@@ -17,7 +17,6 @@ class InfoScreen extends StatefulWidget {
 }
 
 class _InfoScreenState extends State<InfoScreen> {
-  List<int> numbers = [1, 2, 3];
   ResponsiveConfig responsive = getIt<ResponsiveConfig>();
   AppTextStyles appTextStyles = getIt<AppTextStyles>();
   @override
@@ -85,7 +84,6 @@ class _InfoScreenState extends State<InfoScreen> {
               const Text(
                 '✅ Use this automation tool to quickly set up your Flutter project with best practices!',
               ),
-
               ElevatedButton(
                 onPressed: () {
                   // RouteFunctions.navigateToWithArgs(context, '/screen1', 123);
