@@ -4,6 +4,7 @@ import 'package:flutter_automation/core/logger/app_logger.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../config/responsive/responsive_config.dart';
 import '../../../../core/base/abstract/base_screen.dart';
+import '../../../../core/utils/secure_storage.dart';
 import '../../../../core/utils/toast_helper.dart';
 import '../../../../instance/app_lifecycle_handler.dart';
 import '../../../../instance/locator.dart';
@@ -40,6 +41,7 @@ class _ProductsBodyState extends State<_ProductsBody> {
   DateTime? _pausedTime;
   final Duration refreshAfter = const Duration(seconds: 10);
   ResponsiveConfig responsive = getIt<ResponsiveConfig>();
+  CustomSecureStorage customSecureStorage = getIt<CustomSecureStorage>();
 
   @override
   void initState() {
@@ -68,7 +70,10 @@ class _ProductsBodyState extends State<_ProductsBody> {
   Future<void> fetchData() async {
     try {
       BlocProvider.of<ProductCubit>(context).fetchProducts();
-      AppLogger.appLogger("Insert", "sss");
+      customSecureStorage.writeSecureData("sssssssssssss", "valuesssssssssss");
+      String? value = await customSecureStorage.readSecureData("sssssssssssss");
+      CustomAppLogger.appLogger("customSecureStorage", value!);
+      CustomAppLogger.appLogger("Insert", "sss");
     } catch (err) {
       showErrorToast(err.toString());
     }

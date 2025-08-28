@@ -16,46 +16,25 @@ Future<void> main() async {
   runZonedGuarded(
     () async {
       WidgetsFlutterBinding.ensureInitialized();
+
       await SystemChrome.setPreferredOrientations([
         DeviceOrientation.portraitUp,
         DeviceOrientation.portraitDown,
         DeviceOrientation.landscapeLeft,
         DeviceOrientation.landscapeRight,
       ]);
+
       await EasyLocalization.ensureInitialized();
+
       try {
         await dotenv.load(fileName: ".env");
       } catch (e) {
         throw Exception('Error loading .env file: $e');
       }
-      // changeAppIcon();
-      // const fatalError = true;
-      // // Non-async exceptions
-      // FlutterError.onError = (errorDetails) {
-      //   if (fatalError) {
-      //     // If you want to record a "fatal" exception
-      //     FirebaseCrashlytics.instance.recordFlutterFatalError(errorDetails);
-      //     // ignore: dead_code
-      //   } else {
-      //     // If you want to record a "non-fatal" exception
-      //     FirebaseCrashlytics.instance.recordFlutterError(errorDetails);
-      //   }
-      // };
-      // // Async exceptions
-      // PlatformDispatcher.instance.onError = (error, stack) {
-      //   if (fatalError) {
-      //     // If you want to record a "fatal" exception
-      //     FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
-      //     // ignore: dead_code
-      //   } else {
-      //     // If you want to record a "non-fatal" exception
-      //     FirebaseCrashlytics.instance.recordError(error, stack);
-      //   }
-      //   return true;
-      // };
+
       await ScreenUtil.ensureScreenSize();
-      final alice = Alice(showNotification: FlavorConfig.isDevelopment);
-      await dioProvider.initAlice(alice);
+
+      // 🚀 Render app as early as possible
       runApp(
         EasyLocalization(
           supportedLocales: [Locale('ta', ''), Locale('en', '')],
@@ -66,14 +45,28 @@ Future<void> main() async {
               : MyApp(),
         ),
       );
+
+      // ✅ Non-critical tasks → run in background
+      Future.microtask(() async {
+        final alice = Alice(showNotification: FlavorConfig.isDevelopment);
+        await dioProvider.initAlice(alice);
+
+        ErrorWidget.builder = (FlutterErrorDetails details) {
+          return MyCustomErrorWidget(details);
+        };
+
+        // Crashlytics setup can also be here
+        // FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+        // PlatformDispatcher.instance.onError = (error, stack) {
+        //   FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+        //   return true;
+        // };
+      });
     },
     (error, stack) {
-      AppLogger.error(error.toString(), "runZonedGuarded");
+      CustomAppLogger.error(error.toString(), "runZonedGuarded");
     },
   );
-  ErrorWidget.builder = (FlutterErrorDetails details) {
-    return MyCustomErrorWidget(details);
-  };
 }
 
 void changeAppIcon() async {

@@ -4,39 +4,39 @@ read -p "Are you need to Initialize Firebase (Answer yes/no): " FIREBASE_OPTION
 echo "🔍 Checking Node.js installation..."
 
   # shellcheck disable=SC1073
-#  if ! command -v node &> /dev/null; then
-#    echo "❌ Node.js is not installed!"
-#    echo "➡️ Please install Node.js from https://nodejs.org/"
-#    echo "💡 Or use this command on Windows with Chocolatey:"
-#    echo "   choco install nodejs -y"
-#    exit 1
-#  else
-#    echo "✅ Node.js version: $(node --version)"
-#  fi
-#
-#  echo "🔍 Checking npm installation..."
-#
-#  if ! command -v npm &> /dev/null; then
-#    echo "❌ npm is not installed!"
-#    echo "➡️ npm usually comes with Node.js. Reinstall Node.js from https://nodejs.org/"
-#    exit 1
-#  else
-#    echo "✅ npm version: $(npm --version)"
-#  fi
-#
-#  echo "⚙️ Installing Firebase CLI globally..."
-#  npm install -g firebase-tools
-#
-#  # shellcheck disable=SC2181
-#  if [ $? -eq 0 ]; then
-#    echo "✅ Firebase CLI installed successfully."
-#  else
-#    echo "❌ Firebase CLI installation failed!"
-#    exit 1
-#  fi
-#
-#  echo "🔐 Logging into Firebase..."
-#  firebase login
+  if ! command -v node &> /dev/null; then
+    echo "❌ Node.js is not installed!"
+    echo "➡️ Please install Node.js from https://nodejs.org/"
+    echo "💡 Or use this command on Windows with Chocolatey:"
+    echo "   choco install nodejs -y"
+    exit 1
+  else
+    echo "✅ Node.js version: $(node --version)"
+  fi
+
+  echo "🔍 Checking npm installation..."
+
+  if ! command -v npm &> /dev/null; then
+    echo "❌ npm is not installed!"
+    echo "➡️ npm usually comes with Node.js. Reinstall Node.js from https://nodejs.org/"
+    exit 1
+  else
+    echo "✅ npm version: $(npm --version)"
+  fi
+
+  echo "⚙️ Installing Firebase CLI globally..."
+  npm install -g firebase-tools
+
+  # shellcheck disable=SC2181
+  if [ $? -eq 0 ]; then
+    echo "✅ Firebase CLI installed successfully."
+  else
+    echo "❌ Firebase CLI installation failed!"
+    exit 1
+  fi
+
+  echo "🔐 Logging into Firebase..."
+  firebase login
   read -p "Enter your Project ID (Take from console): " PROJECT_ID
   read -p "Enter your base bundle ID (e.g., com.example.app): " BASE_BUNDLE_ID
  echo 'Take you path (C:/Users/SivabalaSubramaniamP/AppData/Local/Pub/Cache/bin)'

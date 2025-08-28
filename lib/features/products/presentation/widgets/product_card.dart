@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../data/models/product_model.dart';
 
 class ProductCard extends StatelessWidget {
@@ -32,6 +33,10 @@ class ProductCard extends StatelessWidget {
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         onTap: () {
+          context.pushReplacementNamed(
+            "sss",
+            pathParameters: {'id': product.title!},
+          );
           // Navigate to details if you add a details page later
         },
       ),

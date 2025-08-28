@@ -24,11 +24,13 @@ class ProductServiceImp extends ProductService {
         final result = response.data;
         return ProductModel.fromJson(result);
       } else {
-        AppLogger.error('Failed to load driver data: ${response.statusCode}');
+        CustomAppLogger.error(
+          'Failed to load driver data: ${response.statusCode}',
+        );
         throw Exception('Failed to load driver data: ${response.statusCode}');
       }
     } on DioException catch (e) {
-      AppLogger.error(e);
+      CustomAppLogger.error(e);
       throw Exception('${AppStrings.failedToLoad} ${e.error}');
     }
   }

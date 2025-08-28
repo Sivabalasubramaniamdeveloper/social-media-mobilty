@@ -4,6 +4,7 @@ import 'package:flutter_automation/config/router/route_functions.dart';
 import 'package:flutter_automation/core/constants/app_strings.dart';
 import 'package:flutter_automation/core/constants/app_text_styles.dart';
 import 'package:flutter_automation/core/logger/app_logger.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../config/responsive/responsive_config.dart';
 import '../../../../core/widgets/bullet_points_text.dart';
 import '../../../../instance/locator.dart';
@@ -16,7 +17,6 @@ class InfoScreen extends StatefulWidget {
 }
 
 class _InfoScreenState extends State<InfoScreen> {
-  List<int> numbers = [1, 2, 3];
   ResponsiveConfig responsive = getIt<ResponsiveConfig>();
   AppTextStyles appTextStyles = getIt<AppTextStyles>();
   @override
@@ -84,18 +84,24 @@ class _InfoScreenState extends State<InfoScreen> {
               const Text(
                 '✅ Use this automation tool to quickly set up your Flutter project with best practices!',
               ),
-
               ElevatedButton(
                 onPressed: () {
-                  RouteFunctions.navigateToWithArgs(context, '/screen1', 123);
+                  // RouteFunctions.navigateToWithArgs(context, '/screen1', 123);
+                  context.pushNamed('/screen1');
                 },
                 child: const Text('screen1'),
               ),
               ElevatedButton(
                 onPressed: () {
-                  RouteFunctions.navigateTo(context, '/products');
+                  context.pushNamed('/products');
                 },
                 child: const Text('products'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  context.pushNamed('sss', pathParameters: {"id": "siva"});
+                },
+                child: const Text('products child'),
               ),
               ElevatedButton(
                 onPressed: () {
@@ -106,7 +112,7 @@ class _InfoScreenState extends State<InfoScreen> {
               ElevatedButton(
                 onPressed: () {
                   context.setLocale(Locale('ta', ''));
-                  AppLogger.appLogger(
+                  CustomAppLogger.appLogger(
                     "change language",
                     context.locale.toString(),
                   );

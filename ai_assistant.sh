@@ -2,8 +2,16 @@
 
 # === Configuration ===
 MODEL="gpt-4o-mini"  # You can change to gpt-4o, gpt-3.5-turbo, etc.
-OPENAI_API_KEY="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" # Load from env if available
-API_KEY="${OPENAI_API_KEY:-}"
+ENV_FILE=".env"       # Path to your env file if you have one
+
+# --- Load API Key ---
+if [ -f "$ENV_FILE" ]; then
+  # shellcheck disable=SC2046
+  export $(grep -v '^#' "$ENV_FILE" | xargs)
+fi
+
+API_KEY="${OPENAI_API_KEY:?Error: OPENAI_API_KEY not set in environment. Add it in .env or export it.}"
+
 
 #read -p "Enter your api-key"
 

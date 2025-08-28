@@ -15,7 +15,7 @@ class _MyCustomErrorWidgetState extends State<MyCustomErrorWidget> {
   void initState() {
     // TODO: implement initState
     super.initState();
-    AppLogger.error(
+    CustomAppLogger.error(
       widget.details.exception.toString(),
       widget.details.library,
     );
@@ -23,26 +23,28 @@ class _MyCustomErrorWidgetState extends State<MyCustomErrorWidget> {
 
   @override
   Widget build(BuildContext context) {
-    AppLogger.readLogs().then((onValue) => print(onValue));
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.error_outline, color: Colors.red, size: 80),
-            const SizedBox(height: 16),
-            const Text(
-              "Oops! Something went wrong.",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              widget.details.exception.toString(), // show error message
-              style: const TextStyle(color: Colors.grey),
-              textAlign: TextAlign.center,
-            ),
-          ],
+    return Directionality(
+      textDirection: TextDirection.ltr,
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.error_outline, color: Colors.red, size: 80),
+              const SizedBox(height: 16),
+              const Text(
+                "Oops! Something went wrong.",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                widget.details.exception.toString(), // show error message
+                style: const TextStyle(color: Colors.grey),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
         ),
       ),
     );

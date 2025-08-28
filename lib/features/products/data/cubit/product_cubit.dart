@@ -22,7 +22,7 @@ class ProductCubit extends Cubit<ProductState> {
         },
       );
     } catch (e) {
-      AppLogger.error(e, "ProductModel cubit");
+      CustomAppLogger.error(e, "ProductModel cubit");
       emit(ProductErrorState(message: e.toString())); // 🔥 Ensure this fires
     }
   }

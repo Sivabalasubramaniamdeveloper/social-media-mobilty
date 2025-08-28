@@ -4,7 +4,7 @@ import 'package:logger/logger.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:intl/intl.dart';
 
-class AppLogger {
+class CustomAppLogger {
   static final Logger _logger = Logger(
     printer: PrettyPrinter(
       methodCount: 2, // number of method calls to be displayed
