@@ -24,7 +24,9 @@ class ProductServiceImp extends ProductService {
         final result = response.data;
         return ProductModel.fromJson(result);
       } else {
-        CustomAppLogger.error('Failed to load driver data: ${response.statusCode}');
+        CustomAppLogger.error(
+          'Failed to load driver data: ${response.statusCode}',
+        );
         throw Exception('Failed to load driver data: ${response.statusCode}');
       }
     } on DioException catch (e) {

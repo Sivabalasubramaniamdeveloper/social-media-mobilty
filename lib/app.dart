@@ -5,9 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'app_providers.dart';
 import 'config/router/route_generator.dart';
-import 'config/router/route_names.dart';
 import 'config/theme/app_theme.dart';
-import 'core/network/alice.dart';
 import 'core/network/internet_connectivity.dart';
 import 'instance/locator.dart';
 

@@ -33,7 +33,10 @@ class ProductCard extends StatelessWidget {
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         onTap: () {
-          context.pushReplacementNamed("sss",  pathParameters: {'id': product.title!},);
+          context.pushReplacementNamed(
+            "sss",
+            pathParameters: {'id': product.title!},
+          );
           // Navigate to details if you add a details page later
         },
       ),

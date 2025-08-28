@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_automation/config/router/route_names.dart';
-import 'package:flutter_automation/core/logger/app_logger.dart';
 import 'package:flutter_automation/features/info/presentation/pages/info_screen.dart';
 import 'package:flutter_automation/features/info/presentation/pages/screen1.dart';
 import 'package:flutter_automation/features/info/presentation/pages/screen2.dart';

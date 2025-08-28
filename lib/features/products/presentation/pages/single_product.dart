@@ -1,20 +1,18 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/src/widgets/framework.dart';
 import 'package:flutter_automation/core/base/abstract/base_screen.dart';
 
-class SingleProduct extends BaseScreen{
+class SingleProduct extends BaseScreen {
   final String productId;
-  const SingleProduct( {super.key,required this.productId,});
+  const SingleProduct({super.key, required this.productId});
 
   @override
   Widget buildBody(BuildContext context) {
-    return SingleProductBody(productId: productId,);
+    return SingleProductBody(productId: productId);
   }
 
   @override
   // TODO: implement title
   String get title => "Single";
-
 }
 
 class SingleProductBody extends StatefulWidget {

@@ -99,7 +99,7 @@ class _InfoScreenState extends State<InfoScreen> {
               ),
               ElevatedButton(
                 onPressed: () {
-                  context.pushNamed('sss',pathParameters: {"id":"siva"});
+                  context.pushNamed('sss', pathParameters: {"id": "siva"});
                 },
                 child: const Text('products child'),
               ),

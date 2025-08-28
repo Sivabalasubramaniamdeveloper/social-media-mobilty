@@ -71,8 +71,8 @@ class _ProductsBodyState extends State<_ProductsBody> {
     try {
       BlocProvider.of<ProductCubit>(context).fetchProducts();
       customSecureStorage.writeSecureData("sssssssssssss", "valuesssssssssss");
-      String? value=await customSecureStorage.readSecureData("sssssssssssss");
-      CustomAppLogger.appLogger("customSecureStorage",value!);
+      String? value = await customSecureStorage.readSecureData("sssssssssssss");
+      CustomAppLogger.appLogger("customSecureStorage", value!);
       CustomAppLogger.appLogger("Insert", "sss");
     } catch (err) {
       showErrorToast(err.toString());

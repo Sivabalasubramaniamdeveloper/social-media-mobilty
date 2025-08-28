@@ -23,7 +23,6 @@ class _MyCustomErrorWidgetState extends State<MyCustomErrorWidget> {
 
   @override
   Widget build(BuildContext context) {
-
     return Directionality(
       textDirection: TextDirection.ltr,
       child: Scaffold(
