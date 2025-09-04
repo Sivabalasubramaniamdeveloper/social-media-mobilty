@@ -1,5 +1,5 @@
 #!/bin/bash
-read -p "Are you need to Initialize Firebase (Answer yes/no): " FIREBASE_OPTION
+
 
 echo "🔍 Checking Node.js installation..."
 

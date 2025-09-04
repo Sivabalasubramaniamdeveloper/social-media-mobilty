@@ -40,6 +40,8 @@ class _MyAppState extends State<MyApp> {
             supportedLocales: context.supportedLocales,
             locale: context.locale,
             debugShowCheckedModeBanner: false,
+
+            // 👇 Move BlocListener OUTSIDE of builder
             builder: (context, child) {
               return BlocListener<ConnectivityCubit, ConnectivityStatus>(
                 listener: (context, state) {
@@ -50,6 +52,7 @@ class _MyAppState extends State<MyApp> {
                     );
                   } else {
                     SnackBarHelper.showSuccess(context, "Back Online");
+                    _showDialog(context); // now works ✅
                   }
                 },
                 child: child!,
@@ -58,6 +61,30 @@ class _MyAppState extends State<MyApp> {
           );
         },
       ),
+    );
+  }
+
+  void _showDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      useRootNavigator: true, // 👈 important
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Alert!!"),
+          content: const Text("You are awesome!"),
+          actions: [
+            TextButton(
+              child: const Text("OK"),
+              onPressed: () {
+                Navigator.of(
+                  context,
+                  rootNavigator: true,
+                ).pop(); // 👈 match rootNavigator
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 }
