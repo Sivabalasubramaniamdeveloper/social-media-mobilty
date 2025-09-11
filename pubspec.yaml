@@ -63,6 +63,7 @@ dependencies:
   timezone: any
   http: any
   overlay_support: any
+  file_picker: ^10.3.2
 dev_dependencies:
   flutter_test:
     sdk: flutter

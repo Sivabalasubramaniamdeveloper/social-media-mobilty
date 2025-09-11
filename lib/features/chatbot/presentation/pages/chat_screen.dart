@@ -17,6 +17,7 @@ class Screen3 extends BaseScreen {
   @override
   bool get showAppBar => true;
 
+
   @override
   Widget buildBody(BuildContext context) {
     return ChatScreen();

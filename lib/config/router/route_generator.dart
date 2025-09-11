@@ -3,10 +3,11 @@ import 'package:flutter_automation/config/router/route_names.dart';
 import 'package:flutter_automation/features/info/presentation/pages/info_screen.dart';
 import 'package:flutter_automation/features/info/presentation/pages/screen1.dart';
 import 'package:flutter_automation/features/info/presentation/pages/screen2.dart';
-import 'package:flutter_automation/features/info/presentation/pages/screen3.dart';
+import 'package:flutter_automation/features/chatbot/presentation/pages/chat_screen.dart';
 import 'package:flutter_automation/features/products/presentation/pages/products_page.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/chatbot/presentation/pages/pdf_upload_screen.dart';
 import '../../features/products/presentation/pages/single_product.dart';
 
 class AppRouter {
@@ -48,6 +49,12 @@ class AppRouter {
         path: '/screen3',
         builder: (context, state) => Screen3(),
       ),
+      GoRoute(
+        name: RouteNames.pdfuploadscreen,
+        path: '/pdfuploadscreen',
+        builder: (context, state) => PDFUploadScreen(),
+      ),
+
       // GoRoute(
       //   path: '/profile/:id',  // Dynamic path
       //   builder: (context, state) {
