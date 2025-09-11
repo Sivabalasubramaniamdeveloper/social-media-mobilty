@@ -1,6 +1,5 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_automation/config/router/route_functions.dart';
 import 'package:flutter_automation/core/constants/app_strings.dart';
 import 'package:flutter_automation/core/constants/app_text_styles.dart';
 import 'package:flutter_automation/core/logger/app_logger.dart';
@@ -105,9 +104,15 @@ class _InfoScreenState extends State<InfoScreen> {
               ),
               ElevatedButton(
                 onPressed: () {
-                  RouteFunctions.navigateTo(context, '/screen2');
+                  context.pushNamed("/screen2");
                 },
                 child: const Text('screen2'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  context.pushNamed("/screen3");
+                },
+                child: const Text('screen3'),
               ),
               ElevatedButton(
                 onPressed: () {

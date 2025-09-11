@@ -3,34 +3,14 @@ import 'package:flutter_automation/config/router/route_names.dart';
 import 'package:flutter_automation/features/info/presentation/pages/info_screen.dart';
 import 'package:flutter_automation/features/info/presentation/pages/screen1.dart';
 import 'package:flutter_automation/features/info/presentation/pages/screen2.dart';
-import 'package:flutter_automation/features/info/presentation/pages/screen3.dart';
+import 'package:flutter_automation/features/chatbot/presentation/pages/chat_screen.dart';
 import 'package:flutter_automation/features/products/presentation/pages/products_page.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/chatbot/presentation/pages/pdf_upload_screen.dart';
 import '../../features/products/presentation/pages/single_product.dart';
 
 class AppRouter {
-  static Route<dynamic> generateRoute(RouteSettings settings) {
-    switch (settings.name) {
-      case RouteNames.home:
-        return _buildPageRoute(InfoScreen(), settings);
-      case RouteNames.screen1:
-        return _buildPageRoute(Screen1(), settings);
-      case RouteNames.screen2:
-        return _buildPageRoute(Screen2(), settings);
-      case RouteNames.screen3:
-        return _buildPageRoute(Screen3(), settings);
-      case RouteNames.products:
-        return _buildPageRoute(ProductsPage(), settings);
-      default:
-        return MaterialPageRoute(
-          builder: (_) => Scaffold(
-            body: Center(child: Text('No route defined for ${settings.name}')),
-          ),
-        );
-    }
-  }
-
   static GoRouter router = GoRouter(
     initialLocation: RouteNames.home,
     routes: [
@@ -69,6 +49,12 @@ class AppRouter {
         path: '/screen3',
         builder: (context, state) => Screen3(),
       ),
+      GoRoute(
+        name: RouteNames.pdfuploadscreen,
+        path: '/pdfuploadscreen',
+        builder: (context, state) => PDFUploadScreen(),
+      ),
+
       // GoRoute(
       //   path: '/profile/:id',  // Dynamic path
       //   builder: (context, state) {
@@ -82,6 +68,27 @@ class AppRouter {
     //   // CustomAppLogger.appLogger("state.path", state.path!);
     // },
   );
+
+  static Route<dynamic> generateRoute(RouteSettings settings) {
+    switch (settings.name) {
+      case RouteNames.home:
+        return _buildPageRoute(InfoScreen(), settings);
+      case RouteNames.screen1:
+        return _buildPageRoute(Screen1(), settings);
+      case RouteNames.screen2:
+        return _buildPageRoute(Screen2(), settings);
+      case RouteNames.screen3:
+        return _buildPageRoute(Screen3(), settings);
+      case RouteNames.products:
+        return _buildPageRoute(ProductsPage(), settings);
+      default:
+        return MaterialPageRoute(
+          builder: (_) => Scaffold(
+            body: Center(child: Text('No route defined for ${settings.name}')),
+          ),
+        );
+    }
+  }
 
   static PageRouteBuilder _buildPageRoute(Widget page, RouteSettings settings) {
     return PageRouteBuilder(

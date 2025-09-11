@@ -17,6 +17,7 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
+  late bool _firstCheckDone = false;
   @override
   void initState() {
     super.initState();
@@ -43,7 +44,13 @@ class _MyAppState extends State<MyApp> {
             builder: (context, child) {
               return BlocListener<ConnectivityCubit, ConnectivityStatus>(
                 listener: (context, state) {
+                  if (!_firstCheckDone && state!=ConnectivityStatus.disconnected) {
+                    _firstCheckDone = true; // skip first state
+                    return;
+                  }
+
                   if (state == ConnectivityStatus.disconnected) {
+                    _firstCheckDone = true;
                     SnackBarHelper.networkError(
                       context,
                       "No Internet Connection",
@@ -58,6 +65,30 @@ class _MyAppState extends State<MyApp> {
           );
         },
       ),
+    );
+  }
+
+  void _showDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      useRootNavigator: true, // 👈 important
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Alert!!"),
+          content: const Text("You are awesome!"),
+          actions: [
+            TextButton(
+              child: const Text("OK"),
+              onPressed: () {
+                Navigator.of(
+                  context,
+                  rootNavigator: true,
+                ).pop(); // 👈 match rootNavigator
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 }

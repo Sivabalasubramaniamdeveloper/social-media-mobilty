@@ -46,7 +46,6 @@ class _ProductsBodyState extends State<_ProductsBody> {
   @override
   void initState() {
     super.initState();
-
     AppLifecycleHandler(
       onChange: (state) {
         if (state == AppLifecycleState.resumed) {
@@ -63,7 +62,6 @@ class _ProductsBodyState extends State<_ProductsBody> {
         }
       },
     );
-
     fetchData();
   }
 

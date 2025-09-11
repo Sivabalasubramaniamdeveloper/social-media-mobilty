@@ -11,6 +11,7 @@ class AppStrings {
   //  API Call Methods
   // ======================
   static const String getAPI = "GET";
+  static const String postAPI = "POST";
 
   // ======================
   //  Exception

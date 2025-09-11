@@ -1,7 +1,7 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+
 
 import '../../instance/locator.dart';
 
@@ -13,14 +13,14 @@ class PushNotificationService {
       FlutterLocalNotificationsPlugin();
 
   Future<void> init() async {
-    SharedPreferences localDb = getIt<SharedPreferences>();
+
 
     // Request permission for iOS devices
 
     // Generate the token and save it locally
     final token = await FirebaseMessaging.instance.getToken();
     print("Firebase Token: $token");
-    await localDb.setString("firebaseToken", token!);
+
     await FirebaseMessaging.instance.requestPermission(
       alert: true,
       announcement: true,
