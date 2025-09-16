@@ -8,6 +8,7 @@ import 'package:flutter_automation/features/products/presentation/pages/products
 import 'package:go_router/go_router.dart';
 
 import '../../features/chatbot/presentation/pages/pdf_upload_screen.dart';
+import '../../features/login_page.dart';
 import '../../features/products/presentation/pages/single_product.dart';
 
 class AppRouter {
@@ -37,7 +38,7 @@ class AppRouter {
       GoRoute(
         name: RouteNames.screen1,
         path: '/screen1',
-        builder: (context, state) => Screen1(),
+        builder: (context, state) => LoginPage(),
       ),
       GoRoute(
         name: RouteNames.screen2,

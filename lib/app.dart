@@ -44,7 +44,8 @@ class _MyAppState extends State<MyApp> {
             builder: (context, child) {
               return BlocListener<ConnectivityCubit, ConnectivityStatus>(
                 listener: (context, state) {
-                  if (!_firstCheckDone && state!=ConnectivityStatus.disconnected) {
+                  if (!_firstCheckDone &&
+                      state != ConnectivityStatus.disconnected) {
                     _firstCheckDone = true; // skip first state
                     return;
                   }
