@@ -38,7 +38,7 @@ class AppRouter {
       GoRoute(
         name: RouteNames.screen1,
         path: '/screen1',
-        builder: (context, state) => LoginPage(),
+        builder: (context, state) => Screen1(),
       ),
       GoRoute(
         name: RouteNames.screen2,

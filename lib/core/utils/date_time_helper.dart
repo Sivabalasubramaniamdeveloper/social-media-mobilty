@@ -91,4 +91,14 @@ class DateTimeHelper {
     DateTime dateTime = DateTime.fromMillisecondsSinceEpoch(epochTime);
     return DateFormat("MMM d yyyy h:mm a").format(dateTime);
   }
+
+  static List<String> changeTime24To12HourFormat(List<String> times24Hour) {
+    List<String> times12Hour = times24Hour.map((time) {
+      // Parse time string to DateTime object
+      DateTime dateTime = DateFormat("HH:mm").parse(time);
+      // Format to 12-hour time with AM/PM
+      return DateFormat("h:mm a").format(dateTime);
+    }).toList();
+    return times12Hour;
+  }
 }
