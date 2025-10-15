@@ -2,9 +2,6 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
-
-import '../../instance/locator.dart';
-
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {}
 
 class PushNotificationService {
@@ -13,8 +10,6 @@ class PushNotificationService {
       FlutterLocalNotificationsPlugin();
 
   Future<void> init() async {
-
-
     // Request permission for iOS devices
 
     // Generate the token and save it locally

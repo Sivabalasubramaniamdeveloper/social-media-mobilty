@@ -1,8 +1,12 @@
+import 'package:background_fetch/background_fetch.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_automation/config/firebase/local_notification.dart';
+import 'package:flutter_automation/config/router/route_names.dart';
 import 'package:flutter_automation/core/utils/snackbar_helper.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:quick_actions/quick_actions.dart';
 import 'app_providers.dart';
 import 'config/router/route_generator.dart';
 import 'config/theme/app_theme.dart';
@@ -17,11 +21,89 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  late bool _firstCheckDone = false;
+  final QuickActions _quickActions = const QuickActions();
+  bool _firstCheckDone = false;
+
+  final Map<String, String> _shortcutToRoute = {
+    'quick_products': RouteNames.products,
+    'quick_javis': RouteNames.javis,
+    'quick_flowise': RouteNames.screen1,
+  };
   @override
   void initState() {
     super.initState();
     setupLocator(context); // valid context
+    initPlatformState();
+    // Register dynamic shortcuts (these show when long-pressing the app icon)
+    _quickActions.setShortcutItems(const <ShortcutItem>[
+      ShortcutItem(
+        type: 'quick_products',
+        localizedTitle: 'Products',
+        icon: 'ic_launcher', // platform icon name - see notes below
+      ),
+      ShortcutItem(
+        type: 'quick_javis',
+        localizedTitle: 'Javis',
+        icon: 'ic_launcher',
+      ),
+      ShortcutItem(
+        type: 'quick_flowise',
+        localizedTitle: 'Flowise Chat',
+        icon: 'ic_launcher',
+      ),
+    ]);
+
+    // Initialize the callback to handle when a shortcut is tapped.
+    // This will be called on cold start OR when the app is running.
+    _quickActions.initialize((String shortcutType) {
+      // shortcutType will be one of the 'type' values above
+      _handleShortcut(shortcutType);
+    });
+  }
+
+  // Platform messages are asynchronous, so we initialize in an async method.
+  Future<void> initPlatformState() async {
+    // Configure BackgroundFetch.
+    int status = await BackgroundFetch.configure(
+      BackgroundFetchConfig(
+        minimumFetchInterval: 3,
+        stopOnTerminate: false,
+        enableHeadless: true,
+        requiresBatteryNotLow: false,
+        requiresCharging: false,
+        requiresStorageNotLow: false,
+        requiresDeviceIdle: false,
+        requiredNetworkType: NetworkType.NONE,
+      ),
+      (String taskId) async {
+        // <-- Event handler
+        // This is the fetch-event callback.
+        print("[BackgroundFetch] Event received $taskId");
+        LocalNotification.showInstantNotification(
+          title: "backround Fetch",
+          body: "Background fetch event received: $taskId",
+        );
+        // IMPORTANT:  You must signal completion of your task or the OS can punish your app
+        // for taking too long in the background.
+        BackgroundFetch.finish(taskId);
+      },
+      (String taskId) async {
+        // <-- Task timeout handler.
+        // This task has exceeded its allowed running-time.  You must stop what you're doing and immediately .finish(taskId)
+        LocalNotification.showInstantNotification(
+          title: "backround Fetch",
+          body: "Background fetch event received: $taskId",
+        );
+        print("[BackgroundFetch] TASK TIMEOUT taskId: $taskId");
+        BackgroundFetch.finish(taskId);
+      },
+    );
+    print('[BackgroundFetch] configure success: $status');
+
+    // If the widget was removed from the tree while the asynchronous platform
+    // message was in flight, we want to discard the reply rather than calling
+    // setState to update our non-existent appearance.
+    if (!mounted) return;
   }
 
   @override
@@ -44,7 +126,8 @@ class _MyAppState extends State<MyApp> {
             builder: (context, child) {
               return BlocListener<ConnectivityCubit, ConnectivityStatus>(
                 listener: (context, state) {
-                  if (!_firstCheckDone && state!=ConnectivityStatus.disconnected) {
+                  if (!_firstCheckDone &&
+                      state != ConnectivityStatus.disconnected) {
                     _firstCheckDone = true; // skip first state
                     return;
                   }
@@ -68,27 +151,26 @@ class _MyAppState extends State<MyApp> {
     );
   }
 
-  void _showDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      useRootNavigator: true, // 👈 important
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text("Alert!!"),
-          content: const Text("You are awesome!"),
-          actions: [
-            TextButton(
-              child: const Text("OK"),
-              onPressed: () {
-                Navigator.of(
-                  context,
-                  rootNavigator: true,
-                ).pop(); // 👈 match rootNavigator
-              },
-            ),
-          ],
-        );
-      },
-    );
+  // Handle navigation centrally so we can ensure go_router is ready.
+  Future<void> _handleShortcut(String shortcutType) async {
+    if (shortcutType.isEmpty) return;
+
+    final targetRoute = _shortcutToRoute[shortcutType];
+    if (targetRoute == null) {
+      // unknown shortcut: log or ignore
+      debugPrint('Unknown quick action: $shortcutType');
+      return;
+    }
+
+    // Ensure navigation happens after the current frame, and that the router is initialized.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      try {
+        // If you use named routes: AppRouter.router.goNamed('products');
+        // Here we use path-based navigation:
+        AppRouter.router.go(targetRoute);
+      } catch (e) {
+        debugPrint('Quick action navigation failed: $e');
+      }
+    });
   }
 }
