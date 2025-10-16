@@ -64,6 +64,8 @@ dependencies:
   http: any
   overlay_support: any
   file_picker: ^10.3.2
+  quick_actions: ^1.1.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

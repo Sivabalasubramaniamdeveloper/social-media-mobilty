@@ -31,23 +31,7 @@ android {
         versionName = flutter.versionName
     }
 
-    flavorDimensions += "flavor-type"
-    productFlavors {
-        create("sit") {
-            dimension = "flavor-type"
-            applicationIdSuffix = ".sit"
-            resValue("string", "app_name", "Example SIT")
-        }
-        create("uat") {
-            dimension = "flavor-type"
-            applicationIdSuffix = ".uat"
-            resValue("string", "app_name", "Example UAT")
-        }
-        create("prod") {
-            dimension = "flavor-type"
-            resValue("string", "app_name", "Example APP")
-        }
-    }
+
 
     buildTypes {
         release {

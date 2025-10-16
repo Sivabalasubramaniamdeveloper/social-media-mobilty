@@ -159,6 +159,18 @@ if grep -q 'android:label=' "$MANIFEST"; then
 else
   echo " android:label not found in AndroidManifest.xml"
 fi
+# ---------- Update Info.plist ----------
+INFO_PLIST="ios/Runner/Info.plist"
+
+if grep -q "<key>CFBundleDisplayName</key>" "$INFO_PLIST"; then
+  # Replace the next <string> value with $(PRODUCT_NAME)
+  # shellcheck disable=SC2016
+  sed -i.bak '/<key>CFBundleDisplayName<\/key>/{n;s#<string>.*</string>#<string>$(PRODUCT_NAME)</string>#}' "$INFO_PLIST"
+  rm -f "${INFO_PLIST}.bak"
+  echo "✅ Updated Info.plist CFBundleDisplayName to use PRODUCT_NAME"
+else
+  echo "⚠️ CFBundleDisplayName key not found in Info.plist"
+fi
 
 # --------- Detect Gradle build file ---------
 GRADLE_FILE=""
@@ -252,13 +264,5 @@ EOL
 git add .
 echo " Created MainActivity.kt with correct package declaration"
 
-# --------- Update Dart title ---------
-MAIN_DART_FILE="lib/app.dart"
-if [ -f "$MAIN_DART_FILE" ]; then
-  sed -i '' -E "s/(title\s*:\s*)['\"][^'\"]*['\"]/\\1FlavorConfig.title/" "$MAIN_DART_FILE"
-  echo "✅ Updated MaterialApp title to use FlavorConfig.title in $MAIN_DART_FILE"
-else
-  echo "❌ $MAIN_DART_FILE not found!"
-fi
 
 echo "🎉 Setup complete!"

@@ -1,4 +1,4 @@
-import 'package:background_fetch/background_fetch.dart';
+
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_automation/config/firebase/local_notification.dart';
@@ -26,14 +26,14 @@ class _MyAppState extends State<MyApp> {
 
   final Map<String, String> _shortcutToRoute = {
     'quick_products': RouteNames.products,
-    'quick_javis': RouteNames.javis,
+    
     'quick_flowise': RouteNames.screen1,
   };
   @override
   void initState() {
     super.initState();
     setupLocator(context); // valid context
-    initPlatformState();
+
     // Register dynamic shortcuts (these show when long-pressing the app icon)
     _quickActions.setShortcutItems(const <ShortcutItem>[
       ShortcutItem(
@@ -61,50 +61,7 @@ class _MyAppState extends State<MyApp> {
     });
   }
 
-  // Platform messages are asynchronous, so we initialize in an async method.
-  Future<void> initPlatformState() async {
-    // Configure BackgroundFetch.
-    int status = await BackgroundFetch.configure(
-      BackgroundFetchConfig(
-        minimumFetchInterval: 3,
-        stopOnTerminate: false,
-        enableHeadless: true,
-        requiresBatteryNotLow: false,
-        requiresCharging: false,
-        requiresStorageNotLow: false,
-        requiresDeviceIdle: false,
-        requiredNetworkType: NetworkType.NONE,
-      ),
-      (String taskId) async {
-        // <-- Event handler
-        // This is the fetch-event callback.
-        print("[BackgroundFetch] Event received $taskId");
-        LocalNotification.showInstantNotification(
-          title: "backround Fetch",
-          body: "Background fetch event received: $taskId",
-        );
-        // IMPORTANT:  You must signal completion of your task or the OS can punish your app
-        // for taking too long in the background.
-        BackgroundFetch.finish(taskId);
-      },
-      (String taskId) async {
-        // <-- Task timeout handler.
-        // This task has exceeded its allowed running-time.  You must stop what you're doing and immediately .finish(taskId)
-        LocalNotification.showInstantNotification(
-          title: "backround Fetch",
-          body: "Background fetch event received: $taskId",
-        );
-        print("[BackgroundFetch] TASK TIMEOUT taskId: $taskId");
-        BackgroundFetch.finish(taskId);
-      },
-    );
-    print('[BackgroundFetch] configure success: $status');
-
-    // If the widget was removed from the tree while the asynchronous platform
-    // message was in flight, we want to discard the reply rather than calling
-    // setState to update our non-existent appearance.
-    if (!mounted) return;
-  }
+ 
 
   @override
   Widget build(BuildContext context) {

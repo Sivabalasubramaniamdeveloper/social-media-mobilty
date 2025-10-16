@@ -2,6 +2,7 @@
   echo "📘 Flutter Automation Setup Script - Available Commands:"
   echo ""
   echo "  ./help.sh                     Show this help menu"
+  echo "  ./setup.sh                    Initial setup for flutter project"
   echo "  ./change_appname.sh           Change App Name in (android & ios)"
   echo "  ./change_appicon.sh           Change App icon"
   echo "  ./import_package.sh           Put the package name it imports automatically"
