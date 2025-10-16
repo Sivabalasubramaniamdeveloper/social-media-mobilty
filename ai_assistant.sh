@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # === Configuration ===
-MODEL="gpt-4o-mini"  # You can change to gpt-4o, gpt-3.5-turbo, etc.
-ENV_FILE=".env"       # Path to your env file if you have one
+MODEL="gpt-4o-mini"
+ENV_FILE=".env"
 
 # --- Load API Key ---
 if [ -f "$ENV_FILE" ]; then
@@ -20,10 +20,9 @@ echo "🤖 AI Assistant - Type 'exit' to quit."
     echo "🤖 AI Assistant Menu"
     echo "1️⃣ Just chat with AI"
     echo "2️⃣ Get Flutter/Dart code from AI"
-    echo "3️⃣ Read existing code and get suggestions"
-    echo "4️⃣ Exit"
+    echo "3️⃣ Exit"
     echo "=========================="
-    read -p "Choose an option (1-4): " OPTION
+    read -p "Choose an option (1-3): " OPTION
 
 while true; do
   echo "exit --> Exit from the task"
@@ -74,38 +73,11 @@ while true; do
             ;;
 
         3)
-            read -p "Enter the path of the file to review: " FILE_PATH
-            if [[ "$USER_INPUT" == "exit" ]]; then
-                                echo "Goodbye! 👋"
-                                break
-            fi
-            if [ -f "$FILE_PATH" ]; then
-                FILE_CONTENT=$(cat "$FILE_PATH" | jq -Rs .)
-                RESPONSE=$(curl -s https://api.openai.com/v1/chat/completions \
-                    -H "Content-Type: application/json" \
-                    -H "Authorization: Bearer $API_KEY" \
-                    -d "{
-                        \"model\": \"$MODEL\",
-                        \"messages\": [
-                            {\"role\": \"system\", \"content\": \"You are an expert code reviewer. Provide improvements, bug fixes, and suggestions for this code.\"},
-                            {\"role\": \"user\", \"content\": \"Here is the file content:\n$FILE_CONTENT\"}
-                        ]
-                    }")
-
-                echo "💡 Suggestions from AI:"
-                # shellcheck disable=SC2005
-                echo "$(echo "$RESPONSE" | jq -r '.choices[0].message.content')"
-            else
-                echo "❌ File not found!"
-            fi
-            ;;
-
-        4)
             echo "Goodbye! 👋"
             break
             ;;
         *)
-            echo "❌ Invalid option. Please choose 1-4."
+            echo "❌ Invalid option. Please choose 1-3."
             ;;
     esac
 done
