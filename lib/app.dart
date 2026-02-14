@@ -1,9 +1,9 @@
-
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_automation/config/firebase/local_notification.dart';
-import 'package:flutter_automation/config/router/route_names.dart';
-import 'package:flutter_automation/core/utils/snackbar_helper.dart';
+import 'package:mineai/config/firebase/local_notification.dart';
+import 'package:mineai/config/flavor/flavor_config.dart';
+import 'package:mineai/config/router/route_names.dart';
+import 'package:mineai/core/utils/snackbar_helper.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:quick_actions/quick_actions.dart';
@@ -26,7 +26,7 @@ class _MyAppState extends State<MyApp> {
 
   final Map<String, String> _shortcutToRoute = {
     'quick_products': RouteNames.products,
-    
+
     'quick_flowise': RouteNames.screen1,
   };
   @override
@@ -61,8 +61,6 @@ class _MyAppState extends State<MyApp> {
     });
   }
 
- 
-
   @override
   Widget build(BuildContext context) {
     return MultiBlocProvider(
@@ -73,9 +71,9 @@ class _MyAppState extends State<MyApp> {
         designSize: const Size(412, 846),
         builder: (context, child) {
           return MaterialApp.router(
-            title: "Flutter Automation",
+            title: FlavorConfig.title,
             routerConfig: AppRouter.router,
-            theme: AppTheme.getNaturalTheme(),
+            theme: AppTheme.getPrimaryTheme(),
             localizationsDelegates: context.localizationDelegates,
             supportedLocales: context.supportedLocales,
             locale: context.locale,

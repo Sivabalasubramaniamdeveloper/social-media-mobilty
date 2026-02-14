@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_automation/core/constants/app_colors.dart';
+import 'package:mineai/core/constants/app_colors.dart';
 import '../../core/constants/app_text_styles.dart';
 import '../../instance/locator.dart';
 

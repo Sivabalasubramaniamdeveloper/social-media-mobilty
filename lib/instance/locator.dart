@@ -1,6 +1,6 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter_automation/core/logger/app_logger.dart';
+import 'package:mineai/core/logger/app_logger.dart';
 import 'package:get_it/get_it.dart';
 import '../config/responsive/responsive_config.dart';
 import '../core/constants/app_text_styles.dart';

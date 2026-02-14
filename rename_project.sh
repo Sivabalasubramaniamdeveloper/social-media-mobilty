@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-OLD="flutter_automation"
+OLD="mineai"
 NEW="${1:-}"
 
 if [[ -z "${NEW}" ]]; then

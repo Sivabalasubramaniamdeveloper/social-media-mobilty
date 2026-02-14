@@ -4,8 +4,6 @@ import 'package:flutter/material.dart';
 class AppColors {
   // Common Colors
 
-  static const Color whiteColor = Colors.white;
-  static const Color redColor = Colors.red;
   static const Color blackColor = Colors.black;
   static const Color black87Color = Colors.black87;
   static const Color black54Color = Colors.black54;
@@ -27,4 +25,29 @@ class AppColors {
   static final Color naturalBackground = Colors.green[700]!;
   static const Color naturalText = Colors.white;
   static final Color naturalSecondary = Colors.brown[400]!;
+
+  //primarytheme
+  static const Color primaryThemeBackground = Color(0xFF0B0F2A);
+  static const Color darkBackgroundTop = Color(0xFF0B0F2A);
+  static const Color darkBackgroundMid = Color(0xFF141B3A);
+  static const Color darkBackgroundBottom = Color(0xFF1C1147);
+
+  // Primary Accent
+  static const Color primaryPurple = Color(0xFF7C5CFF);
+  static const Color primaryOrange = Color.fromARGB(255, 243, 135, 3);
+
+  // Secondary Accent
+  static const Color accentBlue = Color(0xFF38BDF8);
+  static const Color accentOrange = Color.fromARGB(255, 227, 190, 8);
+
+  // Glass Card
+  static const Color glassCard = Color(0x0DFFFFFF); // 5% white
+
+  // Text Colors
+  static const Color whiteColor = Color(0xFFFFFFFF);
+  static const Color secondaryText = Color(0xFFA0A3BD);
+  static const Color hintText = Color(0xFF6C7293);
+
+  // Error
+  static const Color redColor = Color(0xFFE53935);
 }

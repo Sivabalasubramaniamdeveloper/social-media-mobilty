@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_automation/config/router/route_names.dart';
-import 'package:flutter_automation/features/info/presentation/pages/info_screen.dart';
-import 'package:flutter_automation/features/info/presentation/pages/screen1.dart';
-import 'package:flutter_automation/features/info/presentation/pages/screen2.dart';
-import 'package:flutter_automation/features/chatbot/presentation/pages/chat_screen.dart';
-import 'package:flutter_automation/features/products/presentation/pages/products_page.dart';
+import 'package:mineai/config/router/route_names.dart';
+import 'package:mineai/features/info/presentation/pages/info_screen.dart';
+import 'package:mineai/features/info/presentation/pages/screen1.dart';
+import 'package:mineai/features/info/presentation/pages/screen2.dart';
+import 'package:mineai/features/chatbot/presentation/pages/chat_screen.dart';
+import 'package:mineai/features/products/presentation/pages/products_page.dart';
 import 'package:go_router/go_router.dart';
-
+import 'package:mineai/features/splashscreen/presentation/splash_screen.dart';
 import '../../features/chatbot/presentation/pages/pdf_upload_screen.dart';
 import '../../features/products/presentation/pages/single_product.dart';
 
@@ -17,7 +17,7 @@ class AppRouter {
       GoRoute(
         name: RouteNames.home,
         path: '/',
-        builder: (context, state) => InfoScreen(),
+        builder: (context, state) => SplashScreen(),
       ),
       GoRoute(
         name: RouteNames.products,

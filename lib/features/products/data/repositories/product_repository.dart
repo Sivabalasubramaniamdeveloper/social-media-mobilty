@@ -1,4 +1,4 @@
-import 'package:flutter_automation/core/logger/app_logger.dart';
+import 'package:mineai/core/logger/app_logger.dart';
 import '../../../../core/error/api_failure.dart';
 import '../models/product_model.dart';
 import '../services/product_service.dart';

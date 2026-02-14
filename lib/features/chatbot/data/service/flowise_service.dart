@@ -3,7 +3,7 @@ import 'package:dio/dio.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:flutter_automation/core/network/alice.dart';
+import 'package:mineai/core/network/alice.dart';
 import 'package:go_router/go_router.dart';
 
 class FlowiseService {

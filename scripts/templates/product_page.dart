@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 
-import 'package:flutter_automation/core/network/alice.dart';
+import 'package:mineai/core/network/alice.dart';
 
 class ProductPage extends StatefulWidget {
   const ProductPage({super.key});

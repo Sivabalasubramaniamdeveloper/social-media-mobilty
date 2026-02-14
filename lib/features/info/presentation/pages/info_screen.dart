@@ -1,8 +1,8 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_automation/core/constants/app_strings.dart';
-import 'package:flutter_automation/core/constants/app_text_styles.dart';
-import 'package:flutter_automation/core/logger/app_logger.dart';
+import 'package:mineai/core/constants/app_strings.dart';
+import 'package:mineai/core/constants/app_text_styles.dart';
+import 'package:mineai/core/logger/app_logger.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../config/responsive/responsive_config.dart';
 import '../../../../core/widgets/bullet_points_text.dart';

@@ -1,8 +1,8 @@
 import 'package:dio/dio.dart';
-import 'package:flutter_automation/core/constants/api_constants.dart';
-import 'package:flutter_automation/core/constants/app_strings.dart';
-import 'package:flutter_automation/core/logger/app_logger.dart';
-import 'package:flutter_automation/features/products/data/models/product_model.dart';
+import 'package:mineai/core/constants/api_constants.dart';
+import 'package:mineai/core/constants/app_strings.dart';
+import 'package:mineai/core/logger/app_logger.dart';
+import 'package:mineai/features/products/data/models/product_model.dart';
 import '../../../../core/network/custom_api_call.dart';
 
 abstract class ProductService {

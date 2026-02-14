@@ -1,5 +1,5 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter_automation/core/base/abstract/base_screen.dart';
+import 'package:mineai/core/base/abstract/base_screen.dart';
 
 class SingleProduct extends BaseScreen {
   final String productId;

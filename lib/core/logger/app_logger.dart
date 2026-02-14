@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'package:flutter_automation/config/flavor/flavor_config.dart';
+import 'package:mineai/config/flavor/flavor_config.dart';
 import 'package:logger/logger.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:intl/intl.dart';

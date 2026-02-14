@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_automation/core/logger/app_logger.dart';
+import 'package:mineai/core/logger/app_logger.dart';
 
 class MyCustomErrorWidget extends StatefulWidget {
   final FlutterErrorDetails details;

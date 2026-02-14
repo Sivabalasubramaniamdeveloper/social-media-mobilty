@@ -1,4 +1,4 @@
-# flutter_automation
+# mineai
 
 A new Flutter project.
 

@@ -1,4 +1,4 @@
-import 'package:flutter_automation/core/logger/app_logger.dart';
+import 'package:mineai/core/logger/app_logger.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../repositories/product_repository.dart';
 import 'product_state.dart';

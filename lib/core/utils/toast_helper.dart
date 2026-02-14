@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_automation/core/utils/common_functions_helper.dart';
+import 'package:mineai/core/utils/common_functions_helper.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 

@@ -15,7 +15,7 @@ read -p "📢 Enter comma-separated flavor names (e.g., dev,sit,uat,prod): " FLA
 
 echo "✅ App Name: $APP_NAME"
 echo "✅ Package Name: $PACKAGE_NAME"
-DART_PACKAGE='flutter_automation'
+DART_PACKAGE='mineai'
 echo "✅ Dart Import Name: $DART_PACKAGE"
 [ -n "$ICON_PATH" ] && echo "✅ Icon Path: $ICON_PATH" || echo "Setting default icon..."
 echo "✅ Flavors: $FLAVOR_INPUT"

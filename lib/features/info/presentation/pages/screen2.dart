@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_automation/core/utils/snackbar_helper.dart';
+import 'package:mineai/core/utils/snackbar_helper.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import '../../../../core/base/abstract/base_form.dart';
 
