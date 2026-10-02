@@ -25,9 +25,9 @@ class _MyAppState extends State<MyApp> {
   bool _firstCheckDone = false;
 
   final Map<String, String> _shortcutToRoute = {
-    'quick_products': RouteNames.products,
+    // 'quick_products': RouteNames.products,
 
-    'quick_flowise': RouteNames.screen1,
+    // 'quick_flowise': RouteNames.screen1,
   };
   @override
   void initState() {

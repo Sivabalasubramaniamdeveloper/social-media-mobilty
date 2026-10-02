@@ -2,21 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:mineai/core/constants/app_colors.dart';
 
 class AppLogoWidget extends StatelessWidget {
-  const AppLogoWidget({super.key});
+  final double size;
+  final bool isWidth;
+  const AppLogoWidget({super.key, this.size = 100, this.isWidth = false});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 100,
-      width: 100,
-      decoration: BoxDecoration(
-        color: Theme.of(context).secondaryHeaderColor.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(color: Theme.of(context).primaryColor, blurRadius: 5),
-        ],
+    return SizedBox(
+      height: isWidth ? size : size / 2,
+      width: isWidth ? size / 2 : size,
+      // ... rest same
+      child: Icon(
+        Icons.psychology,
+        size: size * 0.45,
+        color: AppColors.whiteColor,
       ),
-      child: Icon(Icons.psychology, size: 45, color: AppColors.whiteColor),
     );
   }
 }

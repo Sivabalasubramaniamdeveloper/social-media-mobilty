@@ -1,7 +1,9 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:go_router/go_router.dart';
+import 'package:mineai/config/router/route_names.dart';
+import 'package:mineai/core/utils/secure_storage.dart';
 import '../../instance/locator.dart';
 import '../utils/toast_helper.dart';
 import 'alice.dart';
@@ -11,13 +13,12 @@ class CustomApiCallService {
   final Dio dio = dioProvider.dio;
 
   Future<Map<String, String>> _prepareHeaders(String? token) async {
-    final String currentTimeZone = await FlutterTimezone.getLocalTimezone();
+    final TimezoneInfo timezoneInfo = await FlutterTimezone.getLocalTimezone();
     return {
       "Content-Type": "application/json",
-      "TIMEZONE": currentTimeZone,
-      if (token != '') 'Authorization': 'Bearer $token',
-      if (token == '') 'key': 'x-Client-Type',
-      if (token == '') 'value': 'mobile',
+      "TIMEZONE": timezoneInfo.identifier,
+      if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
+      if (token == null || token.isEmpty) 'x-Client-Type': 'mobile',
     };
   }
 
@@ -65,20 +66,22 @@ class CustomApiCallService {
         default:
           throw Exception('Invalid HTTP method');
       }
-
       return response;
     } on DioException catch (e) {
+      // -----------------------------------------------------------------
+      // 401: Token Expired or Unauthorized -> Clear storage and Logout
+      // -----------------------------------------------------------------
       if (e.response?.statusCode == 401) {
         final context = dioProvider.navigatorKey?.currentContext;
         if (context != null) {
           showCupertinoDialog(
             context: context,
             barrierDismissible: false,
-            builder: (BuildContext context) {
+            builder: (BuildContext dialogContext) {
               return PopScope(
                 canPop: false,
                 child: CupertinoAlertDialog(
-                  title: Text(
+                  title: const Text(
                     'Session Expired',
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
@@ -91,19 +94,26 @@ class CustomApiCallService {
                   ),
                   actions: <Widget>[
                     CupertinoDialogAction(
-                      onPressed: () async {
-                        SharedPreferences storedData =
-                            getIt<SharedPreferences>();
-                        await storedData.clear();
-                        // await dioProvider.navigatorKey?.currentState
-                        //     ?.pushAndRemoveUntil(
-                        //   MaterialPageRoute(
-                        //     builder: (context) => LandingScreen(),
-                        //   ),
-                        //       (route) => false,
-                        // );
-                      },
                       isDestructiveAction: true,
+                      onPressed: () async {
+                        // 1. Clear secure storage token
+                        final secureStorage = getIt<CustomSecureStorage>();
+                        await secureStorage.deleteSecureData('loginToken');
+                        await secureStorage.deleteAllSecureData();
+
+                        // 2. Dismiss dialog
+                        if (dialogContext.mounted) {
+                          Navigator.of(
+                            dialogContext,
+                            rootNavigator: true,
+                          ).pop();
+                        }
+
+                        // 3. Navigate user to login screen
+                        if (context.mounted) {
+                          context.go(RouteNames.login);
+                        }
+                      },
                       child: Text(
                         'Continue',
                         style: TextStyle(
@@ -125,48 +135,10 @@ class CustomApiCallService {
         rethrow;
       } else if (e.response?.statusCode == 403) {
         await showErrorToast(
-          e.response?.data['error'] ?? e.response?.data['message'],
+          e.response?.data['error'] ??
+              e.response?.data['message'] ??
+              'Forbidden',
         );
-        final context = dioProvider.navigatorKey?.currentContext;
-        if (context != null) {
-          showCupertinoDialog(
-            context: context,
-            barrierDismissible: false,
-            builder: (BuildContext context) {
-              return PopScope(
-                canPop: false,
-                child: CupertinoAlertDialog(
-                  title: Text(
-                    'Forbidden',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  content: Padding(
-                    padding: const EdgeInsets.only(top: 8.0).r,
-                    child: Text(
-                      e.response?.data['message'] ??
-                          'Your account is currently deactivated. Please contact Admin to activate.',
-                      style: TextStyle(fontSize: 16.sp),
-                    ),
-                  ),
-                  actions: <Widget>[
-                    CupertinoDialogAction(
-                      onPressed: () async {},
-                      isDestructiveAction: true,
-                      child: Text(
-                        'Close',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14.sp,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            },
-          );
-        }
-
         rethrow;
       } else {
         String? errorMessage =
@@ -180,26 +152,4 @@ class CustomApiCallService {
       }
     }
   }
-
-  // Future<Refresh> userRefreshLogin(String token) async {
-  //   try {
-  //     Response response = await makeApiRequest(
-  //       method: 'POST',
-  //       token: token,
-  //       url: ApiLinks.refreshToken,
-  //     );
-  //     Refresh refreshData = Refresh.fromJson(response.data);
-  //     await SecureStorage().writeSecureData(
-  //       "expiresInTimeStampValue",
-  //       refreshData.refreshData!.expiresIn.toString(),
-  //     );
-  //     await SecureStorage().writeSecureData(
-  //       "loginToken",
-  //       refreshData.refreshData!.token!,
-  //     );
-  //     return response.data = Refresh.fromJson(response.data);
-  //   } catch (error) {
-  //     throw Exception('Failed to login: $error');
-  //   }
-  // }
 }

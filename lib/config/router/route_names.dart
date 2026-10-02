@@ -1,8 +1,13 @@
 class RouteNames {
   static const String home = '/';
-  static const String screen1 = '/screen1';
-  static const String screen2 = '/screen2';
-  static const String screen3 = '/screen3';
-  static const String pdfuploadscreen = '/pdfuploadscreen';
-  static const String products = '/products';
+  static const String login = '/login';
+  static const String signup = '/signup';
+  static const String onboarding = '/onboarding';
+  static const String verifyEmail = '/verify-email';
+  static const String authSuccess = '/auth-success';
+  static const String dashboard = '/dashboard';
+  static const String profile = '/profile';
+  static const String editProfile = '/edit-profile';
+  static const String settings = '/settings';
+  static const String weather = '/weather';
 }
