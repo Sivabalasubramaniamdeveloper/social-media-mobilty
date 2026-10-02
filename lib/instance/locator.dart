@@ -2,12 +2,18 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:mineai/core/logger/app_logger.dart';
 import 'package:get_it/get_it.dart';
+import 'package:mineai/features/auth/cubit/auth_cubit.dart';
+import 'package:mineai/features/auth/repository/auth_repository.dart';
+import 'package:mineai/features/auth/services/auth_service.dart';
+import 'package:mineai/features/profile/cubit/user_profile_cubit.dart';
+import 'package:mineai/features/profile/repository/user_profile_repository.dart';
+import 'package:mineai/features/profile/service/user_profile_service.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../config/responsive/responsive_config.dart';
 import '../core/constants/app_text_styles.dart';
 import '../core/network/custom_api_call.dart';
 import '../core/utils/secure_storage.dart';
-import '../features/products/data/repositories/product_repository.dart';
-import '../features/products/data/services/product_service.dart';
+import '../config/supabase/supabase.config.dart';
 
 final GetIt getIt = GetIt.instance;
 
@@ -22,19 +28,28 @@ Future<void> setupLocator(BuildContext context) async {
     () => CustomApiCallService(),
   );
   getIt.registerLazySingleton<CustomSecureStorage>(() => CustomSecureStorage());
+  getIt.registerLazySingleton<SupabaseClient>(() => SupabaseConfig.client);
 
+  // Data Sources
+  // Register Auth State Management dependencies
+  getIt.registerLazySingleton<AuthService>(() => AuthService());
+  getIt.registerLazySingleton<AuthRepository>(
+    () => AuthRepositoryImpl(authService: getIt<AuthService>()),
+  );
+  getIt.registerFactory<AuthCubit>(
+    () => AuthCubit(repository: getIt<AuthRepository>()),
+  );
   //==================================
   // Register Services
   //==================================
-
-  getIt.registerLazySingleton<ProductServiceImp>(() => ProductServiceImp());
-
-  //==================================
-  // Register Repositories
-  //==================================
-
-  getIt.registerLazySingleton<ProductRepository>(
-    () => ProductRepositoryImp(getIt<ProductServiceImp>()),
+  // Profile Dependencies
+  getIt.registerLazySingleton<UserProfileService>(() => UserProfileService());
+  getIt.registerLazySingleton<UserProfileRepository>(
+    () => UserProfileRepositoryImpl(service: getIt<UserProfileService>()),
   );
+  getIt.registerFactory<UserProfileCubit>(
+    () => UserProfileCubit(repository: getIt<UserProfileRepository>()),
+  );
+
   await getIt.allReady();
 }

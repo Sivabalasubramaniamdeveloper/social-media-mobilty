@@ -3,6 +3,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_alice/alice.dart';
+import 'package:mineai/config/supabase/supabase.config.dart';
 import 'package:mineai/core/logger/app_logger.dart';
 import 'package:mineai/core/widgets/errors/custom_error.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -31,7 +32,7 @@ Future<void> main() async {
       } catch (e) {
         throw Exception('Error loading .env file: $e');
       }
-
+      await SupabaseConfig.initialize();
       await ScreenUtil.ensureScreenSize();
 
       // 🚀 Render app as early as possible
@@ -39,7 +40,7 @@ Future<void> main() async {
         EasyLocalization(
           supportedLocales: [Locale('ta', ''), Locale('en', '')],
           path: 'assets/translations',
-          fallbackLocale: Locale('ta'),
+          fallbackLocale: Locale('en'),
           child: FlavorConfig.isDevelopment
               ? OverlaySupport.global(child: MyApp())
               : MyApp(),
