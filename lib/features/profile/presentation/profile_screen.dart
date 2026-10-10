@@ -51,7 +51,6 @@ class _ProfileView extends BaseScreen {
               children: [
                 // Top App Bar
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     IconButton(
                       onPressed: () {
@@ -71,14 +70,6 @@ class _ProfileView extends BaseScreen {
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                         color: AppColors.whiteColor,
-                      ),
-                    ),
-                    IconButton(
-                      onPressed: () => context.push(RouteNames.settings),
-                      icon: const Icon(
-                        Icons.settings_outlined,
-                        color: AppColors.whiteColor,
-                        size: 22,
                       ),
                     ),
                   ],
@@ -110,16 +101,19 @@ class _ProfileView extends BaseScreen {
                       Positioned(
                         bottom: 2,
                         right: 2,
-                        child: Container(
-                          padding: const EdgeInsets.all(4),
-                          decoration: const BoxDecoration(
-                            color: Color(0xFF8B5CF6),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.verified_rounded,
-                            size: 14,
-                            color: AppColors.whiteColor,
+                        child: GestureDetector(
+                          onTap: () => context.push(RouteNames.editProfile),
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: const BoxDecoration(
+                              color: Color(0xFF8B5CF6),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.edit,
+                              size: 14,
+                              color: AppColors.whiteColor,
+                            ),
                           ),
                         ),
                       ),
@@ -177,29 +171,28 @@ class _ProfileView extends BaseScreen {
                 const SizedBox(height: 16),
 
                 // Edit Profile Button
-                SizedBox(
-                  width: 140,
-                  height: 40,
-                  child: ElevatedButton(
-                    onPressed: () => context.push(RouteNames.editProfile),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF7C3AED),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      elevation: 0,
-                    ),
-                    child: Text(
-                      AppStrings.editProfile,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.whiteColor,
-                      ),
-                    ),
-                  ),
-                ),
-
+                // SizedBox(
+                //   width: 140,
+                //   height: 40,
+                //   child: ElevatedButton(
+                //     onPressed: () => context.push(RouteNames.editProfile),
+                //     style: ElevatedButton.styleFrom(
+                //       backgroundColor: const Color(0xFF7C3AED),
+                //       shape: RoundedRectangleBorder(
+                //         borderRadius: BorderRadius.circular(20),
+                //       ),
+                //       elevation: 0,
+                //     ),
+                //     child: Text(
+                //       AppStrings.editProfile,
+                //       style: const TextStyle(
+                //         fontSize: 13,
+                //         fontWeight: FontWeight.w600,
+                //         color: AppColors.whiteColor,
+                //       ),
+                //     ),
+                //   ),
+                // ),
                 const SizedBox(height: 24),
 
                 // 2x2 Metric Cards Grid
