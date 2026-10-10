@@ -122,7 +122,7 @@ class AppStrings {
   static String get time3hAgo => 'time_3h_ago'.tr();
   static String get navHome => 'nav_home'.tr();
   static String get navHistory => 'nav_history'.tr();
-  static String get navStats => 'nav_stats'.tr();
+  static String get expense => 'expense'.tr();
   static String get navProfile => 'nav_profile'.tr();
 
   // ======================
@@ -198,6 +198,43 @@ class AppStrings {
   static String get locationError => 'location_error'.tr();
   static String get locationDenied => 'location_denied'.tr();
   static String get locationDeniedForever => 'location_denied_forever'.tr();
+
+  // ======================
+  // Expense Tracker
+  // ======================
+  static String get expenseTracker => 'expense_tracker'.tr();
+  static String get manageYourSpending => 'manage_your_spending'.tr();
+  static String get totalBalance => 'total_balance'.tr();
+  static String get income => 'income'.tr();
+  static String get expenses => 'expenses'.tr();
+  static String get spendingAnalysis => 'spending_analysis'.tr();
+  static String get thisWeek => 'this_week'.tr();
+  static String get thisMonth => 'this_month'.tr();
+  static String get addNewExpense => 'add_new_expense'.tr();
+  static String get trackIt => 'track_it'.tr();
+  static String get recentExpenses => 'recent_expenses'.tr();
+  static String get seeAll => 'see_all'.tr();
+  static String get foodAndDrinks => 'food_and_drinks'.tr();
+  static String get transportation => 'transportation'.tr();
+  static String get shopping => 'shopping'.tr();
+  static String get entertainment => 'entertainment'.tr();
+  static String get starbucksCoffee => 'starbucks_coffee'.tr();
+  static String get today1045Am => 'today_10_45_am'.tr();
+  static String get uberRide => 'uber_ride'.tr();
+  static String get yesterday620Pm => 'yesterday_6_20_pm'.tr();
+  static String get appleStore => 'apple_store'.tr();
+  static String get oct22215Pm => 'oct_22_2_15_pm'.tr();
+
+  // ======================
+  // Settings & Localization
+  // ======================
+
+  static String get editProfileSubtitle => 'edit_profile_subtitle'.tr();
+
+  static String get proBadge => 'pro_badge'.tr();
+  static String get selectLanguage => 'select_language'.tr();
+  static String get englishLang => 'english_lang'.tr();
+  static String get tamilLang => 'tamil_lang'.tr();
 
   // ======================
   //  API Call Methods

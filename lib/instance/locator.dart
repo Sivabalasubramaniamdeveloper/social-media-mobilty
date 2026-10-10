@@ -1,5 +1,6 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:mineai/core/database/app_database.dart';
 import 'package:mineai/core/logger/app_logger.dart';
 import 'package:get_it/get_it.dart';
 import 'package:mineai/features/auth/cubit/auth_cubit.dart';
@@ -50,6 +51,7 @@ Future<void> setupLocator(BuildContext context) async {
   getIt.registerFactory<UserProfileCubit>(
     () => UserProfileCubit(repository: getIt<UserProfileRepository>()),
   );
-
+  // lib/instance/locator.dart
+  getIt.registerLazySingleton<AppDatabase>(() => AppDatabase.instance);
   await getIt.allReady();
 }

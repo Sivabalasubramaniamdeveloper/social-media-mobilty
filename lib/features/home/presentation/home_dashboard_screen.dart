@@ -5,6 +5,8 @@ import 'package:mineai/config/router/route_names.dart';
 import 'package:mineai/core/constants/app_colors.dart';
 import 'package:mineai/core/constants/app_strings.dart';
 import 'package:mineai/core/widgets/gradiant_background.dart';
+import 'package:mineai/features/expenses/presentation/expense_tracker_screen.dart';
+import 'package:mineai/features/profile/presentation/settings_screen.dart';
 import '../../profile/cubit/user_profile_cubit.dart';
 import '../../profile/cubit/user_profile_state.dart';
 import '../../profile/presentation/profile_screen.dart';
@@ -45,10 +47,8 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
               const Center(
                 child: Text('History', style: TextStyle(color: Colors.white)),
               ),
-              const Center(
-                child: Text('Stats', style: TextStyle(color: Colors.white)),
-              ),
-              const ProfileScreen(),
+              const ExpenseTrackerScreen(),
+              const SettingsScreen(),
             ],
           ),
           Positioned(left: 0, right: 0, bottom: 0, child: _buildBottomNav()),
@@ -431,7 +431,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
         children: [
           _navItem(0, Icons.home_rounded, AppStrings.navHome),
           _navItem(1, Icons.history_rounded, AppStrings.navHistory),
-          _navItem(2, Icons.bar_chart_rounded, AppStrings.navStats),
+          _navItem(2, Icons.bar_chart_rounded, AppStrings.expense),
           _navItem(3, Icons.person_outline_rounded, AppStrings.navProfile),
         ],
       ),

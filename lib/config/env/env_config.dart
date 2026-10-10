@@ -18,7 +18,7 @@ class EnvConfig {
   }
 
   static String get backendBaseUrl =>
-      dotenv.env['BACKEND_BASE_URL'] ?? 'http://10.0.2.2:3000/api';
+      dotenv.env['BACKEND_BASE_URL'] ?? 'http://10.0.2.2:3000/api/v1';
 
   /// Call this inside main() to load the .env file
   static Future<void> init({String fileName = '.env'}) async {

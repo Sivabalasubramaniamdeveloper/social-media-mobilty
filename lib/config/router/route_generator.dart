@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:mineai/config/router/route_names.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mineai/core/network/alice.dart';
+import 'package:mineai/features/expenses/presentation/add_expense_screen.dart';
 import 'package:mineai/features/profile/presentation/edit_profile_screen.dart';
+import 'package:mineai/features/profile/presentation/profile_screen.dart';
 import 'package:mineai/features/profile/presentation/settings_screen.dart';
 import 'package:mineai/features/splashscreen/presentation/splash_screen.dart';
 import 'package:mineai/features/auth/presentation/pages/login_screen.dart';
@@ -75,6 +77,15 @@ class AppRouter {
         name: RouteNames.weather,
         path: RouteNames.weather,
         builder: (context, state) => const WeatherScreen(),
+      ),
+      GoRoute(
+        name: RouteNames.profile,
+        path: RouteNames.profile,
+        builder: (context, state) => const ProfileScreen(),
+      ),
+      GoRoute(
+        path: RouteNames.addExpense,
+        builder: (context, state) => const AddExpenseScreen(),
       ),
     ],
   );
