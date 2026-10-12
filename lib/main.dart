@@ -5,6 +5,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_alice/alice.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:intl/date_symbol_data_local.dart';
+import 'package:mineai/config/firebase/notification_service.dart';
 
 import 'package:overlay_support/overlay_support.dart';
 import 'app.dart';
@@ -25,7 +27,7 @@ Future<void> main() async {
         DeviceOrientation.landscapeLeft,
         DeviceOrientation.landscapeRight,
       ]);
-
+      await NotificationService.instance.init();
       await EasyLocalization.ensureInitialized();
 
       try {
@@ -36,6 +38,7 @@ Future<void> main() async {
 
       await SupabaseConfig.initialize();
       await ScreenUtil.ensureScreenSize();
+      await initializeDateFormatting();
 
       // Dynamic app icon switcher
       changeAppIcon();
@@ -69,12 +72,10 @@ Future<void> main() async {
 }
 
 void changeAppIcon() async {
-  final now = DateTime.now();
-  final day = DateFormat('EEEE').format(now);
-
   const platform = MethodChannel('app.icon.change');
 
   try {
+    final day = DateFormat('EEEE').format(DateTime.now());
     if (day == 'Saturday' || day == 'Sunday') {
       await platform.invokeMethod('setIcon', {'icon': 'weekend'});
     } else {

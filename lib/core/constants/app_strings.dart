@@ -237,6 +237,91 @@ class AppStrings {
   static String get tamilLang => 'tamil_lang'.tr();
 
   // ======================
+  // Budget & Dynamic Categories
+  // ======================
+  static String get budgetTracker => 'budget_tracker'.tr();
+  static String get monthlyBudget => 'monthly_budget'.tr();
+  static String get budgetProgress => 'budget_progress'.tr();
+  static String get setBudget => 'set_budget'.tr();
+  static String get noBudgetSet => 'no_budget_set'.tr();
+  static String get addSavingsGoal => 'add_savings_goal'.tr();
+  static String get savingsGoal => 'savings_goal'.tr();
+  static String get optional => 'optional'.tr();
+  static String get editSavingsGoal => 'edit_savings_goal'.tr();
+  static String get targetAmount => 'target_amount'.tr();
+  static String get savedSoFar => 'saved_so_far'.tr();
+  static String get onTrack => 'on_track'.tr();
+  static String get almostReachedLimit => 'almost_reached_limit'.tr();
+  static String get budgetExceeded => 'budget_exceeded'.tr();
+  static String get quickTrack => 'quick_track'.tr();
+  static String get recentTransactions => 'recent_transactions'.tr();
+  static String get allocatedLimit => 'allocated_limit'.tr();
+  static String get remarks => 'Remarks'.tr();
+  static String get incomeAndBudget => 'income_and_budget'.tr();
+  static String get addIncome => 'add_income'.tr();
+  static String get saveIncome => 'save_income'.tr();
+  static String get recentGains => 'recent_gains'.tr();
+  static String get noIncomeLogged => 'no_income_logged'.tr();
+  static String get noTransactionsLogged => 'no_transactions_logged'.tr();
+  static String get setOrEditBudget => 'set_or_edit_budget'.tr();
+  static String get category => 'category'.tr();
+  static String get allocatedLimitCurrency => 'allocated_limit_currency'.tr();
+  static String get saveBudget => 'save_budget'.tr();
+  static String get incomeSourceDetails => 'income_source_details'.tr();
+  static String get additionalNotes => 'additional_notes'.tr();
+  static String get enterValidAmount => 'enter_valid_amount'.tr();
+  static String get enterValidBudget => 'enter_valid_budget'.tr();
+  static String get otherIncome => 'other_income'.tr();
+  static String get fromLastMonth => 'from_last_month'.tr();
+  static String get used => 'used'.tr();
+  static String get daysMon => 'days_mon'.tr();
+  static String get daysTue => 'days_tue'.tr();
+  static String get daysWed => 'days_wed'.tr();
+  static String get daysThu => 'days_thu'.tr();
+  static String get daysFri => 'days_fri'.tr();
+  static String get daysSat => 'days_sat'.tr();
+  static String get daysSun => 'days_sun'.tr();
+  static String get sampleExpenseTitle => 'sample_expense_title'.tr();
+  static String get sampleIncomeTitle => 'sample_income_title'.tr();
+  static String get sampleBudgetAmount => 'sample_budget_amount'.tr();
+  static String get sampleSavingsGoal => 'sample_savings_goal'.tr();
+  static String get noBudgetsTapToCreate => 'no_budgets_tap_to_create'.tr();
+  static String get titleLabel => 'title'.tr();
+  static String get expenseSettings => 'expense_settings'.tr();
+  static String get expenseSettingsDesc => 'expense_settings_desc'.tr();
+  static String get allTransactions => 'all_transactions'.tr();
+  static String get allBudgets => 'all_budgets'.tr();
+  static String get filterByMonth => 'filter_by_month'.tr();
+  static String get filterByYear => 'filter_by_year'.tr();
+  static String get allMonths => 'all_months'.tr();
+  static String get allYears => 'all_years'.tr();
+  static String get all => 'all'.tr();
+  static String get deleteTransaction => 'delete_transaction'.tr();
+  static String get deleteConfirmMsg => 'delete_confirm_msg'.tr();
+  static String get delete => 'delete'.tr();
+  static String get transactionDeleted => 'transaction_deleted'.tr();
+  static String get clearAllData => 'clear_all_data'.tr();
+  static String get clearTransactions => 'clear_transactions'.tr();
+  static String get resetBudgets => 'reset_budgets'.tr();
+  static String get clearDataConfirm => 'clear_data_confirm'.tr();
+  static String get clearTransactionsConfirm => 'clear_transactions_confirm'.tr();
+  static String get dataClearedSuccess => 'data_cleared_success'.tr();
+  static String get budgetAlertToggle => 'budget_alert_toggle'.tr();
+  static String get budgetAlertDesc => 'budget_alert_desc'.tr();
+  static String get manageBudgets => 'manage_budgets'.tr();
+  static String get noTransactionsForPeriod => 'no_transactions_for_period'.tr();
+
+  // Helper method to translate any category code or fallback to raw string
+  static String getCategoryName(String key) {
+    final trKey = key
+        .toLowerCase()
+        .replaceAll(' & ', '_and_')
+        .replaceAll(' ', '_');
+    final translated = trKey.tr();
+    return translated == trKey ? key : translated;
+  }
+
+  // ======================
   //  API Call Methods
   // ======================
   static const String getAPI = "GET";

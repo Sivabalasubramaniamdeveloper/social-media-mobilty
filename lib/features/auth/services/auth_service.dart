@@ -1,6 +1,9 @@
+import 'dart:io';
+
 import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/network/custom_api_call.dart';
 import '../../../../core/utils/secure_storage.dart';
 import '../../../../instance/locator.dart';
@@ -11,9 +14,16 @@ class AuthService {
   final CustomSecureStorage _secureStorage = getIt<CustomSecureStorage>();
 
   static const String _tokenKey = 'loginToken';
+  static const String _refreshTokenKey = 'refreshToken';
+  static const String _userIdKey = 'userId';
 
-  String get _baseUrl =>
-      dotenv.env['BACKEND_BASE_URL'] ?? 'http://10.0.2.2:3000/api/v1';
+  String get _baseUrl {
+    final envUrl = dotenv.env['BACKEND_BASE_URL'];
+    if (envUrl != null && envUrl.isNotEmpty) return envUrl;
+    // Auto-resolve localhost for Android emulator vs iOS simulator
+    if (Platform.isAndroid) return 'http://10.0.2.2:3000/api/v1';
+    return 'http://localhost:3000/api/v1';
+  }
 
   /// Sign In against /api/v1/auth/login
   Future<AuthResponseModel> login({
@@ -31,9 +41,17 @@ class AuthService {
       final responseData = response.data as Map<String, dynamic>;
       final payload =
           responseData['data'] as Map<String, dynamic>? ?? responseData;
+
+      // Parse with your existing AuthResponseModel
       final authModel = AuthResponseModel.fromJson(payload);
 
-      // Persist access token securely
+      // 1. EXTRACT AND SAVE THE USER ID
+      final userId = authModel.user?.id;
+      if (userId != null && userId.isNotEmpty) {
+        await _secureStorage.writeSecureData(_userIdKey, userId);
+      }
+
+      // 2. Save Access Token
       if (authModel.accessToken != null && authModel.accessToken!.isNotEmpty) {
         await _secureStorage.writeSecureData(_tokenKey, authModel.accessToken!);
       }
@@ -92,6 +110,10 @@ class AuthService {
   /// Wipes token on user logout
   Future<void> clearAuthSession() async {
     await _secureStorage.deleteSecureData(_tokenKey);
+    await _secureStorage.deleteSecureData(_refreshTokenKey);
+    try {
+      await Supabase.instance.client.auth.signOut();
+    } catch (_) {}
   }
 
   /// Reads cached token for automatic login checks

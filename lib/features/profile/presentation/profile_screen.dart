@@ -5,6 +5,7 @@ import 'package:mineai/config/router/route_names.dart';
 import 'package:mineai/core/base/abstract/base_screen.dart';
 import 'package:mineai/core/constants/app_colors.dart';
 import 'package:mineai/core/constants/app_strings.dart';
+import 'package:mineai/core/widgets/app_widgets.dart';
 import 'package:mineai/features/profile/models/user_profile_model.dart';
 import '../cubit/user_profile_cubit.dart';
 import '../cubit/user_profile_state.dart';
@@ -49,31 +50,7 @@ class _ProfileView extends BaseScreen {
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             child: Column(
               children: [
-                // Top App Bar
-                Row(
-                  children: [
-                    IconButton(
-                      onPressed: () {
-                        if (context.canPop()) {
-                          context.pop();
-                        }
-                      },
-                      icon: const Icon(
-                        Icons.arrow_back_ios_new_rounded,
-                        color: AppColors.whiteColor,
-                        size: 20,
-                      ),
-                    ),
-                    Text(
-                      AppStrings.profile,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.whiteColor,
-                      ),
-                    ),
-                  ],
-                ),
+                AppScreenHeader(title: AppStrings.profile),
                 const SizedBox(height: 16),
 
                 // Avatar with Verified Badge

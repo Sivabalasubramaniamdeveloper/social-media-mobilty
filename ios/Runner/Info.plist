@@ -57,6 +57,13 @@
     <string>MindAI needs your location to provide accurate local weather and AI recommendations.</string>
     <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
     <string>MindAI needs your location to provide accurate local weather and AI recommendations.</string>
+    <key>UNNotificationExtensionCategory</key>
+    <string>Dynamic Intent</string>
+    <key>UIBackgroundModes</key>
+    <array>
+        <string>fetch</string>
+        <string>remote-notification</string>
+    </array>
     <key>UISupportedInterfaceOrientations</key>
     <array>
         <string>UIInterfaceOrientationPortrait</string>

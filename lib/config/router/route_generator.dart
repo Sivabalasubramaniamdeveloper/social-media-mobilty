@@ -3,6 +3,9 @@ import 'package:mineai/config/router/route_names.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mineai/core/network/alice.dart';
 import 'package:mineai/features/expenses/presentation/add_expense_screen.dart';
+import 'package:mineai/features/expenses/presentation/all_transactions_screen.dart';
+import 'package:mineai/features/expenses/presentation/expense_settings_screen.dart';
+import 'package:mineai/features/expenses/presentation/income_budget_screen.dart';
 import 'package:mineai/features/profile/presentation/edit_profile_screen.dart';
 import 'package:mineai/features/profile/presentation/profile_screen.dart';
 import 'package:mineai/features/profile/presentation/settings_screen.dart';
@@ -86,6 +89,18 @@ class AppRouter {
       GoRoute(
         path: RouteNames.addExpense,
         builder: (context, state) => const AddExpenseScreen(),
+      ),
+      GoRoute(
+        path: RouteNames.incomeBudget,
+        builder: (context, state) => const IncomeBudgetScreen(),
+      ),
+      GoRoute(
+        path: RouteNames.allTransactions,
+        builder: (context, state) => const AllTransactionsScreen(),
+      ),
+      GoRoute(
+        path: RouteNames.expenseSettings,
+        builder: (context, state) => const ExpenseSettingsScreen(),
       ),
     ],
   );

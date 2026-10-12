@@ -6,6 +6,8 @@ import 'package:get_it/get_it.dart';
 import 'package:mineai/features/auth/cubit/auth_cubit.dart';
 import 'package:mineai/features/auth/repository/auth_repository.dart';
 import 'package:mineai/features/auth/services/auth_service.dart';
+import 'package:mineai/features/expenses/cubit/finance_cubit.dart';
+import 'package:mineai/features/expenses/repositories/expense_repository.dart';
 import 'package:mineai/features/profile/cubit/user_profile_cubit.dart';
 import 'package:mineai/features/profile/repository/user_profile_repository.dart';
 import 'package:mineai/features/profile/service/user_profile_service.dart';
@@ -37,21 +39,30 @@ Future<void> setupLocator(BuildContext context) async {
   getIt.registerLazySingleton<AuthRepository>(
     () => AuthRepositoryImpl(authService: getIt<AuthService>()),
   );
-  getIt.registerFactory<AuthCubit>(
-    () => AuthCubit(repository: getIt<AuthRepository>()),
-  );
+  getIt.registerLazySingleton<UserProfileService>(() => UserProfileService());
+
   //==================================
   // Register Services
   //==================================
-  // Profile Dependencies
-  getIt.registerLazySingleton<UserProfileService>(() => UserProfileService());
+
   getIt.registerLazySingleton<UserProfileRepository>(
     () => UserProfileRepositoryImpl(service: getIt<UserProfileService>()),
+  );
+  getIt.registerLazySingleton<ExpenseRepository>(() => ExpenseRepositoryImpl());
+  // lib/instance/locator.dart
+  getIt.registerLazySingleton<ExpenseDatabaseService>(
+    () => ExpenseDatabaseService.instance,
+  );
+
+  //cubit
+  getIt.registerFactory<AuthCubit>(
+    () => AuthCubit(repository: getIt<AuthRepository>()),
   );
   getIt.registerFactory<UserProfileCubit>(
     () => UserProfileCubit(repository: getIt<UserProfileRepository>()),
   );
-  // lib/instance/locator.dart
-  getIt.registerLazySingleton<AppDatabase>(() => AppDatabase.instance);
+  getIt.registerFactory<FinanceCubit>(
+    () => FinanceCubit(repository: getIt<ExpenseRepository>()),
+  );
   await getIt.allReady();
 }

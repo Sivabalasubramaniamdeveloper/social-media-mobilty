@@ -11,4 +11,7 @@ class RouteNames {
   static const String settings = '/settings';
   static const String weather = '/weather';
   static const String addExpense = '/add-expense';
+  static const String incomeBudget = '/income-budget';
+  static const String allTransactions = '/all-transactions';
+  static const String expenseSettings = '/expense-settings';
 }

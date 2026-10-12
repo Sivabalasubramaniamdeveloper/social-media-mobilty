@@ -236,7 +236,7 @@ class _AppTextFieldState extends State<AppTextField> {
       fillColor: isFilled
           ? AppColors.whiteColor
           : isGlass
-          ? AppColors.whiteColor.withOpacity(0.06)
+          ? AppColors.whiteColor.withValues(alpha: 0.06)
           : Colors.transparent,
       contentPadding:
           widget.contentPadding ??
@@ -250,7 +250,7 @@ class _AppTextFieldState extends State<AppTextField> {
         borderRadius: BorderRadius.circular(widget.borderRadius),
         borderSide: isFilled
             ? BorderSide.none
-            : BorderSide(color: AppColors.whiteColor.withOpacity(0.08)),
+            : BorderSide(color: AppColors.whiteColor.withValues(alpha: 0.08)),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(widget.borderRadius),

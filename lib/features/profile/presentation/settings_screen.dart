@@ -3,10 +3,13 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mineai/config/language/language.dart';
 import 'package:mineai/config/router/route_names.dart';
 import 'package:mineai/core/base/abstract/base_screen.dart';
 import 'package:mineai/core/constants/app_colors.dart';
 import 'package:mineai/core/constants/app_strings.dart';
+import 'package:mineai/core/widgets/app_widgets.dart';
+
 import '../../auth/cubit/auth_cubit.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -126,7 +129,7 @@ class _SettingsView extends BaseScreen {
                         )
                       : null,
                   onTap: () async {
-                    await context.setLocale(const Locale('en'));
+                    CustomLanguage.changeLanguage(context, 'en');
                     if (bottomSheetCtx.mounted) {
                       Navigator.of(bottomSheetCtx).pop();
                     }
@@ -144,7 +147,7 @@ class _SettingsView extends BaseScreen {
                         )
                       : null,
                   onTap: () async {
-                    await context.setLocale(const Locale('ta'));
+                    CustomLanguage.changeLanguage(context, 'ta');
                     if (bottomSheetCtx.mounted) {
                       Navigator.of(bottomSheetCtx).pop();
                     }
@@ -163,21 +166,14 @@ class _SettingsView extends BaseScreen {
     return SafeArea(
       child: Column(
         children: [
-          // Top Bar
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Row(
-              children: [
-                Text(
-                  AppStrings.settings,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.whiteColor,
-                  ),
-                ),
-                const Spacer(flex: 2),
-              ],
+            child: AppScreenHeader(
+              title: AppStrings.settings,
+              centerTitle: true,
+              // onBack: () {
+              //   if (context.canPop()) context.pop();
+              // },
             ),
           ),
 
@@ -186,21 +182,21 @@ class _SettingsView extends BaseScreen {
             child: ListView(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
               children: [
-                _sectionHeader(AppStrings.account),
-                _tile(
+                AppSectionHeader(title: AppStrings.account, isEyebrow: true),
+                AppListTileCard(
                   icon: Icons.person_outline_rounded,
-                  title: AppStrings.editProfile,
+                  title: AppStrings.profile,
                   subtitle: AppStrings.editProfileSubtitle,
-                  onTap: () => context.push(RouteNames.editProfile),
+                  onTap: () => context.push(RouteNames.profile),
                 ),
-                _tile(
+                AppListTileCard(
                   icon: Icons.workspace_premium_outlined,
                   title: AppStrings.subscriptionPlan,
                   subtitle: AppStrings.manageProPlanCredits,
                   trailing: Text(
                     AppStrings.proBadge,
                     style: const TextStyle(
-                      color: Color(0xFFA78BFA),
+                      color: AppColors.accentLavender,
                       fontWeight: FontWeight.bold,
                       fontSize: 12,
                     ),
@@ -210,20 +206,23 @@ class _SettingsView extends BaseScreen {
 
                 const SizedBox(height: 20),
 
-                _sectionHeader(AppStrings.preferences),
-                _switchTile(
+                AppSectionHeader(
+                  title: AppStrings.preferences,
+                  isEyebrow: true,
+                ),
+                AppListTileCard.toggle(
                   icon: Icons.notifications_none_rounded,
                   title: AppStrings.pushNotifications,
                   value: notifications,
                   onChanged: onNotificationChanged,
                 ),
-                _switchTile(
+                AppListTileCard.toggle(
                   icon: Icons.auto_awesome_outlined,
                   title: AppStrings.aiAutoSummarize,
                   value: autoSummarize,
                   onChanged: onAutoSummarizeChanged,
                 ),
-                _tile(
+                AppListTileCard(
                   icon: Icons.translate_rounded,
                   title: AppStrings.appLanguage,
                   subtitle: context.locale.languageCode == 'ta'
@@ -231,29 +230,39 @@ class _SettingsView extends BaseScreen {
                       : 'English',
                   onTap: () => _showLanguageSheet(context),
                 ),
-                _switchTile(
+                AppListTileCard.toggle(
                   icon: Icons.vibration_rounded,
                   title: AppStrings.hapticFeedback,
                   value: hapticFeedback,
                   onChanged: onHapticChanged,
                 ),
+                AppListTileCard(
+                  icon: Icons.account_balance_wallet_outlined,
+                  title: AppStrings.expenseSettings,
+                  subtitle: AppStrings.expenseSettingsDesc,
+                  onTap: () => context.push(RouteNames.expenseSettings),
+                ),
 
                 const SizedBox(height: 20),
 
-                _sectionHeader(AppStrings.supportAndAbout),
-                _tile(
+                AppSectionHeader(
+                  title: AppStrings.supportAndAbout,
+                  isEyebrow: true,
+                ),
+                AppListTileCard(
                   icon: Icons.privacy_tip_outlined,
                   title: AppStrings.privacyPolicy,
                   onTap: () {},
                 ),
-                _tile(
+                AppListTileCard(
                   icon: Icons.description_outlined,
                   title: AppStrings.termsOfService,
                   onTap: () {},
                 ),
-                _tile(
+                AppListTileCard(
                   icon: Icons.info_outline_rounded,
                   title: AppStrings.appVersionLabel,
+                  showChevron: false,
                   trailing: const Text(
                     '2.4.0-pro',
                     style: TextStyle(
@@ -266,18 +275,18 @@ class _SettingsView extends BaseScreen {
 
                 const SizedBox(height: 24),
 
-                // Log Out Button
+                // Log Out Action Button
                 SizedBox(
                   height: 52,
                   child: OutlinedButton(
                     style: OutlinedButton.styleFrom(
                       side: BorderSide(
-                        color: Colors.redAccent.withOpacity(0.4),
+                        color: Colors.redAccent.withValues(alpha: 0.4),
                       ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
-                      backgroundColor: Colors.redAccent.withOpacity(0.08),
+                      backgroundColor: Colors.redAccent.withValues(alpha: 0.08),
                     ),
                     onPressed: () => _showLogoutDialog(context),
                     child: Row(
@@ -307,124 +316,6 @@ class _SettingsView extends BaseScreen {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _sectionHeader(String label) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 8, bottom: 8),
-      child: Text(
-        label,
-        style: const TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.bold,
-          color: AppColors.secondaryText,
-          letterSpacing: 0.8,
-        ),
-      ),
-    );
-  }
-
-  Widget _tile({
-    required IconData icon,
-    required String title,
-    String? subtitle,
-    Widget? trailing,
-    required VoidCallback onTap,
-  }) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1E1B38).withOpacity(0.55),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(16),
-        clipBehavior: Clip.antiAlias,
-        child: ListTile(
-          onTap: onTap,
-          leading: Container(
-            width: 38,
-            height: 38,
-            decoration: BoxDecoration(
-              color: const Color(0xFF2E2752),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, size: 20, color: const Color(0xFFA78BFA)),
-          ),
-          title: Text(
-            title,
-            style: const TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w500,
-              color: AppColors.whiteColor,
-            ),
-          ),
-          subtitle: subtitle != null
-              ? Text(
-                  subtitle,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: AppColors.secondaryText,
-                  ),
-                )
-              : null,
-          trailing:
-              trailing ??
-              const Icon(
-                Icons.arrow_forward_ios_rounded,
-                size: 14,
-                color: AppColors.secondaryText,
-              ),
-        ),
-      ),
-    );
-  }
-
-  Widget _switchTile({
-    required IconData icon,
-    required String title,
-    required bool value,
-    required ValueChanged<bool> onChanged,
-  }) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1E1B38).withOpacity(0.55),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(16),
-        clipBehavior: Clip.antiAlias,
-        child: ListTile(
-          leading: Container(
-            width: 38,
-            height: 38,
-            decoration: BoxDecoration(
-              color: const Color(0xFF2E2752),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, size: 20, color: const Color(0xFFA78BFA)),
-          ),
-          title: Text(
-            title,
-            style: const TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w500,
-              color: AppColors.whiteColor,
-            ),
-          ),
-          trailing: CupertinoSwitch(
-            value: value,
-            activeTrackColor: AppColors.primaryPurple,
-            onChanged: onChanged,
-          ),
-        ),
       ),
     );
   }

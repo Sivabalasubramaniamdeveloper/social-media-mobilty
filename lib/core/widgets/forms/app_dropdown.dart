@@ -114,7 +114,7 @@ class AppDropdown<T> extends StatelessWidget {
             filled: true,
             fillColor: isFilled
                 ? AppColors.whiteColor
-                : AppColors.whiteColor.withOpacity(0.06),
+                : AppColors.whiteColor.withValues(alpha: 0.06),
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 16,
               vertical: 16,
@@ -127,7 +127,7 @@ class AppDropdown<T> extends StatelessWidget {
               borderRadius: BorderRadius.circular(borderRadius),
               borderSide: isFilled
                   ? BorderSide.none
-                  : BorderSide(color: AppColors.whiteColor.withOpacity(0.08)),
+                  : BorderSide(color: AppColors.whiteColor.withValues(alpha: 0.08)),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(borderRadius),

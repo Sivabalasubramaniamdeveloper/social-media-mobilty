@@ -167,13 +167,13 @@ class _RadioTile<T> extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
           color: selected
-              ? AppColors.primaryPurple.withOpacity(0.12)
-              : AppColors.whiteColor.withOpacity(0.04),
+              ? AppColors.primaryPurple.withValues(alpha: 0.12)
+              : AppColors.whiteColor.withValues(alpha: 0.04),
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
             color: selected
                 ? AppColors.primaryPurple
-                : AppColors.whiteColor.withOpacity(0.08),
+                : AppColors.whiteColor.withValues(alpha: 0.08),
             width: selected ? 1.5 : 1,
           ),
         ),

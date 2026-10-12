@@ -9,7 +9,7 @@ class AuthCubit extends Cubit<AuthState> {
     : _repository = repository,
       super(const AuthInitial());
 
-  Future<void> login({required String email, required String password}) async {
+Future<void> login({required String email, required String password}) async {
     emit(const AuthLoading());
     try {
       final authModel = await _repository.login(
@@ -18,7 +18,8 @@ class AuthCubit extends Cubit<AuthState> {
       );
       emit(AuthLoginSuccess(authModel));
     } catch (e) {
-      emit(AuthFailure(e.toString().replaceAll('Exception: ', '')));
+      final cleanMessage = e.toString().replaceAll('Exception: ', '');
+      emit(AuthFailure(cleanMessage));
     }
   }
 

@@ -3,13 +3,14 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mineai/config/router/route_names.dart';
 import 'package:mineai/core/constants/app_colors.dart';
+import 'package:mineai/core/constants/app_sizes.dart';
 import 'package:mineai/core/constants/app_strings.dart';
+import 'package:mineai/core/widgets/app_widgets.dart';
 import 'package:mineai/core/widgets/gradiant_background.dart';
 import 'package:mineai/features/expenses/presentation/expense_tracker_screen.dart';
+import 'package:mineai/features/profile/cubit/user_profile_cubit.dart';
+import 'package:mineai/features/profile/cubit/user_profile_state.dart';
 import 'package:mineai/features/profile/presentation/settings_screen.dart';
-import '../../profile/cubit/user_profile_cubit.dart';
-import '../../profile/cubit/user_profile_state.dart';
-import '../../profile/presentation/profile_screen.dart';
 
 class HomeDashboardScreen extends StatefulWidget {
   const HomeDashboardScreen({super.key});
@@ -66,9 +67,9 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
         bottom: false,
         child: SingleChildScrollView(
           padding: EdgeInsets.fromLTRB(
-            isTablet ? size.width * 0.15 : 20,
-            16,
-            isTablet ? size.width * 0.15 : 20,
+            isTablet ? size.width * 0.15 : AppSizes.pagePadding,
+            AppSizes.lg,
+            isTablet ? size.width * 0.15 : AppSizes.pagePadding,
             90,
           ),
           child: Column(
@@ -123,24 +124,9 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
                 ),
               ],
             ),
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: const Color(0xFF1E1B38).withOpacity(0.7),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(
-                  color: AppColors.whiteColor.withOpacity(0.06),
-                ),
-              ),
-              child: IconButton(
-                icon: const Icon(
-                  Icons.notifications_none_rounded,
-                  color: AppColors.whiteColor,
-                  size: 22,
-                ),
-                onPressed: () {},
-              ),
+            AppIconActionButton(
+              icon: Icons.notifications_none_rounded,
+              onTap: () {},
             ),
           ],
         );
@@ -149,43 +135,9 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
   }
 
   Widget _buildSearchBar() {
-    return Container(
-      height: 52,
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        color: const Color(0xFF181528).withOpacity(0.85),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.whiteColor.withOpacity(0.08)),
-      ),
-      child: Row(
-        children: [
-          const Icon(
-            Icons.search_rounded,
-            color: AppColors.secondaryText,
-            size: 22,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: TextField(
-              controller: _searchController,
-              style: TextStyle(
-                color: Theme.of(context).secondaryHeaderColor,
-                fontSize: 15,
-              ),
-              decoration: InputDecoration(
-                hintText: AppStrings.searchAiTools,
-                hintStyle: const TextStyle(
-                  color: AppColors.secondaryText,
-                  fontSize: 14,
-                ),
-                border: InputBorder.none,
-                isDense: true,
-                contentPadding: EdgeInsets.zero,
-              ),
-            ),
-          ),
-        ],
-      ),
+    return AppSearchField(
+      controller: _searchController,
+      hint: AppStrings.searchAiTools,
     );
   }
 
@@ -242,93 +194,21 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
       ),
       itemBuilder: (context, index) {
         final tool = tools[index];
-        return InkWell(
+        return AppFeatureCard(
+          title: tool.title,
+          description: tool.description,
+          icon: tool.icon,
           onTap: tool.onTap,
-          borderRadius: BorderRadius.circular(20),
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: const Color(0xFF1E1B38).withOpacity(0.65),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: AppColors.whiteColor.withOpacity(0.06)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF2E2752),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    tool.icon,
-                    size: 22,
-                    color: const Color(0xFFA78BFA),
-                  ),
-                ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      tool.title,
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: Theme.of(context).secondaryHeaderColor,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      tool.description,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: AppColors.secondaryText,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
         );
       },
     );
   }
 
   Widget _buildRecentActivityHeader() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          AppStrings.recentActivity,
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Theme.of(context).secondaryHeaderColor,
-          ),
-        ),
-        TextButton(
-          onPressed: () {},
-          style: TextButton.styleFrom(
-            padding: EdgeInsets.zero,
-            minimumSize: Size.zero,
-            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          ),
-          child: Text(
-            AppStrings.viewAll,
-            style: const TextStyle(
-              fontSize: 13,
-              color: AppColors.primaryPurple,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ),
-      ],
+    return AppSectionHeader(
+      title: AppStrings.recentActivity,
+      actionLabel: AppStrings.viewAll,
+      onAction: () {},
     );
   }
 
@@ -355,75 +235,33 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
     ];
 
     return Column(
-      children: activities.map((item) {
-        return Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: const Color(0xFF1E1B38).withOpacity(0.5),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.whiteColor.withOpacity(0.05)),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF2E2752),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  item.icon,
-                  size: 20,
-                  color: const Color(0xFFA78BFA),
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      item.title,
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        color: Theme.of(context).secondaryHeaderColor,
-                      ),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      item.subtitle,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: AppColors.secondaryText,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Text(
+      children: activities
+          .map(
+            (item) => AppListTileCard(
+              icon: item.icon,
+              title: item.title,
+              subtitle: item.subtitle,
+              showChevron: false,
+              trailing: Text(
                 item.time,
                 style: const TextStyle(
                   fontSize: 12,
                   color: AppColors.secondaryText,
                 ),
               ),
-            ],
-          ),
-        );
-      }).toList(),
+            ),
+          )
+          .toList(),
     );
   }
 
   Widget _buildBottomNav() {
     return Container(
-      height: 68,
+      height: AppSizes.bottomNavHeight,
       decoration: BoxDecoration(
-        color: const Color(0xFF110E24).withOpacity(0.96),
+        color: const Color(0xFF110E24).withValues(alpha: 0.96),
         border: Border(
-          top: BorderSide(color: AppColors.whiteColor.withOpacity(0.08)),
+          top: BorderSide(color: AppColors.whiteColor.withValues(alpha: 0.08)),
         ),
       ),
       child: Row(
@@ -441,7 +279,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
   Widget _navItem(int index, IconData icon, String label) {
     final isSelected = _navIndex == index;
     final color = isSelected
-        ? const Color(0xFFA78BFA)
+        ? AppColors.accentLavender
         : AppColors.secondaryText;
 
     return InkWell(
