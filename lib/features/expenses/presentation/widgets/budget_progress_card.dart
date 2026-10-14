@@ -59,6 +59,10 @@ class BudgetProgressCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final isLight = theme.brightness == Brightness.light;
+
     final displayItems = maxDisplayCount != null
         ? items.take(maxDisplayCount!).toList()
         : items;
@@ -69,10 +73,10 @@ class BudgetProgressCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(AppSizes.lg + 2),
       decoration: BoxDecoration(
-        color: AppColors.surfaceDeep,
+        color: isLight ? scheme.surfaceContainerHighest : AppColors.surfaceDeep,
         borderRadius: BorderRadius.circular(AppSizes.radiusHeading),
         border: Border.all(
-          color: AppColors.whiteColor.withValues(alpha: 0.06),
+          color: scheme.onSurface.withValues(alpha: 0.06),
         ),
       ),
       child: Column(
@@ -83,10 +87,10 @@ class BudgetProgressCard extends StatelessWidget {
             children: [
               Text(
                 title,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: AppSizes.fontSubheading,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.whiteColor,
+                  color: scheme.onSurface,
                 ),
               ),
               if (actionText != null && onActionTap != null)
@@ -94,10 +98,10 @@ class BudgetProgressCard extends StatelessWidget {
                   onTap: onActionTap,
                   child: Text(
                     actionText!,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: AppSizes.fontCaption,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.accentLavender,
+                      color: scheme.secondary,
                     ),
                   ),
                 ),
@@ -110,15 +114,15 @@ class BudgetProgressCard extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(vertical: AppSizes.md),
                 child: TextButton.icon(
                   onPressed: onActionTap,
-                  icon: const Icon(
+                  icon: Icon(
                     Icons.add,
-                    color: AppColors.primaryPurple,
+                    color: scheme.primary,
                     size: AppSizes.fontTitleSm,
                   ),
                   label: Text(
                     AppStrings.noBudgetSet,
-                    style: const TextStyle(
-                      color: AppColors.primaryPurple,
+                    style: TextStyle(
+                      color: scheme.primary,
                       fontSize: AppSizes.fontBodySm,
                     ),
                   ),
@@ -126,7 +130,7 @@ class BudgetProgressCard extends StatelessWidget {
               ),
             )
           else ...[
-            ...displayItems.map((item) => _buildItemRow(item)),
+            ...displayItems.map((item) => _buildItemRow(item, scheme)),
             if (hasMore && onViewAllTap != null)
               Align(
                 alignment: Alignment.centerRight,
@@ -139,8 +143,8 @@ class BudgetProgressCard extends StatelessWidget {
                   ),
                   child: Text(
                     '${AppStrings.seeAll} (${items.length})',
-                    style: const TextStyle(
-                      color: AppColors.accentLavender,
+                    style: TextStyle(
+                      color: scheme.secondary,
                       fontSize: AppSizes.fontCaption,
                       fontWeight: FontWeight.bold,
                     ),
@@ -153,7 +157,7 @@ class BudgetProgressCard extends StatelessWidget {
     );
   }
 
-  Widget _buildItemRow(BudgetProgressItemModel item) {
+  Widget _buildItemRow(BudgetProgressItemModel item, ColorScheme scheme) {
     final pct = (item.percentage / 100).clamp(0.0, 1.0);
     final isExceeded = item.percentage >= 100;
     final isCritical = item.percentage >= 90;
@@ -162,7 +166,7 @@ class BudgetProgressCard extends StatelessWidget {
         ? AppColors.statusCritical
         : isCritical
             ? AppColors.statusWarning
-            : AppColors.primaryPurple;
+            : scheme.primary;
 
     final statusText = isExceeded
         ? AppStrings.budgetExceeded
@@ -186,16 +190,16 @@ class BudgetProgressCard extends StatelessWidget {
             children: [
               Text(
                 AppStrings.getCategoryName(item.categoryName),
-                style: const TextStyle(
-                  color: AppColors.whiteColor,
+                style: TextStyle(
+                  color: scheme.onSurface,
                   fontSize: AppSizes.fontBodySm,
                   fontWeight: FontWeight.w600,
                 ),
               ),
               Text(
                 '${currencyFormat.format(item.spent)} / ${currencyFormat.format(item.allocated)}',
-                style: const TextStyle(
-                  color: AppColors.whiteColor,
+                style: TextStyle(
+                  color: scheme.onSurface,
                   fontSize: AppSizes.fontCaption,
                   fontWeight: FontWeight.bold,
                 ),
@@ -208,7 +212,7 @@ class BudgetProgressCard extends StatelessWidget {
             child: LinearProgressIndicator(
               value: pct,
               minHeight: 5,
-              backgroundColor: AppColors.whiteColor.withValues(alpha: 0.1),
+              backgroundColor: scheme.onSurface.withValues(alpha: 0.1),
               color: barColor,
             ),
           ),

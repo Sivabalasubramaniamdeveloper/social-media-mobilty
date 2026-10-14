@@ -9,12 +9,14 @@ import 'package:mineai/core/constants/app_strings.dart';
 import 'package:mineai/core/constants/app_text_styles.dart';
 import 'package:mineai/core/database/app_database.dart';
 import 'package:mineai/core/utils/secure_storage.dart';
+import 'package:mineai/core/utils/user_helper.dart';
 import 'package:mineai/core/widgets/gradiant_background.dart';
 import 'package:mineai/core/widgets/headers/app_section_header.dart';
 import 'package:mineai/features/expenses/models/category_model.dart';
 import 'package:mineai/features/expenses/models/transaction_model.dart';
 import 'package:mineai/features/expenses/presentation/widgets/widgets.dart';
 import 'package:mineai/features/expenses/repositories/expense_repository.dart';
+import 'package:mineai/features/expenses/services/expense_export_service.dart';
 import 'package:mineai/instance/locator.dart';
 
 class ExpenseTrackerScreen extends StatefulWidget {
@@ -31,6 +33,7 @@ class _ExpenseTrackerScreenState extends State<ExpenseTrackerScreen> {
   String _selectedCategoryId = '';
   String _selectedPeriod = 'This Week';
   bool _isLoading = true;
+  bool _hasCheckedFirstTimeBudget = false;
 
   List<TransactionModel> _allTransactions = [];
   List<CategoryModel> _expenseCategories = [];
@@ -56,21 +59,26 @@ class _ExpenseTrackerScreenState extends State<ExpenseTrackerScreen> {
     super.dispose();
   }
 
-  Future<String> getCurrentUserId() async {
-    final secureStorage = getIt<CustomSecureStorage>();
-    final savedId = await secureStorage.readSecureData('userId');
-    if (savedId != null && savedId.isNotEmpty) {
-      return savedId;
-    }
-    return 'guest_user';
-  }
-
   Future<void> _loadAllData() async {
     setState(() => _isLoading = true);
-    final userId = await getCurrentUserId();
+    final userId = await UserHelper.getCurrentUserId();
     final monthYear = _currentMonthYear;
 
     try {
+      // Auto-refresh monthly budget if enabled
+      final storage = getIt<CustomSecureStorage>();
+      final savedAutoRefresh = await storage.readSecureData(
+        'expense_auto_refresh_budget',
+      );
+      final isAutoRefresh =
+          savedAutoRefresh == null || savedAutoRefresh == 'true';
+
+      await ExpenseDatabaseService.instance.checkAndAutoRefreshBudgets(
+        userId,
+        monthYear,
+        isAutoRefresh: isAutoRefresh,
+      );
+
       final expCats = await ExpenseDatabaseService.instance.getCategories(
         userId,
         'expense',
@@ -80,7 +88,9 @@ class _ExpenseTrackerScreenState extends State<ExpenseTrackerScreen> {
         'income',
       );
 
-      final items = await ExpenseDatabaseService.instance.getTransactions(userId);
+      final items = await ExpenseDatabaseService.instance.getTransactions(
+        userId,
+      );
       double expTotal = 0.0;
       double incTotal = 0.0;
       for (final item in items) {
@@ -112,8 +122,19 @@ class _ExpenseTrackerScreenState extends State<ExpenseTrackerScreen> {
           _monthlySavingsGoal = goal;
           _isLoading = false;
         });
+
+        // First time user: If no budget and no expense, navigate to budget page first!
+        if (!_hasCheckedFirstTimeBudget && progress.isEmpty && items.isEmpty) {
+          _hasCheckedFirstTimeBudget = true;
+          WidgetsBinding.instance.addPostFrameCallback((_) async {
+            if (!mounted) return;
+            final res = await context.push(RouteNames.incomeBudget);
+            if (res == true) _loadAllData();
+          });
+        }
       }
-    } catch (_) {
+    } catch (e) {
+      debugPrint('Error loading expense data: $e');
       if (mounted) setState(() => _isLoading = false);
     }
   }
@@ -133,13 +154,15 @@ class _ExpenseTrackerScreenState extends State<ExpenseTrackerScreen> {
       return;
     }
 
-    final userId = await getCurrentUserId();
+    final userId = await UserHelper.getCurrentUserId();
     final catList = _quickType == 'expense'
         ? _expenseCategories
         : _incomeCategories;
     final selectedCat = catList.firstWhere(
       (c) => c.id == _selectedCategoryId,
-      orElse: () => catList.first,
+      orElse: () => catList.isNotEmpty
+          ? catList.first
+          : CategoryModel(id: 'other', name: 'Other', type: _quickType),
     );
 
     final tx = TransactionModel(
@@ -155,10 +178,24 @@ class _ExpenseTrackerScreenState extends State<ExpenseTrackerScreen> {
     await ExpenseRepositoryImpl().addTransaction(tx, false);
     _amountController.clear();
     await _loadAllData();
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            _quickType == 'expense'
+                ? 'Quick expense logged!'
+                : 'Quick income added!',
+          ),
+          backgroundColor: AppColors.statusSuccess,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
   }
 
   Future<void> _showSavingsGoalDialog() async {
-    final userId = await getCurrentUserId();
+    final userId = await UserHelper.getCurrentUserId();
     if (!mounted) return;
     await SavingsGoalDialog.show(
       context,
@@ -170,7 +207,7 @@ class _ExpenseTrackerScreenState extends State<ExpenseTrackerScreen> {
   }
 
   Future<void> _showSetBudgetDialog() async {
-    final userId = await getCurrentUserId();
+    final userId = await UserHelper.getCurrentUserId();
     if (!mounted) return;
     await SetBudgetDialog.show(
       context,
@@ -192,6 +229,10 @@ class _ExpenseTrackerScreenState extends State<ExpenseTrackerScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final isLight = theme.brightness == Brightness.light;
+
     final size = MediaQuery.of(context).size;
     final isTablet = size.width > AppSizes.tabletBreakpoint;
     final currencyFormat = NumberFormat.currency(
@@ -204,12 +245,10 @@ class _ExpenseTrackerScreenState extends State<ExpenseTrackerScreen> {
         : _incomeCategories;
 
     return Scaffold(
-      floatingActionButton: _buildFab(),
+      floatingActionButton: _buildFab(scheme),
       body: GradientBackground(
         child: _isLoading
-            ? const Center(
-                child: CircularProgressIndicator(color: AppColors.primaryPurple),
-              )
+            ? Center(child: CircularProgressIndicator(color: scheme.primary))
             : SafeArea(
                 bottom: false,
                 child: SingleChildScrollView(
@@ -222,8 +261,15 @@ class _ExpenseTrackerScreenState extends State<ExpenseTrackerScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildTopBar(context),
+                      _buildTopBar(context, scheme),
                       const SizedBox(height: AppSizes.xl),
+
+                      // First-time Budget prompt banner
+                      if (_budgetProgressList.isEmpty) ...[
+                        _buildFirstTimeBudgetBanner(scheme),
+                        const SizedBox(height: AppSizes.lg),
+                      ],
+
                       BalanceOverviewCard(
                         totalBalance: totalBalance,
                         totalIncome: _totalIncome,
@@ -267,8 +313,9 @@ class _ExpenseTrackerScreenState extends State<ExpenseTrackerScreen> {
                             final list = type == 'expense'
                                 ? _expenseCategories
                                 : _incomeCategories;
-                            _selectedCategoryId =
-                                list.isNotEmpty ? list.first.id : '';
+                            _selectedCategoryId = list.isNotEmpty
+                                ? list.first.id
+                                : '';
                           });
                         },
                         onCategoryChanged: (val) =>
@@ -276,7 +323,12 @@ class _ExpenseTrackerScreenState extends State<ExpenseTrackerScreen> {
                         onTrack: _trackQuickTransaction,
                       ),
                       const SizedBox(height: AppSizes.xxl),
-                      _buildRecentTransactionsSection(context, currencyFormat),
+                      _buildRecentTransactionsSection(
+                        context,
+                        currencyFormat,
+                        scheme,
+                        isLight,
+                      ),
                     ],
                   ),
                 ),
@@ -285,20 +337,100 @@ class _ExpenseTrackerScreenState extends State<ExpenseTrackerScreen> {
     );
   }
 
-  Widget _buildFab() {
+  Widget _buildFirstTimeBudgetBanner(ColorScheme scheme) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            scheme.primary.withValues(alpha: 0.35),
+            scheme.primary.withValues(alpha: 0.45),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: scheme.primary.withValues(alpha: 0.6),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: scheme.primary.withValues(alpha: 0.15),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: scheme.primary,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(Icons.stars_rounded, color: scheme.onPrimary, size: 24),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Set Your Monthly Budget First',
+                  style: TextStyle(
+                    color: scheme.onPrimary,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'First step: Define category budgets for this month so you can track limits.',
+                  style: TextStyle(
+                    color: scheme.onPrimary.withValues(alpha: 0.7),
+                    fontSize: 11,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: scheme.onPrimary,
+              foregroundColor: scheme.primary,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            onPressed: _openBudgetScreen,
+            child: const Text(
+              'Set Budget',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFab(ColorScheme scheme) {
     return Container(
       width: 60,
       height: 60,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        gradient: const LinearGradient(
-          colors: [AppColors.primaryPurpleLight, AppColors.primaryPurpleDark],
+        gradient: LinearGradient(
+          colors: [scheme.primary.withValues(alpha: 0.85), scheme.primary],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primaryPurpleLight.withValues(alpha: 0.4),
+            color: scheme.primary.withValues(alpha: 0.4),
             blurRadius: 16,
             offset: const Offset(0, 4),
           ),
@@ -307,16 +439,16 @@ class _ExpenseTrackerScreenState extends State<ExpenseTrackerScreen> {
       child: RawMaterialButton(
         shape: const CircleBorder(),
         onPressed: _openAddScreen,
-        child: const Icon(
+        child: Icon(
           Icons.add_rounded,
-          color: AppColors.whiteColor,
+          color: scheme.onPrimary,
           size: AppSizes.iconXxl,
         ),
       ),
     );
   }
 
-  Widget _buildTopBar(BuildContext context) {
+  Widget _buildTopBar(BuildContext context, ColorScheme scheme) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -332,43 +464,56 @@ class _ExpenseTrackerScreenState extends State<ExpenseTrackerScreen> {
               ),
             ),
             const SizedBox(height: AppSizes.xs),
-            Text(
-              AppStrings.manageYourSpending,
-              style: AppTextStyles.subtitle,
-            ),
+            Text(AppStrings.manageYourSpending, style: AppTextStyles.subtitle),
           ],
         ),
         Row(
           children: [
+            // Export / Download Icon Button
+            // IconButton(
+            //   icon: Icon(
+            //     Icons.download_rounded,
+            //     color: scheme.secondary,
+            //     size: AppSizes.iconLg,
+            //   ),
+            //   tooltip: 'Export Report',
+            //   onPressed: () {
+            //     ExpenseExportService.showExportBottomSheet(
+            //       context: context,
+            //       transactions: _allTransactions,
+            //       periodTitle: DateFormat('MMMM yyyy').format(DateTime.now()),
+            //     );
+            //   },
+            // ),
+            // IconButton(
+            //   icon: Icon(
+            //     Icons.notifications_outlined,
+            //     color: scheme.secondary,
+            //     size: AppSizes.iconLg,
+            //   ),
+            //   tooltip: 'Notification',
+            //   onPressed: () async {
+            //     await NotificationService.instance.showNotification(
+            //       id: 1,
+            //       title: 'MindAI Expense Digest',
+            //       body: 'Daily financial activity updated successfully.',
+            //       payload: 'custom_data_payload',
+            //     );
+            //   },
+            // ),
             IconButton(
-              icon: const Icon(
-                Icons.notifications_outlined,
-                color: AppColors.accentLavender,
-                size: AppSizes.iconLg,
-              ),
-              tooltip: 'Notification',
-              onPressed: () async {
-                await NotificationService.instance.showNotification(
-                  id: 1,
-                  title: 'MindAI Expense Digest',
-                  body: 'Daily financial activity updated successfully.',
-                  payload: 'custom_data_payload',
-                );
-              },
-            ),
-            IconButton(
-              icon: const Icon(
+              icon: Icon(
                 Icons.tune_rounded,
-                color: AppColors.accentLavender,
+                color: scheme.secondary,
                 size: AppSizes.iconLg,
               ),
               tooltip: AppStrings.setBudget,
               onPressed: _openBudgetScreen,
             ),
             IconButton(
-              icon: const Icon(
+              icon: Icon(
                 Icons.settings_outlined,
-                color: AppColors.accentLavender,
+                color: scheme.secondary,
                 size: AppSizes.iconLg,
               ),
               tooltip: AppStrings.expenseSettings,
@@ -386,6 +531,8 @@ class _ExpenseTrackerScreenState extends State<ExpenseTrackerScreen> {
   Widget _buildRecentTransactionsSection(
     BuildContext context,
     NumberFormat currencyFormat,
+    ColorScheme scheme,
+    bool isLight,
   ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -404,17 +551,21 @@ class _ExpenseTrackerScreenState extends State<ExpenseTrackerScreen> {
             width: double.infinity,
             padding: const EdgeInsets.symmetric(vertical: AppSizes.xxl),
             decoration: BoxDecoration(
-              color: AppColors.surfaceDeep,
+              color: isLight
+                  ? scheme.surfaceContainerHighest
+                  : AppColors.surfaceDeep,
               borderRadius: BorderRadius.circular(AppSizes.radiusLg - 2),
               border: Border.all(
-                color: AppColors.whiteColor.withValues(alpha: 0.05),
+                color: scheme.onSurface.withValues(alpha: 0.05),
               ),
             ),
             child: Center(
               child: Text(
                 AppStrings.noTransactionsLogged,
-                style: const TextStyle(
-                  color: AppColors.secondaryText,
+                style: TextStyle(
+                  color: isLight
+                      ? AppColors.lightSecondaryOnSurface
+                      : AppColors.secondaryText,
                   fontSize: AppSizes.fontBodySm,
                 ),
               ),
@@ -424,7 +575,9 @@ class _ExpenseTrackerScreenState extends State<ExpenseTrackerScreen> {
           ListView.separated(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            itemCount: _allTransactions.length > 5 ? 5 : _allTransactions.length,
+            itemCount: _allTransactions.length > 5
+                ? 5
+                : _allTransactions.length,
             separatorBuilder: (context, index) =>
                 const SizedBox(height: AppSizes.sm + 2),
             itemBuilder: (context, index) {

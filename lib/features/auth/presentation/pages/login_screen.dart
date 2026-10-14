@@ -101,10 +101,17 @@ class _LoginFormView extends BaseFormScreen {
 
   @override
   List<Widget> buildFormFields(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final isLight = theme.brightness == Brightness.light;
+
     final size = MediaQuery.of(context).size;
     final height = size.height;
     final width = size.width;
     final isTablet = width > 600;
+
+    final secondaryTextColor =
+        isLight ? AppColors.lightSecondaryOnSurface : AppColors.secondaryText;
 
     return [
       Padding(
@@ -155,9 +162,9 @@ class _LoginFormView extends BaseFormScreen {
             const SizedBox(height: 8),
             Text(
               AppStrings.loginToContinue,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 15,
-                color: AppColors.secondaryText,
+                color: secondaryTextColor,
               ),
             ),
             SizedBox(height: height * 0.04),
@@ -182,10 +189,10 @@ class _LoginFormView extends BaseFormScreen {
                 ),
                 child: Text(
                   AppStrings.forgotPassword,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
-                    color: AppColors.primaryPurple,
+                    color: scheme.primary,
                   ),
                 ),
               ),
@@ -197,8 +204,8 @@ class _LoginFormView extends BaseFormScreen {
               child: DecoratedBox(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(30),
-                  gradient: const LinearGradient(
-                    colors: [AppColors.primaryPurple, AppColors.accentBlue],
+                  gradient: LinearGradient(
+                    colors: [scheme.primary, scheme.secondary],
                   ),
                 ),
                 child: ElevatedButton(
@@ -221,10 +228,10 @@ class _LoginFormView extends BaseFormScreen {
                         )
                       : Text(
                           AppStrings.logIn,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
-                            color: AppColors.whiteColor,
+                            color: scheme.onPrimary,
                           ),
                         ),
                 ),
@@ -235,23 +242,23 @@ class _LoginFormView extends BaseFormScreen {
               children: [
                 Expanded(
                   child: Divider(
-                    color: AppColors.secondaryText.withOpacity(0.3),
+                    color: scheme.onSurface.withValues(alpha: 0.2),
                   ),
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Text(
                     AppStrings.or,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 13,
-                      color: AppColors.secondaryText,
+                      color: secondaryTextColor,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
                 ),
                 Expanded(
                   child: Divider(
-                    color: AppColors.secondaryText.withOpacity(0.3),
+                    color: scheme.onSurface.withValues(alpha: 0.2),
                   ),
                 ),
               ],
@@ -264,12 +271,14 @@ class _LoginFormView extends BaseFormScreen {
                 onPressed: () {},
                 style: OutlinedButton.styleFrom(
                   side: BorderSide(
-                    color: AppColors.secondaryText.withOpacity(0.25),
+                    color: scheme.onSurface.withValues(alpha: 0.2),
                   ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(30),
                   ),
-                  backgroundColor: AppColors.whiteColor.withOpacity(0.05),
+                  backgroundColor: isLight
+                      ? Colors.white
+                      : AppColors.whiteColor.withValues(alpha: 0.05),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -299,19 +308,19 @@ class _LoginFormView extends BaseFormScreen {
                 children: [
                   Text(
                     AppStrings.dontHaveAccount,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 14,
-                      color: AppColors.secondaryText,
+                      color: secondaryTextColor,
                     ),
                   ),
                   GestureDetector(
                     onTap: () => context.push(RouteNames.signup),
                     child: Text(
                       ' ${AppStrings.signUp}',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: Color(0xFF34D399),
+                        color: scheme.primary,
                       ),
                     ),
                   ),

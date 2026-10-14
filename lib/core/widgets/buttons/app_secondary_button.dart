@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../constants/app_colors.dart';
 
 class AppSecondaryButton extends StatelessWidget {
   final String title;
@@ -13,12 +12,14 @@ class AppSecondaryButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return SizedBox(
       width: double.infinity,
       child: OutlinedButton(
         onPressed: onTap,
         style: OutlinedButton.styleFrom(
-          side: BorderSide(color: AppColors.primaryPurple.withValues(alpha: 0.4)),
+          side: BorderSide(color: scheme.primary.withValues(alpha: 0.5)),
+          foregroundColor: scheme.primary,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
@@ -26,8 +27,8 @@ class AppSecondaryButton extends StatelessWidget {
         ),
         child: Text(
           title,
-          style: const TextStyle(
-            color: AppColors.whiteColor,
+          style: TextStyle(
+            color: scheme.primary,
             fontWeight: FontWeight.w600,
           ),
         ),

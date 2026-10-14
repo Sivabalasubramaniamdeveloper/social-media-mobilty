@@ -82,4 +82,28 @@ class AppColors {
 
   // Error
   static const Color redColor = Color(0xFFE53935);
+
+  // ── White & Orange Theme ──────────────────────────────────────────────
+  /// Vivid orange used as primary accent in the White+Orange theme
+  static const Color woOrange         = Color(0xFFFF6B00);
+  static const Color woOrangeLight    = Color(0xFFFF8C38);
+  static const Color woOrangeDark     = Color(0xFFE05A00);
+  static const Color woOrangeSurface  = Color(0xFFFFF3E6); // warm tinted card bg
+  static const Color woCardBg         = Color(0xFFFFFAF5); // very slight warm white
+  static const Color woIconSurface    = Color(0xFFFFE4CC); // icon box tint
+  static const Color woIconColor      = Color(0xFFD95F00); // icon colour on white
+
+  // ── White & Blue Theme ────────────────────────────────────────────────
+  /// Cool blue used as primary accent in the White+Blue theme
+  static const Color wbBlue          = Color(0xFF1976D2);
+  static const Color wbBlueLight     = Color(0xFF42A5F5);
+  static const Color wbBlueDark      = Color(0xFF1565C0);
+  static const Color wbBlueSurface   = Color(0xFFE8F4FD); // cool tinted card bg
+  static const Color wbCardBg        = Color(0xFFF5FAFF); // very slight cool white
+  static const Color wbIconSurface   = Color(0xFFCCE5FF); // icon box tint
+  static const Color wbIconColor     = Color(0xFF1565C0); // icon colour on white
+
+  // ── Shared Light-Theme Text ───────────────────────────────────────────
+  static const Color lightOnSurface       = Color(0xFF1A1A1A);
+  static const Color lightSecondaryOnSurface = Color(0xFF5A5A72);
 }

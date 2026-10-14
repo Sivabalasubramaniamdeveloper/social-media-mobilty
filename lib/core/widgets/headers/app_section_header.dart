@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mineai/core/constants/app_colors.dart';
 
 /// Section title with an optional trailing action (e.g. "View all").
+/// Adapts text and action colours to the active theme.
 class AppSectionHeader extends StatelessWidget {
   final String title;
   final String? actionLabel;
@@ -18,15 +19,20 @@ class AppSectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isLight = theme.brightness == Brightness.light;
+
     if (isEyebrow) {
       return Padding(
         padding: const EdgeInsets.only(left: 8, bottom: 8),
         child: Text(
           title,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.bold,
-            color: AppColors.secondaryText,
+            color: isLight
+                ? AppColors.lightSecondaryOnSurface
+                : AppColors.secondaryText,
             letterSpacing: 0.8,
           ),
         ),
@@ -41,7 +47,7 @@ class AppSectionHeader extends StatelessWidget {
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
-            color: Theme.of(context).secondaryHeaderColor,
+            color: theme.colorScheme.onSurface,
           ),
         ),
         if (actionLabel != null)
@@ -54,9 +60,9 @@ class AppSectionHeader extends StatelessWidget {
             ),
             child: Text(
               actionLabel!,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 13,
-                color: AppColors.primaryPurple,
+                color: theme.colorScheme.primary,
                 fontWeight: FontWeight.w500,
               ),
             ),

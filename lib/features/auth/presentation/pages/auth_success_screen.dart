@@ -42,10 +42,17 @@ class _AuthSuccessView extends BaseScreen {
 
   @override
   Widget buildBody(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final isLight = theme.brightness == Brightness.light;
+
     final size = MediaQuery.of(context).size;
     final width = size.width;
     final height = size.height;
     final isTablet = width > 600;
+
+    final secondaryTextColor =
+        isLight ? AppColors.lightSecondaryOnSurface : AppColors.secondaryText;
 
     return SafeArea(
       child: Padding(
@@ -70,9 +77,9 @@ class _AuthSuccessView extends BaseScreen {
                 const Spacer(),
                 IconButton(
                   onPressed: () => context.go(RouteNames.home),
-                  icon: const Icon(
+                  icon: Icon(
                     Icons.close_rounded,
-                    color: AppColors.whiteColor,
+                    color: scheme.onSurface,
                     size: 22,
                   ),
                 ),
@@ -87,19 +94,19 @@ class _AuthSuccessView extends BaseScreen {
               height: 96,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppColors.primaryPurple,
+                color: scheme.primary,
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.primaryPurple.withOpacity(0.5),
+                    color: scheme.primary.withValues(alpha: 0.5),
                     blurRadius: 40,
                     spreadRadius: 8,
                   ),
                 ],
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.check_rounded,
                 size: 54,
-                color: AppColors.whiteColor,
+                color: scheme.onPrimary,
               ),
             ),
 
@@ -126,7 +133,7 @@ class _AuthSuccessView extends BaseScreen {
                 style: TextStyle(
                   fontSize: isTablet ? 16 : 14,
                   height: 1.5,
-                  color: AppColors.secondaryText,
+                  color: secondaryTextColor,
                 ),
               ),
             ),
@@ -137,10 +144,12 @@ class _AuthSuccessView extends BaseScreen {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
               decoration: BoxDecoration(
-                color: AppColors.whiteColor.withOpacity(0.04),
+                color: isLight
+                    ? scheme.surfaceContainerHighest
+                    : AppColors.whiteColor.withValues(alpha: 0.04),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                  color: AppColors.whiteColor.withOpacity(0.08),
+                  color: scheme.onSurface.withValues(alpha: 0.08),
                 ),
               ),
               child: Column(
@@ -150,17 +159,17 @@ class _AuthSuccessView extends BaseScreen {
                     children: [
                       Text(
                         AppStrings.transactionId,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 13,
-                          color: AppColors.secondaryText,
+                          color: secondaryTextColor,
                         ),
                       ),
                       Text(
                         transactionId,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
-                          color: AppColors.primaryPurple,
+                          color: scheme.primary,
                         ),
                       ),
                     ],
@@ -171,9 +180,9 @@ class _AuthSuccessView extends BaseScreen {
                     children: [
                       Text(
                         AppStrings.timestamp,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 13,
-                          color: AppColors.secondaryText,
+                          color: secondaryTextColor,
                         ),
                       ),
                       Text(
@@ -199,8 +208,8 @@ class _AuthSuccessView extends BaseScreen {
               child: DecoratedBox(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(30),
-                  gradient: const LinearGradient(
-                    colors: [AppColors.primaryPurple, Color(0xFF9059FF)],
+                  gradient: LinearGradient(
+                    colors: [scheme.primary, scheme.secondary],
                   ),
                 ),
                 child: ElevatedButton(
@@ -217,17 +226,17 @@ class _AuthSuccessView extends BaseScreen {
                     children: [
                       Text(
                         AppStrings.backToHome,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: AppColors.whiteColor,
+                          color: scheme.onPrimary,
                         ),
                       ),
                       const SizedBox(width: 8),
-                      const Icon(
+                      Icon(
                         Icons.arrow_forward_rounded,
                         size: 20,
-                        color: AppColors.whiteColor,
+                        color: scheme.onPrimary,
                       ),
                     ],
                   ),
@@ -240,16 +249,16 @@ class _AuthSuccessView extends BaseScreen {
             // View Details link
             TextButton.icon(
               onPressed: () {},
-              icon: const Icon(
+              icon: Icon(
                 Icons.receipt_long_rounded,
                 size: 16,
-                color: AppColors.secondaryText,
+                color: secondaryTextColor,
               ),
               label: Text(
                 AppStrings.viewTransactionDetails,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 13,
-                  color: AppColors.secondaryText,
+                  color: secondaryTextColor,
                   decoration: TextDecoration.underline,
                 ),
               ),

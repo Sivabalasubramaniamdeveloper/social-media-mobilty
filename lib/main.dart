@@ -1,13 +1,12 @@
 import 'dart:async';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_alice/alice.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mineai/config/firebase/notification_service.dart';
-
 import 'package:overlay_support/overlay_support.dart';
 import 'app.dart';
 import 'config/flavor/flavor_config.dart';

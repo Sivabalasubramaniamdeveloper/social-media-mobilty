@@ -21,8 +21,9 @@ class AuthService {
     final envUrl = dotenv.env['BACKEND_BASE_URL'];
     if (envUrl != null && envUrl.isNotEmpty) return envUrl;
     // Auto-resolve localhost for Android emulator vs iOS simulator
-    if (Platform.isAndroid) return 'http://10.0.2.2:3000/api/v1';
-    return 'http://localhost:3000/api/v1';
+    if (Platform.isAndroid)
+      return 'https://mineaibackend-production.up.railway.app';
+    return 'https://mineaibackend-production.up.railway.app';
   }
 
   /// Sign In against /api/v1/auth/login

@@ -17,6 +17,11 @@ class IncomeOverviewCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final isLight = theme.brightness == Brightness.light;
+    final secondaryText = isLight ? AppColors.lightSecondaryOnSurface : AppColors.secondaryText;
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(AppSizes.lg),
@@ -58,8 +63,8 @@ class IncomeOverviewCard extends StatelessWidget {
           const SizedBox(height: AppSizes.sm),
           Text(
             currencyFormat.format(totalIncome),
-            style: const TextStyle(
-              color: AppColors.whiteColor,
+            style: TextStyle(
+              color: scheme.onSurface,
               fontSize: AppSizes.fontTitle,
               fontWeight: FontWeight.bold,
             ),
@@ -67,8 +72,8 @@ class IncomeOverviewCard extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             '+12% ${AppStrings.fromLastMonth}',
-            style: const TextStyle(
-              color: AppColors.secondaryText,
+            style: TextStyle(
+              color: secondaryText,
               fontSize: AppSizes.fontXs,
             ),
           ),

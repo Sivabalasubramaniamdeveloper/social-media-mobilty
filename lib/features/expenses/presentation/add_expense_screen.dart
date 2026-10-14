@@ -5,13 +5,13 @@ import 'package:mineai/core/constants/app_colors.dart';
 import 'package:mineai/core/constants/app_sizes.dart';
 import 'package:mineai/core/constants/app_strings.dart';
 import 'package:mineai/core/database/app_database.dart';
+import 'package:mineai/core/utils/user_helper.dart';
 import 'package:mineai/core/widgets/forms/app_text_field.dart';
 import 'package:mineai/core/widgets/headers/app_screen_header.dart';
 import 'package:mineai/features/expenses/models/category_model.dart';
 import 'package:mineai/features/expenses/models/transaction_model.dart';
 import 'package:mineai/features/expenses/presentation/widgets/widgets.dart';
 import 'package:mineai/features/expenses/repositories/expense_repository.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AddExpenseScreen extends StatefulWidget {
   const AddExpenseScreen({super.key});
@@ -33,15 +33,14 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
 
   List<CategoryModel> _expCategories = [];
   List<CategoryModel> _incCategories = [];
+  bool _isLoading = true;
   bool _isSaving = false;
-
-  String get _userId =>
-      Supabase.instance.client.auth.currentUser?.id ?? 'guest_user';
+  String _currentUserId = 'guest_user';
 
   @override
   void initState() {
     super.initState();
-    _fetchCategories();
+    _initData();
   }
 
   @override
@@ -52,22 +51,45 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     super.dispose();
   }
 
+  Future<void> _initData() async {
+    final userId = await UserHelper.getCurrentUserId();
+    if (!mounted) return;
+    setState(() => _currentUserId = userId);
+    await _fetchCategories();
+  }
+
   Future<void> _fetchCategories() async {
-    final exp = await ExpenseDatabaseService.instance.getCategories(
-      _userId,
-      'expense',
-    );
-    final inc = await ExpenseDatabaseService.instance.getCategories(
-      _userId,
-      'income',
-    );
-    if (mounted) {
-      setState(() {
-        _expCategories = exp;
-        _incCategories = inc;
-        _selectedCatId = exp.isNotEmpty ? exp.first.id : '';
-      });
+    try {
+      final exp = await ExpenseDatabaseService.instance.getCategories(
+        _currentUserId,
+        'expense',
+      );
+      final inc = await ExpenseDatabaseService.instance.getCategories(
+        _currentUserId,
+        'income',
+      );
+      if (mounted) {
+        setState(() {
+          _expCategories = exp;
+          _incCategories = inc;
+          if (_type == 'expense' && exp.isNotEmpty) {
+            _selectedCatId = exp.first.id;
+          } else if (_type == 'income' && inc.isNotEmpty) {
+            _selectedCatId = inc.first.id;
+          }
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error fetching categories: $e');
+      if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  void _addQuickAmount(double delta) {
+    final current = double.tryParse(_amountController.text.trim().replaceAll(',', '.')) ?? 0.0;
+    final total = current + delta;
+    _amountController.text = total.toStringAsFixed(total.truncateToDouble() == total ? 0 : 2);
   }
 
   Future<void> _onSave() async {
@@ -76,18 +98,29 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     final amt = double.tryParse(
       _amountController.text.trim().replaceAll(',', '.'),
     );
-    if (amt == null || amt <= 0) return;
+    if (amt == null || amt <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter a valid amount greater than 0'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
 
     setState(() => _isSaving = true);
     try {
+      final userId = await UserHelper.getCurrentUserId();
       final activeList = _type == 'expense' ? _expCategories : _incCategories;
       final selectedCat = activeList.firstWhere(
         (c) => c.id == _selectedCatId,
-        orElse: () => activeList.first,
+        orElse: () => activeList.isNotEmpty
+            ? activeList.first
+            : CategoryModel(id: 'other', name: 'Other', type: _type),
       );
 
       final transaction = TransactionModel(
-        userId: _userId,
+        userId: userId,
         title: _titleController.text.trim().isEmpty
             ? selectedCat.name
             : _titleController.text.trim(),
@@ -107,11 +140,22 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
             : _noteController.text.trim(),
       );
 
-      debugPrint('Saving transaction for user: $_userId with amount: $amt');
+      debugPrint('Saving transaction for user: $userId, amount: $amt, type: $_type');
       await ExpenseRepositoryImpl().addTransaction(transaction, false);
-      debugPrint('Transaction saved successfully');
+      debugPrint('Transaction successfully logged!');
 
-      if (mounted) context.pop(true);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              _type == 'expense' ? 'Expense logged successfully!' : 'Income recorded successfully!',
+            ),
+            backgroundColor: AppColors.statusSuccess,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+        context.pop(true);
+      }
     } catch (e, stack) {
       debugPrint('Failed to save transaction: $e\n$stack');
       if (mounted) {
@@ -129,94 +173,338 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final isLight = theme.brightness == Brightness.light;
+
     final isExpense = _type == 'expense';
     final activeCategories = isExpense ? _expCategories : _incCategories;
 
     return Scaffold(
-      backgroundColor: AppColors.scaffoldBackground,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSizes.pagePadding,
-            vertical: AppSizes.lg,
+        child: _isLoading
+            ? Center(
+                child: CircularProgressIndicator(color: scheme.primary),
+              )
+            : SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSizes.pagePadding,
+                  vertical: AppSizes.md,
+                ),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      AppScreenHeader(
+                        title: isExpense
+                            ? AppStrings.addNewExpense
+                            : AppStrings.addIncome,
+                        titleSize: AppSizes.fontHeading,
+                        onBack: () => context.pop(),
+                      ),
+                      const SizedBox(height: AppSizes.lg),
+
+                      // Segmented Type Switch
+                      Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: isLight ? scheme.surfaceContainerHighest : AppColors.surfaceDeep,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: scheme.onSurface.withValues(alpha: 0.06),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(12),
+                                onTap: () {
+                                  setState(() {
+                                    _type = 'expense';
+                                    if (_expCategories.isNotEmpty) {
+                                      _selectedCatId = _expCategories.first.id;
+                                    }
+                                  });
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(vertical: 12),
+                                  decoration: BoxDecoration(
+                                    color: isExpense
+                                        ? AppColors.expenseRedBg
+                                        : Colors.transparent,
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.arrow_upward_rounded,
+                                        size: 18,
+                                        color: isExpense
+                                            ? Colors.white
+                                            : (isLight ? AppColors.lightSecondaryOnSurface : AppColors.secondaryText),
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        AppStrings.expenses,
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 14,
+                                          color: isExpense
+                                              ? Colors.white
+                                              : (isLight ? AppColors.lightSecondaryOnSurface : AppColors.secondaryText),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(12),
+                                onTap: () {
+                                  setState(() {
+                                    _type = 'income';
+                                    if (_incCategories.isNotEmpty) {
+                                      _selectedCatId = _incCategories.first.id;
+                                    }
+                                  });
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(vertical: 12),
+                                  decoration: BoxDecoration(
+                                    color: !isExpense
+                                        ? AppColors.incomeGreenBg
+                                        : Colors.transparent,
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.arrow_downward_rounded,
+                                        size: 18,
+                                        color: !isExpense
+                                            ? Colors.white
+                                            : (isLight ? AppColors.lightSecondaryOnSurface : AppColors.secondaryText),
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        AppStrings.income,
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 14,
+                                          color: !isExpense
+                                              ? Colors.white
+                                              : (isLight ? AppColors.lightSecondaryOnSurface : AppColors.secondaryText),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: AppSizes.xl),
+
+                      // Amount Input Card
+                      Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: isLight ? scheme.surfaceContainerHighest : AppColors.surfaceDeep,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: (isExpense
+                                    ? AppColors.expenseRed
+                                    : AppColors.incomeGreen)
+                                .withValues(alpha: 0.25),
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: (isExpense
+                                      ? AppColors.expenseRed
+                                      : AppColors.incomeGreen)
+                                  .withValues(alpha: 0.08),
+                              blurRadius: 18,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'AMOUNT',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 1.2,
+                                color: isExpense
+                                    ? AppColors.expenseRed
+                                    : AppColors.incomeGreen,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                Text(
+                                  '\$',
+                                  style: TextStyle(
+                                    fontSize: 34,
+                                    fontWeight: FontWeight.bold,
+                                    color: isExpense
+                                        ? AppColors.expenseRed
+                                        : AppColors.incomeGreen,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: TextFormField(
+                                    controller: _amountController,
+                                    keyboardType:
+                                        const TextInputType.numberWithOptions(
+                                      decimal: true,
+                                    ),
+                                    style: TextStyle(
+                                      fontSize: 36,
+                                      fontWeight: FontWeight.bold,
+                                      color: scheme.onSurface,
+                                    ),
+                                    decoration: InputDecoration(
+                                      border: InputBorder.none,
+                                      hintText: '0.00',
+                                      hintStyle: TextStyle(
+                                        color: scheme.onSurface.withValues(alpha: 0.3),
+                                        fontSize: 34,
+                                      ),
+                                    ),
+                                    validator: (v) {
+                                      if (v == null || v.trim().isEmpty) {
+                                        return AppStrings.fieldRequired;
+                                      }
+                                      final val = double.tryParse(
+                                        v.trim().replaceAll(',', '.'),
+                                      );
+                                      if (val == null || val <= 0) {
+                                        return 'Enter valid amount';
+                                      }
+                                      return null;
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            // Quick Addition Pills
+                            SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: Row(
+                                children: [
+                                  _quickPill('+\$10', () => _addQuickAmount(10), scheme),
+                                  _quickPill('+\$50', () => _addQuickAmount(50), scheme),
+                                  _quickPill('+\$100', () => _addQuickAmount(100), scheme),
+                                  _quickPill('+\$500', () => _addQuickAmount(500), scheme),
+                                  _quickPill('+\$1,000', () => _addQuickAmount(1000), scheme),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: AppSizes.lg),
+
+                      // Title Field
+                      AppTextField(
+                        controller: _titleController,
+                        label: AppStrings.titleLabel,
+                        hint: isExpense
+                            ? AppStrings.sampleExpenseTitle
+                            : AppStrings.sampleIncomeTitle,
+                        isRequired: false,
+                        style: AppTextFieldStyle.glass,
+                      ),
+
+                      const SizedBox(height: AppSizes.md),
+
+                      // Category Dropdown
+                      CategoryDropdownField(
+                        selectedCategoryId: _selectedCatId,
+                        categories: activeCategories,
+                        onCategoryChanged: (id) =>
+                            setState(() => _selectedCatId = id),
+                      ),
+
+                      const SizedBox(height: AppSizes.md),
+
+                      // Date & Time Picker
+                      _buildDateTimePicker(context, scheme),
+
+                      const SizedBox(height: AppSizes.md),
+
+                      // Remarks
+                      AppTextField(
+                        controller: _noteController,
+                        label: '${AppStrings.remarks} (${AppStrings.optional})',
+                        hint: AppStrings.additionalNotes,
+                        maxLines: 2,
+                        style: AppTextFieldStyle.glass,
+                      ),
+
+                      const SizedBox(height: AppSizes.xxl),
+
+                      // Save Button
+                      GradientActionButton(
+                        text: isExpense
+                            ? AppStrings.addNewExpense
+                            : AppStrings.saveIncome,
+                        gradientColors: isExpense
+                            ? [
+                                AppColors.expenseRed,
+                                AppColors.expenseRedDark,
+                              ]
+                            : [
+                                AppColors.incomeGreen,
+                                AppColors.incomeGreenDark,
+                              ],
+                        isLoading: _isSaving,
+                        onPressed: _onSave,
+                      ),
+                      const SizedBox(height: 24),
+                    ],
+                  ),
+                ),
+              ),
+      ),
+    );
+  }
+
+  Widget _quickPill(String label, VoidCallback onTap, ColorScheme scheme) {
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: scheme.onSurface.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: scheme.onSurface.withValues(alpha: 0.1)),
           ),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                AppScreenHeader(
-                  title: isExpense
-                      ? AppStrings.addNewExpense
-                      : AppStrings.addIncome,
-                  titleSize: AppSizes.fontHeading,
-                  onBack: () => context.pop(),
-                ),
-                const SizedBox(height: AppSizes.xl),
-                TransactionTypeSwitch(
-                  activeType: _type,
-                  onTypeChanged: (type) {
-                    setState(() {
-                      _type = type;
-                      final list = type == 'expense'
-                          ? _expCategories
-                          : _incCategories;
-                      _selectedCatId = list.isNotEmpty ? list.first.id : '';
-                    });
-                  },
-                ),
-                const SizedBox(height: AppSizes.xl),
-                AmountInputField(
-                  controller: _amountController,
-                  accentColor: isExpense
-                      ? AppColors.expenseRed
-                      : AppColors.incomeGreen,
-                  validator: (v) => (v == null || v.trim().isEmpty)
-                      ? AppStrings.fieldRequired
-                      : null,
-                ),
-                const SizedBox(height: AppSizes.lg + 2),
-                AppTextField(
-                  controller: _titleController,
-                  label: AppStrings.titleLabel,
-                  hint: isExpense
-                      ? AppStrings.sampleExpenseTitle
-                      : AppStrings.sampleIncomeTitle,
-                  isRequired: false,
-                  style: AppTextFieldStyle.glass,
-                ),
-                const SizedBox(height: AppSizes.lg + 2),
-                CategoryDropdownField(
-                  selectedCategoryId: _selectedCatId,
-                  categories: activeCategories,
-                  onCategoryChanged: (id) =>
-                      setState(() => _selectedCatId = id),
-                ),
-                const SizedBox(height: AppSizes.lg + 2),
-                _buildDateTimePicker(context),
-                const SizedBox(height: AppSizes.lg + 2),
-                AppTextField(
-                  controller: _noteController,
-                  label: '${AppStrings.remarks} (${AppStrings.optional})',
-                  hint: AppStrings.additionalNotes,
-                  maxLines: 3,
-                  style: AppTextFieldStyle.glass,
-                ),
-                const SizedBox(height: AppSizes.xxxl),
-                GradientActionButton(
-                  text: isExpense
-                      ? AppStrings.addNewExpense
-                      : AppStrings.saveIncome,
-                  gradientColors: isExpense
-                      ? [AppColors.expenseRedDark, AppColors.expenseRedDeep]
-                      : [
-                          AppColors.incomeGreenDark,
-                          AppColors.incomeGreenBorder,
-                        ],
-                  isLoading: _isSaving,
-                  onPressed: _onSave,
-                ),
-              ],
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: scheme.onSurface.withValues(alpha: 0.7),
             ),
           ),
         ),
@@ -224,11 +512,12 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     );
   }
 
-  Widget _buildDateTimePicker(BuildContext context) {
+  Widget _buildDateTimePicker(BuildContext context, ColorScheme scheme) {
     return Row(
       children: [
         Expanded(
           child: InkWell(
+            borderRadius: BorderRadius.circular(AppSizes.radiusMd),
             onTap: () async {
               final d = await showDatePicker(
                 context: context,
@@ -240,13 +529,15 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
             },
             child: _box(
               icon: Icons.calendar_today_rounded,
-              label: DateFormat('dd/MM/yyyy').format(_date),
+              label: DateFormat('MMM dd, yyyy').format(_date),
+              scheme: scheme,
             ),
           ),
         ),
         const SizedBox(width: AppSizes.md),
         Expanded(
           child: InkWell(
+            borderRadius: BorderRadius.circular(AppSizes.radiusMd),
             onTap: () async {
               final t = await showTimePicker(
                 context: context,
@@ -257,6 +548,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
             child: _box(
               icon: Icons.access_time_rounded,
               label: _time.format(context),
+              scheme: scheme,
             ),
           ),
         ),
@@ -264,27 +556,31 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     );
   }
 
-  Widget _box({required IconData icon, required String label}) {
+  Widget _box({required IconData icon, required String label, required ColorScheme scheme}) {
     return Container(
-      padding: const EdgeInsets.all(AppSizes.fontBody),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       decoration: BoxDecoration(
-        color: AppColors.surface.withValues(alpha: 0.6),
+        color: scheme.surface.withValues(alpha: 0.6),
         borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-        border: Border.all(color: AppColors.whiteColor.withValues(alpha: 0.08)),
+        border: Border.all(color: scheme.onSurface.withValues(alpha: 0.08)),
       ),
       child: Row(
         children: [
           Icon(
             icon,
             size: AppSizes.fontTitleSm,
-            color: AppColors.primaryPurple,
+            color: scheme.secondary,
           ),
           const SizedBox(width: AppSizes.sm),
-          Text(
-            label,
-            style: const TextStyle(
-              color: AppColors.whiteColor,
-              fontSize: AppSizes.fontBodySm,
+          Expanded(
+            child: Text(
+              label,
+              style: TextStyle(
+                color: scheme.onSurface,
+                fontSize: AppSizes.fontBodySm,
+                fontWeight: FontWeight.w500,
+              ),
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],

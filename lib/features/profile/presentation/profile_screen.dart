@@ -33,12 +33,16 @@ class _ProfileView extends BaseScreen {
 
   @override
   Widget buildBody(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final isLight = theme.brightness == Brightness.light;
+
     return SafeArea(
       child: BlocBuilder<UserProfileCubit, UserProfileState>(
         builder: (context, state) {
           if (state is UserProfileLoading) {
-            return const Center(
-              child: CircularProgressIndicator(color: AppColors.primaryPurple),
+            return Center(
+              child: CircularProgressIndicator(color: scheme.primary),
             );
           }
 
@@ -63,7 +67,7 @@ class _ProfileView extends BaseScreen {
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: AppColors.primaryPurple.withOpacity(0.4),
+                            color: scheme.primary.withValues(alpha: 0.4),
                             width: 3,
                           ),
                           image: DecorationImage(
@@ -82,14 +86,14 @@ class _ProfileView extends BaseScreen {
                           onTap: () => context.push(RouteNames.editProfile),
                           child: Container(
                             padding: const EdgeInsets.all(4),
-                            decoration: const BoxDecoration(
-                              color: Color(0xFF8B5CF6),
+                            decoration: BoxDecoration(
+                              color: scheme.primary,
                               shape: BoxShape.circle,
                             ),
-                            child: const Icon(
+                            child: Icon(
                               Icons.edit,
                               size: 14,
-                              color: AppColors.whiteColor,
+                              color: scheme.onPrimary,
                             ),
                           ),
                         ),
@@ -106,10 +110,10 @@ class _ProfileView extends BaseScreen {
                   children: [
                     Text(
                       profile?.fullName ?? 'User Profile',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
-                        color: AppColors.whiteColor,
+                        color: scheme.onSurface,
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -119,15 +123,17 @@ class _ProfileView extends BaseScreen {
                         vertical: 3,
                       ),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF2E2752),
+                        color: isLight
+                            ? scheme.surfaceContainerHighest
+                            : const Color(0xFF2E2752),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
                         AppStrings.proPlan,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.w600,
-                          color: Color(0xFFA78BFA),
+                          color: scheme.secondary,
                           letterSpacing: 0.5,
                         ),
                       ),
@@ -138,9 +144,9 @@ class _ProfileView extends BaseScreen {
                 const SizedBox(height: 4),
                 Text(
                   profile?.email ?? 'user@mindai.io',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 13,
-                    color: Color(0xFF8B5CF6),
+                    color: scheme.primary,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -177,6 +183,7 @@ class _ProfileView extends BaseScreen {
                   children: [
                     Expanded(
                       child: _buildMetricCard(
+                        context: context,
                         icon: Icons.auto_awesome,
                         title: AppStrings.prompts,
                         value: '1,250',
@@ -186,6 +193,7 @@ class _ProfileView extends BaseScreen {
                     const SizedBox(width: 12),
                     Expanded(
                       child: _buildMetricCard(
+                        context: context,
                         icon: Icons.access_time_rounded,
                         title: AppStrings.timeSaved,
                         value: '42h',
@@ -199,6 +207,7 @@ class _ProfileView extends BaseScreen {
                   children: [
                     Expanded(
                       child: _buildMetricCard(
+                        context: context,
                         icon: Icons.local_fire_department_rounded,
                         title: AppStrings.streak,
                         value: '15 days',
@@ -208,6 +217,7 @@ class _ProfileView extends BaseScreen {
                     const SizedBox(width: 12),
                     Expanded(
                       child: _buildMetricCard(
+                        context: context,
                         icon: Icons.psychology_rounded,
                         title: AppStrings.topModel,
                         value: 'GPT-4o',
@@ -223,10 +233,14 @@ class _ProfileView extends BaseScreen {
                 Container(
                   padding: const EdgeInsets.all(18),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF1E1B38).withOpacity(0.7),
+                    color: isLight
+                        ? scheme.surfaceContainerHighest
+                        : const Color(0xFF1E1B38).withValues(alpha: 0.7),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
-                      color: AppColors.whiteColor.withOpacity(0.06),
+                      color: isLight
+                          ? scheme.primary.withValues(alpha: 0.1)
+                          : Colors.white.withValues(alpha: 0.06),
                     ),
                   ),
                   child: Column(
@@ -237,18 +251,18 @@ class _ProfileView extends BaseScreen {
                         children: [
                           Row(
                             children: [
-                              const Icon(
+                              Icon(
                                 Icons.token_rounded,
                                 size: 18,
-                                color: Color(0xFFA78BFA),
+                                color: scheme.secondary,
                               ),
                               const SizedBox(width: 8),
                               Text(
                                 '${profile?.credits ?? 1250} ${AppStrings.aiCredits}',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 15,
                                   fontWeight: FontWeight.bold,
-                                  color: AppColors.whiteColor,
+                                  color: scheme.onSurface,
                                 ),
                               ),
                             ],
@@ -259,15 +273,17 @@ class _ProfileView extends BaseScreen {
                               vertical: 3,
                             ),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF2E2752),
+                              color: isLight
+                                  ? scheme.surfaceContainerHighest
+                                  : const Color(0xFF2E2752),
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
                               AppStrings.active,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.bold,
-                                color: Color(0xFFA78BFA),
+                                color: scheme.secondary,
                               ),
                             ),
                           ),
@@ -276,19 +292,23 @@ class _ProfileView extends BaseScreen {
                       const SizedBox(height: 4),
                       Text(
                         AppStrings.creditsRenewOn,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 11,
-                          color: AppColors.secondaryText,
+                          color: isLight
+                              ? AppColors.lightSecondaryOnSurface
+                              : AppColors.secondaryText,
                         ),
                       ),
                       const SizedBox(height: 14),
                       ClipRRect(
                         borderRadius: BorderRadius.circular(4),
-                        child: const LinearProgressIndicator(
+                        child: LinearProgressIndicator(
                           value: 0.65,
                           minHeight: 6,
-                          backgroundColor: Color(0xFF2E2752),
-                          valueColor: AlwaysStoppedAnimation(Color(0xFF8B5CF6)),
+                          backgroundColor: isLight
+                              ? scheme.surfaceContainerHighest
+                              : const Color(0xFF2E2752),
+                          valueColor: AlwaysStoppedAnimation(scheme.primary),
                         ),
                       ),
                       const SizedBox(height: 14),
@@ -297,15 +317,17 @@ class _ProfileView extends BaseScreen {
                         children: [
                           Text(
                             AppStrings.monthlyLimitUsed,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 11,
-                              color: AppColors.secondaryText,
+                              color: isLight
+                                  ? AppColors.lightSecondaryOnSurface
+                                  : AppColors.secondaryText,
                             ),
                           ),
                           ElevatedButton.icon(
                             onPressed: () {},
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF8B5CF6),
+                              backgroundColor: scheme.primary,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(16),
                               ),
@@ -315,17 +337,17 @@ class _ProfileView extends BaseScreen {
                               ),
                               minimumSize: Size.zero,
                             ),
-                            icon: const Icon(
+                            icon: Icon(
                               Icons.add_circle_outline,
                               size: 16,
-                              color: AppColors.whiteColor,
+                              color: scheme.onPrimary,
                             ),
                             label: Text(
                               AppStrings.topUp,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w600,
-                                color: AppColors.whiteColor,
+                                color: scheme.onPrimary,
                               ),
                             ),
                           ),
@@ -341,8 +363,8 @@ class _ProfileView extends BaseScreen {
                 Container(
                   padding: const EdgeInsets.all(18),
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+                    gradient: LinearGradient(
+                      colors: [scheme.primary, scheme.secondary],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
@@ -357,18 +379,18 @@ class _ProfileView extends BaseScreen {
                           children: [
                             Text(
                               AppStrings.upgradeToMindAiUltra,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
-                                color: AppColors.whiteColor,
+                                color: scheme.onPrimary,
                               ),
                             ),
                             const SizedBox(height: 4),
                             Text(
                               AppStrings.unlimitedPromptsEarlyAccess,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 11,
-                                color: Colors.white70,
+                                color: scheme.onPrimary.withValues(alpha: 0.7),
                               ),
                             ),
                           ],
@@ -377,12 +399,14 @@ class _ProfileView extends BaseScreen {
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: AppColors.whiteColor.withOpacity(0.15),
+                          color: isLight
+                              ? scheme.primary.withValues(alpha: 0.1)
+                              : Colors.white.withValues(alpha: 0.15),
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(
+                        child: Icon(
                           Icons.workspace_premium_rounded,
-                          color: AppColors.whiteColor,
+                          color: scheme.onPrimary,
                           size: 24,
                         ),
                       ),
@@ -399,32 +423,45 @@ class _ProfileView extends BaseScreen {
   }
 
   Widget _buildMetricCard({
+    required BuildContext context,
     required IconData icon,
     required String title,
     required String value,
     String? delta,
     String? subtext,
   }) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final isLight = theme.brightness == Brightness.light;
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E1B38).withOpacity(0.7),
+        color: isLight
+            ? scheme.surfaceContainerHighest
+            : const Color(0xFF1E1B38).withValues(alpha: 0.7),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppColors.whiteColor.withOpacity(0.06)),
+        border: Border.all(
+          color: isLight
+              ? scheme.primary.withValues(alpha: 0.1)
+              : Colors.white.withValues(alpha: 0.06),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(icon, size: 16, color: const Color(0xFFA78BFA)),
+              Icon(icon, size: 16, color: scheme.secondary),
               const SizedBox(width: 6),
               Text(
                 title,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.secondaryText,
+                  color: isLight
+                      ? AppColors.lightSecondaryOnSurface
+                      : AppColors.secondaryText,
                   letterSpacing: 0.5,
                 ),
               ),
@@ -433,10 +470,10 @@ class _ProfileView extends BaseScreen {
           const SizedBox(height: 10),
           Text(
             value,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.bold,
-              color: AppColors.whiteColor,
+              color: scheme.onSurface,
             ),
           ),
           const SizedBox(height: 4),
@@ -446,15 +483,17 @@ class _ProfileView extends BaseScreen {
               style: const TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
-                color: Color(0xFF34D399),
+                color: Color(0xFF34D399), // semantic income-green, kept as-is
               ),
             )
           else if (subtext != null)
             Text(
               subtext,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 11,
-                color: AppColors.secondaryText,
+                color: isLight
+                    ? AppColors.lightSecondaryOnSurface
+                    : AppColors.secondaryText,
               ),
             ),
         ],

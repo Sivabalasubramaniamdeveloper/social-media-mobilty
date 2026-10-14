@@ -7,9 +7,12 @@ import 'package:mineai/core/constants/app_sizes.dart';
 import 'package:mineai/core/constants/app_strings.dart';
 import 'package:mineai/core/database/app_database.dart';
 import 'package:mineai/core/utils/secure_storage.dart';
+import 'package:mineai/core/utils/user_helper.dart';
 import 'package:mineai/core/widgets/cards/app_list_tile_card.dart';
 import 'package:mineai/core/widgets/headers/app_screen_header.dart';
 import 'package:mineai/core/widgets/headers/app_section_header.dart';
+import 'package:mineai/features/expenses/models/transaction_model.dart';
+import 'package:mineai/features/expenses/services/expense_export_service.dart';
 import 'package:mineai/instance/locator.dart';
 
 class ExpenseSettingsScreen extends StatefulWidget {
@@ -20,26 +23,29 @@ class ExpenseSettingsScreen extends StatefulWidget {
 }
 
 class _ExpenseSettingsScreenState extends State<ExpenseSettingsScreen> {
+  static const String _autoRefreshKey = 'expense_auto_refresh_budget';
+
   bool _budgetAlerts = true;
+  bool _autoRefreshMonthlyBudget = true;
   int _totalTransactionsCount = 0;
   int _activeBudgetsCount = 0;
+  List<TransactionModel> _allTransactions = [];
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _loadStats();
+    _loadSettingsAndStats();
   }
 
-  Future<String> _getUserId() async {
-    final storage = getIt<CustomSecureStorage>();
-    final id = await storage.readSecureData('userId');
-    return (id != null && id.isNotEmpty) ? id : 'guest_user';
-  }
-
-  Future<void> _loadStats() async {
-    final userId = await _getUserId();
+  Future<void> _loadSettingsAndStats() async {
+    final userId = await UserHelper.getCurrentUserId();
     final monthYear = DateFormat('yyyy-MM').format(DateTime.now());
+
+    // Load auto-refresh preference from storage
+    final storage = getIt<CustomSecureStorage>();
+    final savedAutoRefresh = await storage.readSecureData(_autoRefreshKey);
+    final autoRefresh = savedAutoRefresh == null || savedAutoRefresh == 'true';
 
     final txList = await ExpenseDatabaseService.instance.getTransactions(userId);
     final budgets = await ExpenseDatabaseService.instance.getAllBudgets(
@@ -49,10 +55,57 @@ class _ExpenseSettingsScreenState extends State<ExpenseSettingsScreen> {
 
     if (mounted) {
       setState(() {
+        _autoRefreshMonthlyBudget = autoRefresh;
         _totalTransactionsCount = txList.length;
         _activeBudgetsCount = budgets.length;
+        _allTransactions = txList;
         _isLoading = false;
       });
+    }
+  }
+
+  Future<void> _onAutoRefreshChanged(bool value) async {
+    setState(() => _autoRefreshMonthlyBudget = value);
+    final storage = getIt<CustomSecureStorage>();
+    await storage.writeSecureData(_autoRefreshKey, value ? 'true' : 'false');
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            value
+              ? 'Auto-refresh enabled: Budgets will renew automatically each month.'
+              : 'Manual budget mode enabled: You will create budgets manually each month.',
+          ),
+          backgroundColor: Theme.of(context).colorScheme.primary,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
+  Future<void> _copyPreviousMonthBudgetNow() async {
+    final userId = await UserHelper.getCurrentUserId();
+    final currentMonthYear = DateFormat('yyyy-MM').format(DateTime.now());
+
+    final count = await ExpenseDatabaseService.instance
+        .copyBudgetsFromPreviousMonth(userId, currentMonthYear);
+
+    if (!mounted) return;
+    if (count > 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Successfully copied $count category budgets from previous month!'),
+          backgroundColor: AppColors.statusSuccess,
+        ),
+      );
+      _loadSettingsAndStats();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No previous month budgets found to copy.'),
+          backgroundColor: Colors.orangeAccent,
+        ),
+      );
     }
   }
 
@@ -61,30 +114,34 @@ class _ExpenseSettingsScreenState extends State<ExpenseSettingsScreen> {
     required String message,
     required Future<void> Function() onConfirmed,
   }) async {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final isLight = theme.brightness == Brightness.light;
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: AppColors.surface,
+        backgroundColor: isLight ? scheme.surface : AppColors.surface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppSizes.radiusLg),
         ),
         title: Text(
           title,
-          style: const TextStyle(
-            color: AppColors.whiteColor,
+          style: TextStyle(
+            color: scheme.onSurface,
             fontWeight: FontWeight.bold,
           ),
         ),
         content: Text(
           message,
-          style: const TextStyle(color: AppColors.secondaryText),
+          style: TextStyle(color: isLight ? AppColors.lightSecondaryOnSurface : AppColors.secondaryText),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
             child: Text(
               AppStrings.cancel,
-              style: const TextStyle(color: AppColors.secondaryText),
+              style: TextStyle(color: isLight ? AppColors.lightSecondaryOnSurface : AppColors.secondaryText),
             ),
           ),
           ElevatedButton(
@@ -98,7 +155,7 @@ class _ExpenseSettingsScreenState extends State<ExpenseSettingsScreen> {
             child: Text(
               AppStrings.confirm,
               style: const TextStyle(
-                color: AppColors.whiteColor,
+                color: Colors.white,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -116,7 +173,7 @@ class _ExpenseSettingsScreenState extends State<ExpenseSettingsScreen> {
             backgroundColor: AppColors.statusSuccess,
           ),
         );
-        _loadStats();
+        _loadSettingsAndStats();
       }
     }
   }
@@ -126,7 +183,7 @@ class _ExpenseSettingsScreenState extends State<ExpenseSettingsScreen> {
       title: AppStrings.clearTransactions,
       message: AppStrings.clearTransactionsConfirm,
       onConfirmed: () async {
-        final userId = await _getUserId();
+        final userId = await UserHelper.getCurrentUserId();
         await ExpenseDatabaseService.instance.clearAllTransactions(userId);
       },
     );
@@ -137,7 +194,7 @@ class _ExpenseSettingsScreenState extends State<ExpenseSettingsScreen> {
       title: AppStrings.resetBudgets,
       message: 'Are you sure you want to reset all category budgets for this month?',
       onConfirmed: () async {
-        final userId = await _getUserId();
+        final userId = await UserHelper.getCurrentUserId();
         await ExpenseDatabaseService.instance.clearAllBudgets(userId);
       },
     );
@@ -148,7 +205,7 @@ class _ExpenseSettingsScreenState extends State<ExpenseSettingsScreen> {
       title: AppStrings.clearAllData,
       message: AppStrings.clearDataConfirm,
       onConfirmed: () async {
-        final userId = await _getUserId();
+        final userId = await UserHelper.getCurrentUserId();
         await ExpenseDatabaseService.instance.clearAllExpenseData(userId);
       },
     );
@@ -156,8 +213,12 @@ class _ExpenseSettingsScreenState extends State<ExpenseSettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final isLight = theme.brightness == Brightness.light;
+
     return Scaffold(
-      backgroundColor: AppColors.scaffoldBackground,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child: Column(
           children: [
@@ -174,8 +235,10 @@ class _ExpenseSettingsScreenState extends State<ExpenseSettingsScreen> {
             ),
             Expanded(
               child: _isLoading
-                  ? const Center(
-                      child: CircularProgressIndicator(color: AppColors.primaryPurple),
+                  ? Center(
+                      child: CircularProgressIndicator(
+                        color: scheme.primary,
+                      ),
                     )
                   : ListView(
                       padding: const EdgeInsets.symmetric(
@@ -183,8 +246,42 @@ class _ExpenseSettingsScreenState extends State<ExpenseSettingsScreen> {
                         vertical: AppSizes.md,
                       ),
                       children: [
-                        _buildStatsSummary(),
+                        _buildStatsSummary(scheme, isLight),
                         const SizedBox(height: AppSizes.xxl),
+
+                        // Section 1: Monthly Budget & Rollover
+                        AppSectionHeader(
+                          title: 'MONTHLY BUDGET SETTINGS',
+                          isEyebrow: true,
+                        ),
+                        AppListTileCard.toggle(
+                          icon: Icons.autorenew_rounded,
+                          title: 'Auto-refresh Monthly Budget',
+                          subtitle: _autoRefreshMonthlyBudget
+                              ? 'Automatically renews your budgets on the 1st of every month'
+                              : 'Manual mode: You create new budgets manually each month',
+                          value: _autoRefreshMonthlyBudget,
+                          onChanged: _onAutoRefreshChanged,
+                        ),
+                        AppListTileCard(
+                          icon: Icons.copy_all_rounded,
+                          title: 'Copy Last Month\'s Budget Now',
+                          subtitle: 'Apply previous month allocations to this month',
+                          onTap: _copyPreviousMonthBudgetNow,
+                        ),
+                        AppListTileCard(
+                          icon: Icons.tune_rounded,
+                          title: AppStrings.manageBudgets,
+                          subtitle: 'Configure limits for current month',
+                          onTap: () async {
+                            await context.push(RouteNames.incomeBudget);
+                            _loadSettingsAndStats();
+                          },
+                        ),
+
+                        const SizedBox(height: AppSizes.xxl),
+
+                        // Section 2: Preferences & Alerts
                         AppSectionHeader(
                           title: AppStrings.preferences,
                           isEyebrow: true,
@@ -192,19 +289,46 @@ class _ExpenseSettingsScreenState extends State<ExpenseSettingsScreen> {
                         AppListTileCard.toggle(
                           icon: Icons.notifications_active_outlined,
                           title: AppStrings.budgetAlertToggle,
+                          subtitle: 'Receive alerts when spending exceeds limits',
                           value: _budgetAlerts,
                           onChanged: (val) => setState(() => _budgetAlerts = val),
                         ),
+
+                        const SizedBox(height: AppSizes.xxl),
+
+                        // Section 3: Data Export
+                        AppSectionHeader(
+                          title: 'DOWNLOAD & EXPORT',
+                          isEyebrow: true,
+                        ),
                         AppListTileCard(
-                          icon: Icons.tune_rounded,
-                          title: AppStrings.manageBudgets,
-                          subtitle: 'Configure monthly limits',
-                          onTap: () async {
-                            await context.push(RouteNames.incomeBudget);
-                            _loadStats();
+                          icon: Icons.picture_as_pdf_outlined,
+                          title: 'Download Expense Report (PDF)',
+                          subtitle: 'Formatted PDF document saved to local device',
+                          onTap: () {
+                            ExpenseExportService.instance.exportToPdf(
+                              context: context,
+                              transactions: _allTransactions,
+                              periodTitle: 'All Logged Records',
+                            );
                           },
                         ),
+                        AppListTileCard(
+                          icon: Icons.table_chart_outlined,
+                          title: 'Download Expense Sheet (Excel)',
+                          subtitle: 'Excel workbook (.xlsx) saved to local device',
+                          onTap: () {
+                            ExpenseExportService.instance.exportToExcel(
+                              context: context,
+                              transactions: _allTransactions,
+                              periodTitle: 'All Logged Records',
+                            );
+                          },
+                        ),
+
                         const SizedBox(height: AppSizes.xxl),
+
+                        // Section 4: Data Management
                         AppSectionHeader(
                           title: 'DATA MANAGEMENT',
                           isEyebrow: true,
@@ -231,6 +355,8 @@ class _ExpenseSettingsScreenState extends State<ExpenseSettingsScreen> {
                           ),
                           onTap: _clearAllData,
                         ),
+
+                        const SizedBox(height: 32),
                       ],
                     ),
             ),
@@ -240,49 +366,77 @@ class _ExpenseSettingsScreenState extends State<ExpenseSettingsScreen> {
     );
   }
 
-  Widget _buildStatsSummary() {
+  Widget _buildStatsSummary(ColorScheme scheme, bool isLight) {
     return Container(
       padding: const EdgeInsets.all(AppSizes.lg),
       decoration: BoxDecoration(
-        color: AppColors.surfaceDeep,
+        color: isLight ? scheme.surfaceContainerHighest : AppColors.surfaceDeep,
         borderRadius: BorderRadius.circular(AppSizes.radiusLg),
         border: Border.all(
-          color: AppColors.whiteColor.withValues(alpha: 0.06),
+          color: scheme.onSurface.withValues(alpha: 0.06),
         ),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _statCol('Logged Transactions', '$_totalTransactionsCount'),
+          _statCol(
+            'Logged Transactions',
+            '$_totalTransactionsCount',
+            Icons.receipt_long_rounded,
+            scheme.primary,
+            scheme,
+            isLight,
+          ),
           Container(
             width: 1,
-            height: 36,
-            color: AppColors.whiteColor.withValues(alpha: 0.1),
+            height: 40,
+            color: scheme.onSurface.withValues(alpha: 0.1),
           ),
-          _statCol('Active Budgets', '$_activeBudgetsCount'),
+          _statCol(
+            'Active Budgets',
+            '$_activeBudgetsCount',
+            Icons.account_balance_wallet_rounded,
+            AppColors.incomeGreen,
+            scheme,
+            isLight,
+          ),
         ],
       ),
     );
   }
 
-  Widget _statCol(String label, String value) {
-    return Column(
+  Widget _statCol(String label, String value, IconData icon, Color color, ColorScheme scheme, bool isLight) {
+    return Row(
       children: [
-        Text(
-          value,
-          style: const TextStyle(
-            color: AppColors.whiteColor,
-            fontSize: AppSizes.fontTitleSm,
-            fontWeight: FontWeight.bold,
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(12),
           ),
+          child: Icon(icon, color: color, size: 20),
         ),
-        const SizedBox(height: 2),
-        Text(
-          label,
-          style: const TextStyle(
-            color: AppColors.secondaryText,
-            fontSize: AppSizes.fontXs,
-          ),
+        const SizedBox(width: 12),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              value,
+              style: TextStyle(
+                color: scheme.onSurface,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: TextStyle(
+                color: isLight ? AppColors.lightSecondaryOnSurface : AppColors.secondaryText,
+                fontSize: 11,
+              ),
+            ),
+          ],
         ),
       ],
     );

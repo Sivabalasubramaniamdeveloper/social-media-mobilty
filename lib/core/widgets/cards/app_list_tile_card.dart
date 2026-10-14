@@ -6,6 +6,7 @@ import 'package:mineai/core/theme/app_decorations.dart';
 import 'package:mineai/core/widgets/cards/app_icon_box.dart';
 
 /// Glass list row used for settings, recent activity, and similar tiles.
+/// Uses Theme.of(context) so it adapts to all app themes automatically.
 class AppListTileCard extends StatelessWidget {
   final IconData icon;
   final String title;
@@ -29,6 +30,7 @@ class AppListTileCard extends StatelessWidget {
     Key? key,
     required IconData icon,
     required String title,
+    String? subtitle,
     required bool value,
     required ValueChanged<bool> onChanged,
   }) {
@@ -36,21 +38,38 @@ class AppListTileCard extends StatelessWidget {
       key: key,
       icon: icon,
       title: title,
+      subtitle: subtitle,
       onTap: null,
       showChevron: false,
-      trailing: CupertinoSwitch(
-        value: value,
-        activeTrackColor: AppColors.primaryPurple,
-        onChanged: onChanged,
-      ),
+      trailing: _ThemedSwitch(value: value, onChanged: onChanged),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isLight = theme.brightness == Brightness.light;
+    final titleColor = isLight
+        ? AppColors.lightOnSurface
+        : AppColors.whiteColor;
+    final subtitleColor = isLight
+        ? AppColors.lightSecondaryOnSurface
+        : AppColors.secondaryText;
+    final chevronColor = isLight
+        ? AppColors.lightSecondaryOnSurface
+        : AppColors.secondaryText;
+
     return Container(
       margin: const EdgeInsets.only(bottom: AppSizes.sm),
-      decoration: AppDecorations.glass(),
+      decoration: isLight
+          ? BoxDecoration(
+              color: theme.colorScheme.surfaceContainerHighest,
+              borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+              border: Border.all(
+                color: theme.colorScheme.primary.withValues(alpha: 0.15),
+              ),
+            )
+          : AppDecorations.glass(),
       child: Material(
         color: Colors.transparent,
         borderRadius: BorderRadius.circular(AppSizes.radiusMd),
@@ -60,32 +79,50 @@ class AppListTileCard extends StatelessWidget {
           leading: AppIconBox(icon: icon),
           title: Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w500,
-              color: AppColors.whiteColor,
+              color: titleColor,
             ),
           ),
           subtitle: subtitle != null
               ? Text(
                   subtitle!,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
-                    color: AppColors.secondaryText,
+                    color: subtitleColor,
                   ),
                 )
               : null,
           trailing:
               trailing ??
               (showChevron
-                  ? const Icon(
+                  ? Icon(
                       Icons.arrow_forward_ios_rounded,
                       size: 14,
-                      color: AppColors.secondaryText,
+                      color: chevronColor,
                     )
                   : null),
         ),
       ),
+    );
+  }
+}
+
+/// Internal widget so the switch can access BuildContext for theming.
+class _ThemedSwitch extends StatelessWidget {
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  const _ThemedSwitch({required this.value, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
+    return CupertinoSwitch(
+      value: value,
+      activeTrackColor: primary,
+      onChanged: onChanged,
     );
   }
 }

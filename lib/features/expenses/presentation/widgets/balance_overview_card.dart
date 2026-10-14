@@ -24,14 +24,18 @@ class BalanceOverviewCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final isLight = theme.brightness == Brightness.light;
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(AppSizes.xxl),
       decoration: BoxDecoration(
-        color: AppColors.surfaceDeep,
+        color: isLight ? scheme.surfaceContainerHighest : AppColors.surfaceDeep,
         borderRadius: BorderRadius.circular(AppSizes.radiusXl),
         border: Border.all(
-          color: AppColors.whiteColor.withValues(alpha: 0.06),
+          color: scheme.onSurface.withValues(alpha: 0.06),
         ),
       ),
       child: Column(
@@ -53,7 +57,7 @@ class BalanceOverviewCard extends StatelessWidget {
                     style: TextStyle(
                       fontSize: AppSizes.fontDisplay,
                       fontWeight: FontWeight.w800,
-                      color: Theme.of(context).secondaryHeaderColor,
+                      color: theme.secondaryHeaderColor,
                     ),
                   ),
                 ],
@@ -65,12 +69,12 @@ class BalanceOverviewCard extends StatelessWidget {
                   width: 56,
                   height: 48,
                   decoration: BoxDecoration(
-                    color: AppColors.whiteColor.withValues(alpha: 0.04),
+                    color: scheme.onSurface.withValues(alpha: 0.04),
                     borderRadius: BorderRadius.circular(AppSizes.radiusSm),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.account_balance_wallet_rounded,
-                    color: AppColors.accentLavender,
+                    color: scheme.secondary,
                     size: AppSizes.iconXl,
                   ),
                 ),
@@ -86,6 +90,7 @@ class BalanceOverviewCard extends StatelessWidget {
                 icon: Icons.arrow_downward_rounded,
                 iconColor: AppColors.incomeGreen,
                 iconBgColor: AppColors.incomeGreenBg.withValues(alpha: 0.5),
+                textColor: scheme.onSurface,
               ),
               const SizedBox(width: AppSizes.xxxl),
               _buildMetricItem(
@@ -94,6 +99,7 @@ class BalanceOverviewCard extends StatelessWidget {
                 icon: Icons.arrow_upward_rounded,
                 iconColor: AppColors.expenseRed,
                 iconBgColor: AppColors.expenseRedBg.withValues(alpha: 0.5),
+                textColor: scheme.onSurface,
               ),
             ],
           ),
@@ -108,6 +114,7 @@ class BalanceOverviewCard extends StatelessWidget {
     required IconData icon,
     required Color iconColor,
     required Color iconBgColor,
+    required Color textColor,
   }) {
     return Row(
       children: [
@@ -128,10 +135,10 @@ class BalanceOverviewCard extends StatelessWidget {
             const SizedBox(height: 2),
             Text(
               amount,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: AppSizes.fontBody,
                 fontWeight: FontWeight.bold,
-                color: AppColors.whiteColor,
+                color: textColor,
               ),
             ),
           ],

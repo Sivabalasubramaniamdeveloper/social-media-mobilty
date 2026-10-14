@@ -127,10 +127,17 @@ class _SignUpFormView extends BaseFormScreen {
 
   @override
   List<Widget> buildFormFields(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final isLight = theme.brightness == Brightness.light;
+
     final size = MediaQuery.of(context).size;
     final height = size.height;
     final width = size.width;
     final isTablet = width > 600;
+
+    final secondaryTextColor =
+        isLight ? AppColors.lightSecondaryOnSurface : AppColors.secondaryText;
 
     return [
       Padding(
@@ -181,9 +188,9 @@ class _SignUpFormView extends BaseFormScreen {
             const SizedBox(height: 8),
             Text(
               AppStrings.joinFutureOfProductivity,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 15,
-                color: AppColors.secondaryText,
+                color: secondaryTextColor,
               ),
             ),
             SizedBox(height: height * 0.035),
@@ -230,12 +237,12 @@ class _SignUpFormView extends BaseFormScreen {
                   child: Checkbox(
                     value: agreeTerms,
                     onChanged: (val) => onAgreeChanged(val ?? false),
-                    activeColor: AppColors.primaryPurple,
+                    activeColor: scheme.primary,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(5),
                     ),
                     side: BorderSide(
-                      color: AppColors.secondaryText.withOpacity(0.5),
+                      color: secondaryTextColor.withValues(alpha: 0.5),
                     ),
                   ),
                 ),
@@ -243,16 +250,16 @@ class _SignUpFormView extends BaseFormScreen {
                 Expanded(
                   child: RichText(
                     text: TextSpan(
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 13,
-                        color: AppColors.secondaryText,
+                        color: secondaryTextColor,
                       ),
                       children: [
                         TextSpan(text: '${AppStrings.iAgreeToThe} '),
                         TextSpan(
                           text: AppStrings.termsOfService,
-                          style: const TextStyle(
-                            color: AppColors.primaryPurple,
+                          style: TextStyle(
+                            color: scheme.primary,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -269,8 +276,8 @@ class _SignUpFormView extends BaseFormScreen {
               child: DecoratedBox(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(30),
-                  gradient: const LinearGradient(
-                    colors: [AppColors.primaryPurple, AppColors.accentBlue],
+                  gradient: LinearGradient(
+                    colors: [scheme.primary, scheme.secondary],
                   ),
                 ),
                 child: ElevatedButton(
@@ -299,17 +306,17 @@ class _SignUpFormView extends BaseFormScreen {
                           children: [
                             Text(
                               AppStrings.createAccountButton,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
-                                color: AppColors.whiteColor,
+                                color: scheme.onPrimary,
                               ),
                             ),
                             const SizedBox(width: 8),
-                            const Icon(
+                            Icon(
                               Icons.arrow_forward_rounded,
                               size: 20,
-                              color: AppColors.whiteColor,
+                              color: scheme.onPrimary,
                             ),
                           ],
                         ),
@@ -321,23 +328,23 @@ class _SignUpFormView extends BaseFormScreen {
               children: [
                 Expanded(
                   child: Divider(
-                    color: AppColors.secondaryText.withOpacity(0.3),
+                    color: scheme.onSurface.withValues(alpha: 0.2),
                   ),
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Text(
                     AppStrings.or,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 13,
-                      color: AppColors.secondaryText,
+                      color: secondaryTextColor,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
                 ),
                 Expanded(
                   child: Divider(
-                    color: AppColors.secondaryText.withOpacity(0.3),
+                    color: scheme.onSurface.withValues(alpha: 0.2),
                   ),
                 ),
               ],
@@ -365,9 +372,9 @@ class _SignUpFormView extends BaseFormScreen {
                 children: [
                   Text(
                     AppStrings.alreadyHaveAccount,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 14,
-                      color: AppColors.secondaryText,
+                      color: secondaryTextColor,
                     ),
                   ),
                   GestureDetector(
@@ -380,10 +387,10 @@ class _SignUpFormView extends BaseFormScreen {
                     },
                     child: Text(
                       ' ${AppStrings.logIn}',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: Color(0xFF34D399),
+                        color: scheme.primary,
                       ),
                     ),
                   ),
@@ -398,16 +405,22 @@ class _SignUpFormView extends BaseFormScreen {
   }
 
   Widget _socialBtn(BuildContext context, String label, IconData icon) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final isLight = theme.brightness == Brightness.light;
+
     return SizedBox(
       height: 52,
       child: OutlinedButton(
         onPressed: () {},
         style: OutlinedButton.styleFrom(
-          side: BorderSide(color: AppColors.secondaryText.withOpacity(0.25)),
+          side: BorderSide(color: scheme.onSurface.withValues(alpha: 0.2)),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(30),
           ),
-          backgroundColor: AppColors.whiteColor.withOpacity(0.05),
+          backgroundColor: isLight
+              ? Colors.white
+              : AppColors.whiteColor.withValues(alpha: 0.05),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,

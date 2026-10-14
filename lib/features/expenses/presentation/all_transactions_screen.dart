@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:mineai/config/router/route_names.dart';
 import 'package:mineai/core/constants/app_colors.dart';
 import 'package:mineai/core/constants/app_sizes.dart';
 import 'package:mineai/core/constants/app_strings.dart';
 import 'package:mineai/core/constants/app_text_styles.dart';
 import 'package:mineai/core/database/app_database.dart';
-import 'package:mineai/core/utils/secure_storage.dart';
+import 'package:mineai/core/utils/user_helper.dart';
 import 'package:mineai/core/widgets/headers/app_screen_header.dart';
 import 'package:mineai/features/expenses/models/transaction_model.dart';
 import 'package:mineai/features/expenses/presentation/widgets/transaction_tile.dart';
 import 'package:mineai/features/expenses/repositories/expense_repository.dart';
-import 'package:mineai/instance/locator.dart';
+import 'package:mineai/features/expenses/services/expense_export_service.dart';
 
 class AllTransactionsScreen extends StatefulWidget {
   const AllTransactionsScreen({super.key});
@@ -33,18 +34,18 @@ class _AllTransactionsScreenState extends State<AllTransactionsScreen> {
 
   final List<Map<String, String>> _months = [
     {'code': 'all', 'name': 'All Months'},
-    {'code': '01', 'name': 'Jan'},
-    {'code': '02', 'name': 'Feb'},
-    {'code': '03', 'name': 'Mar'},
-    {'code': '04', 'name': 'Apr'},
+    {'code': '01', 'name': 'January'},
+    {'code': '02', 'name': 'February'},
+    {'code': '03', 'name': 'March'},
+    {'code': '04', 'name': 'April'},
     {'code': '05', 'name': 'May'},
-    {'code': '06', 'name': 'Jun'},
-    {'code': '07', 'name': 'Jul'},
-    {'code': '08', 'name': 'Aug'},
-    {'code': '09', 'name': 'Sep'},
-    {'code': '10', 'name': 'Oct'},
-    {'code': '11', 'name': 'Nov'},
-    {'code': '12', 'name': 'Dec'},
+    {'code': '06', 'name': 'June'},
+    {'code': '07', 'name': 'July'},
+    {'code': '08', 'name': 'August'},
+    {'code': '09', 'name': 'September'},
+    {'code': '10', 'name': 'October'},
+    {'code': '11', 'name': 'November'},
+    {'code': '12', 'name': 'December'},
   ];
 
   @override
@@ -53,14 +54,8 @@ class _AllTransactionsScreenState extends State<AllTransactionsScreen> {
     _initData();
   }
 
-  Future<String> _getUserId() async {
-    final storage = getIt<CustomSecureStorage>();
-    final id = await storage.readSecureData('userId');
-    return (id != null && id.isNotEmpty) ? id : 'guest_user';
-  }
-
   Future<void> _initData() async {
-    final userId = await _getUserId();
+    final userId = await UserHelper.getCurrentUserId();
     final years = await ExpenseDatabaseService.instance.getDistinctYears(userId);
     if (mounted) {
       setState(() {
@@ -75,7 +70,7 @@ class _AllTransactionsScreenState extends State<AllTransactionsScreen> {
 
   Future<void> _loadTransactions() async {
     setState(() => _isLoading = true);
-    final userId = await _getUserId();
+    final userId = await UserHelper.getCurrentUserId();
 
     final monthYear = _selectedMonth == 'all'
         ? null
@@ -97,31 +92,43 @@ class _AllTransactionsScreenState extends State<AllTransactionsScreen> {
     }
   }
 
+  String _getSelectedPeriodLabel() {
+    final monthName = _months.firstWhere(
+      (m) => m['code'] == _selectedMonth,
+      orElse: () => {'name': _selectedMonth},
+    )['name'];
+    return '$_selectedYear • $monthName';
+  }
+
   Future<void> _confirmDelete(TransactionModel tx) async {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final isLight = theme.brightness == Brightness.light;
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: AppColors.surface,
+        backgroundColor: isLight ? scheme.surface : AppColors.surface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppSizes.radiusLg),
         ),
         title: Text(
           AppStrings.deleteTransaction,
-          style: const TextStyle(
-            color: AppColors.whiteColor,
+          style: TextStyle(
+            color: scheme.onSurface,
             fontWeight: FontWeight.bold,
           ),
         ),
         content: Text(
           '${AppStrings.deleteConfirmMsg}\n\n${tx.title} • \$${tx.amount.toStringAsFixed(2)}',
-          style: const TextStyle(color: AppColors.secondaryText),
+          style: TextStyle(color: isLight ? AppColors.lightSecondaryOnSurface : AppColors.secondaryText),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
             child: Text(
               AppStrings.cancel,
-              style: const TextStyle(color: AppColors.secondaryText),
+              style: TextStyle(color: isLight ? AppColors.lightSecondaryOnSurface : AppColors.secondaryText),
             ),
           ),
           ElevatedButton(
@@ -135,7 +142,7 @@ class _AllTransactionsScreenState extends State<AllTransactionsScreen> {
             child: Text(
               AppStrings.delete,
               style: const TextStyle(
-                color: AppColors.whiteColor,
+                color: Colors.white,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -145,7 +152,8 @@ class _AllTransactionsScreenState extends State<AllTransactionsScreen> {
     );
 
     if (confirmed == true && tx.id != null) {
-      await _repository.deleteTransaction(tx.id!, tx.userId);
+      final userId = await UserHelper.getCurrentUserId();
+      await _repository.deleteTransaction(tx.id!, userId);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -160,6 +168,10 @@ class _AllTransactionsScreenState extends State<AllTransactionsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final isLight = theme.brightness == Brightness.light;
+
     final currencyFormat = NumberFormat.currency(
       symbol: '\$',
       decimalDigits: 2,
@@ -176,7 +188,7 @@ class _AllTransactionsScreenState extends State<AllTransactionsScreen> {
     }
 
     return Scaffold(
-      backgroundColor: AppColors.scaffoldBackground,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child: Column(
           children: [
@@ -185,30 +197,82 @@ class _AllTransactionsScreenState extends State<AllTransactionsScreen> {
                 horizontal: AppSizes.pagePadding,
                 vertical: AppSizes.md,
               ),
-              child: AppScreenHeader(
-                title: AppStrings.allTransactions,
-                titleSize: AppSizes.fontHeading,
-                onBack: () => context.pop(true),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: AppScreenHeader(
+                      title: AppStrings.allTransactions,
+                      titleSize: AppSizes.fontHeading,
+                      onBack: () => context.pop(true),
+                    ),
+                  ),
+                  // Export Button
+                  Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(12),
+                      onTap: () {
+                        ExpenseExportService.showExportBottomSheet(
+                          context: context,
+                          transactions: _transactions,
+                          periodTitle: _getSelectedPeriodLabel(),
+                        );
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: scheme.primary.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: scheme.primary.withValues(alpha: 0.3),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.download_rounded,
+                              color: scheme.secondary,
+                              size: 18,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              'Export',
+                              style: TextStyle(
+                                color: scheme.secondary,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-            _buildFilterHeader(),
-            _buildSummaryRow(totalIncome, totalExpense, currencyFormat),
+
+            // Dropdown Filter Header
+            _buildFilterHeader(scheme, isLight),
+
+            // Summary Stats Card
+            _buildSummaryRow(totalIncome, totalExpense, currencyFormat, scheme, isLight),
+
             const SizedBox(height: AppSizes.sm),
+
+            // Transactions List
             Expanded(
               child: _isLoading
-                  ? const Center(
-                      child: CircularProgressIndicator(color: AppColors.primaryPurple),
+                  ? Center(
+                      child: CircularProgressIndicator(
+                        color: scheme.primary,
+                      ),
                     )
                   : _transactions.isEmpty
-                      ? Center(
-                          child: Text(
-                            AppStrings.noTransactionsForPeriod,
-                            style: const TextStyle(
-                              color: AppColors.secondaryText,
-                              fontSize: AppSizes.fontBodySm,
-                            ),
-                          ),
-                        )
+                      ? _buildEmptyState(scheme, isLight)
                       : ListView.separated(
                           padding: const EdgeInsets.symmetric(
                             horizontal: AppSizes.pagePadding,
@@ -233,135 +297,201 @@ class _AllTransactionsScreenState extends State<AllTransactionsScreen> {
     );
   }
 
-  Widget _buildFilterHeader() {
+  Widget _buildFilterHeader(ColorScheme scheme, bool isLight) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSizes.pagePadding,
-        vertical: AppSizes.sm,
+      margin: const EdgeInsets.symmetric(horizontal: AppSizes.pagePadding),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: isLight ? scheme.surfaceContainerHighest : AppColors.surfaceDeep,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: scheme.onSurface.withValues(alpha: 0.06),
+        ),
       ),
       child: Column(
         children: [
+          // Row with Year Dropdown and Month Dropdown side-by-side
           Row(
             children: [
               // Year Dropdown
-              Container(
-                height: 40,
-                padding: const EdgeInsets.symmetric(horizontal: AppSizes.md),
-                decoration: BoxDecoration(
-                  color: AppColors.surfaceDeep,
-                  borderRadius: BorderRadius.circular(AppSizes.radiusSm),
-                  border: Border.all(
-                    color: AppColors.whiteColor.withValues(alpha: 0.08),
-                  ),
-                ),
-                child: DropdownButtonHideUnderline(
-                  child: DropdownButton<String>(
-                    value: _selectedYear,
-                    dropdownColor: AppColors.surface,
-                    style: AppTextStyles.bodyText,
-                    icon: const Icon(
-                      Icons.keyboard_arrow_down_rounded,
-                      color: AppColors.accentLavender,
-                      size: AppSizes.fontTitleSm,
+              Expanded(
+                flex: 2,
+                child: Container(
+                  height: 42,
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  decoration: BoxDecoration(
+                    color: isLight ? scheme.surface : AppColors.surface,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: scheme.onSurface.withValues(alpha: 0.08),
                     ),
-                    items: _availableYears
-                        .map(
-                          (y) => DropdownMenuItem(value: y, child: Text(y)),
-                        )
-                        .toList(),
-                    onChanged: (val) {
-                      if (val != null) {
-                        setState(() => _selectedYear = val);
-                        _loadTransactions();
-                      }
-                    },
+                  ),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      value: _selectedYear,
+                      isExpanded: true,
+                      dropdownColor: isLight ? scheme.surface : const Color(0xFF1B192E),
+                      style: TextStyle(
+                        color: scheme.onSurface,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      icon: Icon(
+                        Icons.keyboard_arrow_down_rounded,
+                        color: scheme.secondary,
+                        size: 20,
+                      ),
+                      items: _availableYears
+                          .map(
+                            (y) => DropdownMenuItem(
+                              value: y,
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.calendar_today_rounded,
+                                    size: 14,
+                                    color: scheme.secondary,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(y),
+                                ],
+                              ),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: (val) {
+                        if (val != null) {
+                          setState(() => _selectedYear = val);
+                          _loadTransactions();
+                        }
+                      },
+                    ),
                   ),
                 ),
               ),
-              const SizedBox(width: AppSizes.sm),
-              // Type Filter Toggle
+
+              const SizedBox(width: 10),
+
+              // Month Dropdown (Replaces horizontal chips)
               Expanded(
-                child: Row(
-                  children: [
-                    _typeChip('all', AppStrings.all),
-                    const SizedBox(width: AppSizes.xs),
-                    _typeChip('expense', AppStrings.expenses),
-                    const SizedBox(width: AppSizes.xs),
-                    _typeChip('income', AppStrings.income),
-                  ],
+                flex: 3,
+                child: Container(
+                  height: 42,
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  decoration: BoxDecoration(
+                    color: isLight ? scheme.surface : AppColors.surface,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: scheme.onSurface.withValues(alpha: 0.08),
+                    ),
+                  ),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      value: _selectedMonth,
+                      isExpanded: true,
+                      dropdownColor: isLight ? scheme.surface : const Color(0xFF1B192E),
+                      style: TextStyle(
+                        color: scheme.onSurface,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      icon: Icon(
+                        Icons.keyboard_arrow_down_rounded,
+                        color: scheme.secondary,
+                        size: 20,
+                      ),
+                      items: _months
+                          .map(
+                            (m) => DropdownMenuItem(
+                              value: m['code'],
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.event_note_rounded,
+                                    size: 14,
+                                    color: scheme.secondary,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      m['name']!,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: (val) {
+                        if (val != null) {
+                          setState(() => _selectedMonth = val);
+                          _loadTransactions();
+                        }
+                      },
+                    ),
+                  ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: AppSizes.sm),
-          // Horizontal Months Selector
-          SizedBox(
-            height: 36,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: _months.length,
-              separatorBuilder: (context, index) =>
-                  const SizedBox(width: AppSizes.xs),
-              itemBuilder: (context, index) {
-                final m = _months[index];
-                final isSelected = _selectedMonth == m['code'];
-                return ChoiceChip(
-                  label: Text(
-                    m['name']!,
-                    style: TextStyle(
-                      fontSize: AppSizes.fontSm,
-                      color: isSelected
-                          ? AppColors.whiteColor
-                          : AppColors.secondaryText,
-                    ),
-                  ),
-                  selected: isSelected,
-                  selectedColor: AppColors.primaryPurple,
-                  backgroundColor: AppColors.surfaceDeep,
-                  onSelected: (val) {
-                    if (val) {
-                      setState(() => _selectedMonth = m['code']!);
-                      _loadTransactions();
-                    }
-                  },
-                );
-              },
-            ),
+
+          const SizedBox(height: 10),
+
+          // Type Segmented Filter (All, Expenses, Income)
+          Row(
+            children: [
+              _typeButton('all', AppStrings.all, scheme),
+              const SizedBox(width: 6),
+              _typeButton('expense', AppStrings.expenses, scheme),
+              const SizedBox(width: 6),
+              _typeButton('income', AppStrings.income, scheme),
+            ],
           ),
         ],
       ),
     );
   }
 
-  Widget _typeChip(String type, String label) {
+  Widget _typeButton(String type, String label, ColorScheme scheme) {
     final isSelected = _selectedType == type;
+    Color activeColor = scheme.primary;
+    if (type == 'expense') activeColor = AppColors.expenseRed;
+    if (type == 'income') activeColor = AppColors.incomeGreen;
+
     return Expanded(
       child: InkWell(
         onTap: () {
           setState(() => _selectedType = type);
           _loadTransactions();
         },
-        borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+        borderRadius: BorderRadius.circular(10),
         child: Container(
-          height: 38,
-          alignment: Alignment.center,
+          padding: const EdgeInsets.symmetric(vertical: 8),
           decoration: BoxDecoration(
             color: isSelected
-                ? AppColors.primaryPurple.withValues(alpha: 0.25)
-                : AppColors.surfaceDeep,
-            borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+                ? activeColor.withValues(alpha: 0.2)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(10),
             border: Border.all(
               color: isSelected
-                  ? AppColors.primaryPurple
-                  : AppColors.whiteColor.withValues(alpha: 0.06),
+                  ? activeColor
+                  : scheme.onSurface.withValues(alpha: 0.06),
+              width: isSelected ? 1.5 : 1,
             ),
           ),
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: AppSizes.fontCaption,
-              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-              color: isSelected ? AppColors.whiteColor : AppColors.secondaryText,
+          child: Center(
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                color: isSelected
+                    ? scheme.onSurface
+                    : (Theme.of(context).brightness == Brightness.light
+                        ? AppColors.lightSecondaryOnSurface
+                        : AppColors.secondaryText),
+              ),
             ),
           ),
         ),
@@ -370,78 +500,169 @@ class _AllTransactionsScreenState extends State<AllTransactionsScreen> {
   }
 
   Widget _buildSummaryRow(
-    double totalIncome,
-    double totalExpense,
+    double income,
+    double expense,
     NumberFormat currencyFormat,
+    ColorScheme scheme,
+    bool isLight,
   ) {
-    final balance = totalIncome - totalExpense;
+    final net = income - expense;
 
-    return Container(
-      margin: const EdgeInsets.symmetric(
-        horizontal: AppSizes.pagePadding,
-        vertical: AppSizes.xs,
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSizes.pagePadding,
+        12,
+        AppSizes.pagePadding,
+        0,
       ),
-      padding: const EdgeInsets.all(AppSizes.md),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceDeep,
-        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-        border: Border.all(
-          color: AppColors.whiteColor.withValues(alpha: 0.05),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: isLight ? scheme.surfaceContainerHighest : AppColors.surfaceDeep,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: scheme.onSurface.withValues(alpha: 0.05),
+          ),
         ),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _summaryItem(
-            AppStrings.income,
-            '+${currencyFormat.format(totalIncome)}',
-            AppColors.incomeGreen,
-          ),
-          Container(
-            width: 1,
-            height: 28,
-            color: AppColors.whiteColor.withValues(alpha: 0.1),
-          ),
-          _summaryItem(
-            AppStrings.expenses,
-            '-${currencyFormat.format(totalExpense)}',
-            AppColors.expenseRed,
-          ),
-          Container(
-            width: 1,
-            height: 28,
-            color: AppColors.whiteColor.withValues(alpha: 0.1),
-          ),
-          _summaryItem(
-            AppStrings.totalBalance,
-            currencyFormat.format(balance),
-            balance >= 0 ? AppColors.whiteColor : AppColors.expenseRed,
-          ),
-        ],
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            _summaryItem(
+              'Income',
+              currencyFormat.format(income),
+              AppColors.incomeGreen,
+              Icons.arrow_downward_rounded,
+              scheme,
+              isLight,
+            ),
+            Container(
+              width: 1,
+              height: 32,
+              color: scheme.onSurface.withValues(alpha: 0.08),
+            ),
+            _summaryItem(
+              'Expense',
+              currencyFormat.format(expense),
+              AppColors.expenseRed,
+              Icons.arrow_upward_rounded,
+              scheme,
+              isLight,
+            ),
+            Container(
+              width: 1,
+              height: 32,
+              color: scheme.onSurface.withValues(alpha: 0.08),
+            ),
+            _summaryItem(
+              'Net',
+              currencyFormat.format(net),
+              net >= 0 ? AppColors.incomeGreen : AppColors.expenseRed,
+              Icons.account_balance_wallet_outlined,
+              scheme,
+              isLight,
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _summaryItem(String label, String value, Color valueColor) {
+  Widget _summaryItem(
+    String label,
+    String amount,
+    Color color,
+    IconData icon,
+    ColorScheme scheme,
+    bool isLight,
+  ) {
     return Column(
       children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: AppSizes.fontXs,
-            color: AppColors.secondaryText,
-          ),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 12, color: color),
+            const SizedBox(width: 4),
+            Text(
+              label,
+              style: TextStyle(
+                color: isLight ? AppColors.lightSecondaryOnSurface : AppColors.secondaryText,
+                fontSize: 11,
+              ),
+            ),
+          ],
         ),
-        const SizedBox(height: 2),
+        const SizedBox(height: 4),
         Text(
-          value,
+          amount,
           style: TextStyle(
-            fontSize: AppSizes.fontCaption,
+            color: color,
             fontWeight: FontWeight.bold,
-            color: valueColor,
+            fontSize: 13,
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildEmptyState(ColorScheme scheme, bool isLight) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: scheme.primary.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.receipt_long_rounded,
+                size: 48,
+                color: scheme.secondary,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No Transactions Found',
+              style: TextStyle(
+                color: scheme.onSurface,
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'There are no transactions logged for ${_getSelectedPeriodLabel()}.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: isLight ? AppColors.lightSecondaryOnSurface : AppColors.secondaryText,
+                fontSize: 13,
+              ),
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: scheme.primary,
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+              icon: Icon(Icons.add_rounded, color: scheme.onPrimary),
+              label: Text(
+                'Add Transaction',
+                style: TextStyle(color: scheme.onPrimary, fontWeight: FontWeight.bold),
+              ),
+              onPressed: () async {
+                final res = await context.push(RouteNames.addExpense);
+                if (res == true) _loadTransactions();
+              },
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

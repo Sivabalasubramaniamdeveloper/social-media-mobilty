@@ -338,6 +338,97 @@ class ExpenseDatabaseService {
     );
   }
 
+  /// Checks whether budgets exist for [monthYear].
+  /// If none exist and [isAutoRefresh] is true, checks the previous month or most recent month
+  /// with budgets, and clones those allocations for [monthYear].
+  Future<List<BudgetModel>> checkAndAutoRefreshBudgets(
+    String userId,
+    String monthYear, {
+    bool isAutoRefresh = true,
+  }) async {
+    final currentBudgets = await getAllBudgets(userId, monthYear);
+    if (currentBudgets.isNotEmpty || !isAutoRefresh) {
+      return currentBudgets;
+    }
+
+    final db = await database;
+    final pastRes = await db.rawQuery(
+      '''
+      SELECT month_year FROM budgets
+      WHERE user_id = ? AND month_year < ?
+      ORDER BY month_year DESC
+      LIMIT 1
+      ''',
+      [userId, monthYear],
+    );
+
+    if (pastRes.isEmpty) {
+      return [];
+    }
+
+    final prevMonthYear = pastRes.first['month_year'] as String;
+    final prevBudgets = await getAllBudgets(userId, prevMonthYear);
+    final now = DateTime.now();
+
+    for (var pb in prevBudgets) {
+      final newBudget = BudgetModel(
+        userId: userId,
+        categoryId: pb.categoryId,
+        allocatedAmount: pb.allocatedAmount,
+        monthYear: monthYear,
+        editCount: 0,
+        createdAt: now,
+        updatedAt: now,
+      );
+      await saveOrUpdateBudget(newBudget);
+    }
+
+    debugPrint('Auto-refreshed ${prevBudgets.length} budgets from $prevMonthYear to $monthYear for user: $userId');
+    return await getAllBudgets(userId, monthYear);
+  }
+
+  /// Manually copies budgets from the previous month to [targetMonthYear]
+  Future<int> copyBudgetsFromPreviousMonth(
+    String userId,
+    String targetMonthYear,
+  ) async {
+    final db = await database;
+    final pastRes = await db.rawQuery(
+      '''
+      SELECT month_year FROM budgets
+      WHERE user_id = ? AND month_year < ?
+      ORDER BY month_year DESC
+      LIMIT 1
+      ''',
+      [userId, targetMonthYear],
+    );
+
+    if (pastRes.isEmpty) return 0;
+
+    final prevMonthYear = pastRes.first['month_year'] as String;
+    final prevBudgets = await getAllBudgets(userId, prevMonthYear);
+    final now = DateTime.now();
+
+    int copiedCount = 0;
+    for (var pb in prevBudgets) {
+      final newBudget = BudgetModel(
+        userId: userId,
+        categoryId: pb.categoryId,
+        allocatedAmount: pb.allocatedAmount,
+        monthYear: targetMonthYear,
+        editCount: 0,
+        createdAt: now,
+        updatedAt: now,
+      );
+      await saveOrUpdateBudget(newBudget);
+      copiedCount++;
+    }
+
+
+    return copiedCount;
+  }
+
+
   // ==========================================
   // Savings Goals (Optional)
   // ==========================================

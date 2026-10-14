@@ -116,24 +116,29 @@ class _SetBudgetDialogState extends State<SetBudgetDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final isLight = theme.brightness == Brightness.light;
+    final secondaryText = isLight ? AppColors.lightSecondaryOnSurface : AppColors.secondaryText;
+
     return AlertDialog(
-      backgroundColor: AppColors.surface,
+      backgroundColor: isLight ? Colors.white : const Color(0xFF1B192E),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppSizes.radiusLg),
       ),
       title: Text(
         AppStrings.setOrEditBudget,
-        style: const TextStyle(
-          color: AppColors.whiteColor,
+        style: TextStyle(
+          color: scheme.onSurface,
           fontSize: AppSizes.fontTitleSm,
           fontWeight: FontWeight.bold,
         ),
       ),
       content: _isLoading
-          ? const SizedBox(
+          ? SizedBox(
               height: 120,
               child: Center(
-                child: CircularProgressIndicator(color: AppColors.primaryPurple),
+                child: CircularProgressIndicator(color: scheme.primary),
               ),
             )
           : Column(
@@ -145,7 +150,7 @@ class _SetBudgetDialogState extends State<SetBudgetDialog> {
                   style: TextStyle(
                     fontSize: AppSizes.fontBodySm,
                     fontWeight: FontWeight.w500,
-                    color: Theme.of(context).secondaryHeaderColor,
+                    color: theme.secondaryHeaderColor,
                   ),
                 ),
                 const SizedBox(height: AppSizes.sm),
@@ -153,10 +158,10 @@ class _SetBudgetDialogState extends State<SetBudgetDialog> {
                   height: AppSizes.buttonHeight,
                   padding: const EdgeInsets.symmetric(horizontal: AppSizes.md),
                   decoration: BoxDecoration(
-                    color: AppColors.surfaceDeep,
+                    color: isLight ? scheme.surfaceContainerHighest : AppColors.surfaceDeep,
                     borderRadius: BorderRadius.circular(AppSizes.radiusMd),
                     border: Border.all(
-                      color: AppColors.whiteColor.withValues(alpha: 0.08),
+                      color: scheme.onSurface.withValues(alpha: 0.08),
                     ),
                   ),
                   child: DropdownButtonHideUnderline(
@@ -165,11 +170,11 @@ class _SetBudgetDialogState extends State<SetBudgetDialog> {
                           ? _selectedCategoryId
                           : (_categories.isNotEmpty ? _categories.first.id : null),
                       isExpanded: true,
-                      icon: const Icon(
+                      icon: Icon(
                         Icons.keyboard_arrow_down_rounded,
-                        color: AppColors.secondaryText,
+                        color: secondaryText,
                       ),
-                      dropdownColor: AppColors.surface,
+                      dropdownColor: isLight ? scheme.surface : AppColors.surface,
                       style: AppTextStyles.bodyText,
                       onChanged: (val) {
                         if (val != null) setState(() => _selectedCategoryId = val);
@@ -191,37 +196,37 @@ class _SetBudgetDialogState extends State<SetBudgetDialog> {
                   style: TextStyle(
                     fontSize: AppSizes.fontBodySm,
                     fontWeight: FontWeight.w500,
-                    color: Theme.of(context).secondaryHeaderColor,
+                    color: theme.secondaryHeaderColor,
                   ),
                 ),
                 const SizedBox(height: AppSizes.sm),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: AppSizes.md),
                   decoration: BoxDecoration(
-                    color: AppColors.surfaceDeep,
+                    color: isLight ? scheme.surfaceContainerHighest : AppColors.surfaceDeep,
                     borderRadius: BorderRadius.circular(AppSizes.radiusMd),
                     border: Border.all(
-                      color: AppColors.whiteColor.withValues(alpha: 0.08),
+                      color: scheme.onSurface.withValues(alpha: 0.08),
                     ),
                   ),
                   child: TextField(
                     controller: _amountController,
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                    style: const TextStyle(
-                      color: AppColors.whiteColor,
+                    style: TextStyle(
+                      color: scheme.onSurface,
                       fontSize: AppSizes.fontSubheading,
                       fontWeight: FontWeight.w600,
                     ),
                     decoration: InputDecoration(
                       prefixText: '\$ ',
-                      prefixStyle: const TextStyle(
-                        color: AppColors.primaryPurple,
+                      prefixStyle: TextStyle(
+                        color: scheme.primary,
                         fontWeight: FontWeight.bold,
                         fontSize: AppSizes.fontSubheading,
                       ),
                       hintText: AppStrings.sampleBudgetAmount,
-                      hintStyle: const TextStyle(
-                        color: AppColors.secondaryText,
+                      hintStyle: TextStyle(
+                        color: secondaryText,
                         fontSize: AppSizes.fontBodyLg,
                       ),
                       border: InputBorder.none,
@@ -235,12 +240,12 @@ class _SetBudgetDialogState extends State<SetBudgetDialog> {
           onPressed: () => Navigator.pop(context),
           child: Text(
             AppStrings.cancel,
-            style: const TextStyle(color: AppColors.secondaryText),
+            style: TextStyle(color: secondaryText),
           ),
         ),
         ElevatedButton(
           style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primaryPurple,
+            backgroundColor: scheme.primary,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(AppSizes.radiusSm),
             ),
@@ -249,7 +254,7 @@ class _SetBudgetDialogState extends State<SetBudgetDialog> {
           child: Text(
             AppStrings.saveBudget,
             style: const TextStyle(
-              color: AppColors.whiteColor,
+              color: Colors.white,
               fontWeight: FontWeight.bold,
             ),
           ),

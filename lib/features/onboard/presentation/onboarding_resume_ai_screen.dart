@@ -97,10 +97,17 @@ class _OnboardingView extends BaseScreen {
 
   @override
   Widget buildBody(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final isLight = theme.brightness == Brightness.light;
+
     final size = MediaQuery.of(context).size;
     final width = size.width;
     final height = size.height;
     final isTablet = width > 600;
+
+    final secondaryTextColor =
+        isLight ? AppColors.lightSecondaryOnSurface : AppColors.secondaryText;
 
     return SafeArea(
       child: Padding(
@@ -113,10 +120,10 @@ class _OnboardingView extends BaseScreen {
                 onPressed: onSkip,
                 child: Text(
                   AppStrings.skip,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w500,
-                    color: AppColors.secondaryText,
+                    color: secondaryTextColor,
                   ),
                 ),
               ),
@@ -157,10 +164,10 @@ class _OnboardingView extends BaseScreen {
                             ),
                             TextSpan(
                               text: slide.titleHighlight,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 26,
                                 fontWeight: FontWeight.bold,
-                                color: AppColors.primaryPurple,
+                                color: scheme.primary,
                               ),
                             ),
                           ],
@@ -173,7 +180,7 @@ class _OnboardingView extends BaseScreen {
                         style: TextStyle(
                           fontSize: isTablet ? 16 : 14,
                           height: 1.5,
-                          color: AppColors.secondaryText,
+                          color: secondaryTextColor,
                         ),
                       ),
                       const Spacer(),
@@ -186,7 +193,7 @@ class _OnboardingView extends BaseScreen {
               mainAxisAlignment: MainAxisAlignment.center,
               children: List.generate(
                 slides.length,
-                (i) => _dot(i == currentIndex),
+                (i) => _dot(i == currentIndex, scheme),
               ),
             ),
             SizedBox(height: height * 0.04),
@@ -196,8 +203,8 @@ class _OnboardingView extends BaseScreen {
               child: ElevatedButton(
                 onPressed: onNext,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primaryPurple,
-                  foregroundColor: AppColors.whiteColor,
+                  backgroundColor: scheme.primary,
+                  foregroundColor: scheme.onPrimary,
                   elevation: 0,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(30),
@@ -234,6 +241,9 @@ class _OnboardingView extends BaseScreen {
     double width,
     _OnboardIconType type,
   ) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final isLight = theme.brightness == Brightness.light;
     final boxSize = isTablet ? 280.0 : width * 0.72;
 
     return Container(
@@ -244,30 +254,39 @@ class _OnboardingView extends BaseScreen {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            AppColors.darkBackgroundMid.withOpacity(0.9),
-            AppColors.darkBackgroundBottom.withOpacity(0.95),
-          ],
+          colors: isLight
+              ? [
+                  scheme.surfaceContainerHighest,
+                  scheme.surfaceContainerHighest,
+                ]
+              : [
+                  AppColors.darkBackgroundMid.withValues(alpha: 0.9),
+                  AppColors.darkBackgroundBottom.withValues(alpha: 0.95),
+                ],
         ),
-        border: Border.all(color: AppColors.accentBlue.withOpacity(0.3)),
+        border: Border.all(
+          color: scheme.secondary.withValues(alpha: 0.3),
+        ),
         boxShadow: [
           BoxShadow(
-            color: AppColors.accentBlue.withOpacity(0.2),
+            color: scheme.secondary.withValues(alpha: 0.2),
             blurRadius: 40,
             spreadRadius: 2,
           ),
           BoxShadow(
-            color: AppColors.primaryPurple.withOpacity(0.15),
+            color: scheme.primary.withValues(alpha: 0.15),
             blurRadius: 60,
             spreadRadius: 4,
           ),
         ],
       ),
-      child: Center(child: _getHeroContent(type)),
+      child: Center(child: _getHeroContent(context, type)),
     );
   }
 
-  Widget _getHeroContent(_OnboardIconType type) {
+  Widget _getHeroContent(BuildContext context, _OnboardIconType type) {
+    final scheme = Theme.of(context).colorScheme;
+
     switch (type) {
       case _OnboardIconType.study:
         return Column(
@@ -276,28 +295,28 @@ class _OnboardingView extends BaseScreen {
             Container(
               padding: const EdgeInsets.all(22),
               decoration: BoxDecoration(
-                color: AppColors.primaryPurple.withOpacity(0.2),
+                color: scheme.primary.withValues(alpha: 0.2),
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: AppColors.primaryPurple.withOpacity(0.6),
+                  color: scheme.primary.withValues(alpha: 0.6),
                   width: 1.5,
                 ),
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.psychology_alt_rounded,
                 size: 64,
-                color: AppColors.primaryPurple,
+                color: scheme.primary,
               ),
             ),
             const SizedBox(height: 24),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                _badgeIcon(Icons.menu_book_rounded),
+                _badgeIcon(context, Icons.menu_book_rounded),
                 const SizedBox(width: 12),
-                _badgeIcon(Icons.quiz_rounded),
+                _badgeIcon(context, Icons.quiz_rounded),
                 const SizedBox(width: 12),
-                _badgeIcon(Icons.edit_note_rounded),
+                _badgeIcon(context, Icons.edit_note_rounded),
               ],
             ),
           ],
@@ -309,24 +328,24 @@ class _OnboardingView extends BaseScreen {
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: AppColors.accentBlue.withOpacity(0.15),
+                color: scheme.secondary.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(
-                  color: AppColors.accentBlue.withOpacity(0.5),
+                  color: scheme.secondary.withValues(alpha: 0.5),
                   width: 1.5,
                 ),
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.badge_rounded,
                 size: 64,
-                color: AppColors.accentBlue,
+                color: scheme.secondary,
               ),
             ),
             const SizedBox(height: 16),
-            const Icon(
+            Icon(
               Icons.auto_awesome,
               size: 24,
-              color: AppColors.primaryPurple,
+              color: scheme.primary,
             ),
           ],
         );
@@ -337,20 +356,20 @@ class _OnboardingView extends BaseScreen {
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: AppColors.primaryPurple.withOpacity(0.25),
+                color: scheme.primary.withValues(alpha: 0.25),
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.primaryPurple.withOpacity(0.4),
+                    color: scheme.primary.withValues(alpha: 0.4),
                     blurRadius: 30,
                     spreadRadius: 8,
                   ),
                 ],
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.graphic_eq_rounded,
                 size: 64,
-                color: AppColors.whiteColor,
+                color: scheme.onSurface,
               ),
             ),
           ],
@@ -358,20 +377,22 @@ class _OnboardingView extends BaseScreen {
     }
   }
 
-  Widget _badgeIcon(IconData icon) {
+  Widget _badgeIcon(BuildContext context, IconData icon) {
+    final scheme = Theme.of(context).colorScheme;
+
     return Container(
       width: 42,
       height: 42,
       decoration: BoxDecoration(
-        color: AppColors.whiteColor.withOpacity(0.06),
+        color: scheme.onSurface.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.whiteColor.withOpacity(0.1)),
+        border: Border.all(color: scheme.onSurface.withValues(alpha: 0.1)),
       ),
-      child: Icon(icon, size: 20, color: AppColors.whiteColor),
+      child: Icon(icon, size: 20, color: scheme.onSurface),
     );
   }
 
-  Widget _dot(bool isActive) {
+  Widget _dot(bool isActive, ColorScheme scheme) {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 250),
       margin: const EdgeInsets.symmetric(horizontal: 4),
@@ -380,8 +401,8 @@ class _OnboardingView extends BaseScreen {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(4),
         color: isActive
-            ? AppColors.primaryPurple
-            : AppColors.whiteColor.withOpacity(0.25),
+            ? scheme.primary
+            : scheme.onSurface.withValues(alpha: 0.25),
       ),
     );
   }

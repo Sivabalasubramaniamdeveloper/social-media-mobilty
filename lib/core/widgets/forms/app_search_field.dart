@@ -18,19 +18,24 @@ class AppSearchField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isLight = Theme.of(context).brightness == Brightness.light;
+    final secondaryText = isLight
+        ? AppColors.lightSecondaryOnSurface
+        : AppColors.secondaryText;
+
     return Container(
       height: AppSizes.searchHeight,
       padding: const EdgeInsets.symmetric(horizontal: AppSizes.lg),
       decoration: AppDecorations.glass(
-        color: const Color(0xFF181528),
+        context: context,
         fillOpacity: 0.85,
         borderOpacity: 0.08,
       ),
       child: Row(
         children: [
-          const Icon(
+          Icon(
             Icons.search_rounded,
-            color: AppColors.secondaryText,
+            color: secondaryText,
             size: AppSizes.iconMd,
           ),
           const SizedBox(width: AppSizes.md),
@@ -44,11 +49,9 @@ class AppSearchField extends StatelessWidget {
               ),
               decoration: InputDecoration(
                 hintText: hint,
-                hintStyle: const TextStyle(
-                  color: AppColors.secondaryText,
-                  fontSize: 14,
-                ),
+                hintStyle: TextStyle(color: secondaryText, fontSize: 14),
                 border: InputBorder.none,
+                focusedBorder: InputBorder.none,
                 isDense: true,
                 contentPadding: EdgeInsets.zero,
               ),

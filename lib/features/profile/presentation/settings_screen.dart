@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mineai/config/language/language.dart';
 import 'package:mineai/config/router/route_names.dart';
+import 'package:mineai/config/theme/theme_cubit.dart';
 import 'package:mineai/core/base/abstract/base_screen.dart';
 import 'package:mineai/core/constants/app_colors.dart';
 import 'package:mineai/core/constants/app_strings.dart';
@@ -94,9 +95,15 @@ class _SettingsView extends BaseScreen {
   }
 
   void _showLanguageSheet(BuildContext context) {
+    final theme = Theme.of(context);
+    final isLight = theme.brightness == Brightness.light;
+    final sheetBg = isLight ? Colors.white : const Color(0xFF1B192E);
+    final textColor = isLight ? AppColors.lightOnSurface : AppColors.whiteColor;
+    final checkColor = theme.colorScheme.primary;
+
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF1B192E),
+      backgroundColor: sheetBg,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -110,23 +117,20 @@ class _SettingsView extends BaseScreen {
               children: [
                 Text(
                   AppStrings.selectLanguage,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.whiteColor,
+                    color: textColor,
                   ),
                 ),
                 const SizedBox(height: 16),
                 ListTile(
                   title: Text(
                     AppStrings.englishLang,
-                    style: const TextStyle(color: AppColors.whiteColor),
+                    style: TextStyle(color: textColor),
                   ),
                   trailing: context.locale.languageCode == 'en'
-                      ? const Icon(
-                          Icons.check_circle_rounded,
-                          color: AppColors.primaryPurple,
-                        )
+                      ? Icon(Icons.check_circle_rounded, color: checkColor)
                       : null,
                   onTap: () async {
                     CustomLanguage.changeLanguage(context, 'en');
@@ -138,13 +142,10 @@ class _SettingsView extends BaseScreen {
                 ListTile(
                   title: Text(
                     AppStrings.tamilLang,
-                    style: const TextStyle(color: AppColors.whiteColor),
+                    style: TextStyle(color: textColor),
                   ),
                   trailing: context.locale.languageCode == 'ta'
-                      ? const Icon(
-                          Icons.check_circle_rounded,
-                          color: AppColors.primaryPurple,
-                        )
+                      ? Icon(Icons.check_circle_rounded, color: checkColor)
                       : null,
                   onTap: () async {
                     CustomLanguage.changeLanguage(context, 'ta');
@@ -156,6 +157,114 @@ class _SettingsView extends BaseScreen {
               ],
             ),
           ),
+        );
+      },
+    );
+  }
+
+  void _showThemeSheet(BuildContext context) {
+    final theme = Theme.of(context);
+    final isLight = theme.brightness == Brightness.light;
+    final sheetBg = isLight ? Colors.white : const Color(0xFF1B192E);
+    final titleColor = isLight
+        ? AppColors.lightOnSurface
+        : AppColors.whiteColor;
+    final subtitleColor = isLight
+        ? AppColors.lightSecondaryOnSurface
+        : AppColors.secondaryText;
+    final nameColor = isLight ? AppColors.lightOnSurface : AppColors.whiteColor;
+    final checkColor = theme.colorScheme.primary;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: sheetBg,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (bottomSheetCtx) {
+        return BlocBuilder<ThemeCubit, ThemeState>(
+          builder: (context, themeState) {
+            return SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  vertical: 20,
+                  horizontal: 20,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Choose App Theme',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: titleColor,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Changes theme instantly and saves as your default',
+                      style: TextStyle(fontSize: 13, color: subtitleColor),
+                    ),
+                    const SizedBox(height: 16),
+                    ...AppThemeMode.values.map((mode) {
+                      final isSelected = themeState.mode == mode;
+                      return ListTile(
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
+                        leading: Container(
+                          width: 34,
+                          height: 34,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: mode.previewBackgroundColor,
+                            border: Border.all(
+                              color: mode.previewPrimaryColor,
+                              width: 2.5,
+                            ),
+                          ),
+                          child: Center(
+                            child: Container(
+                              width: 12,
+                              height: 12,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: mode.previewPrimaryColor,
+                              ),
+                            ),
+                          ),
+                        ),
+                        title: Text(
+                          mode.displayName,
+                          style: TextStyle(
+                            color: nameColor,
+                            fontWeight: isSelected
+                                ? FontWeight.bold
+                                : FontWeight.w500,
+                          ),
+                        ),
+                        trailing: isSelected
+                            ? Icon(
+                                Icons.check_circle_rounded,
+                                color: checkColor,
+                              )
+                            : null,
+                        onTap: () {
+                          context.read<ThemeCubit>().setTheme(mode);
+                          if (bottomSheetCtx.mounted) {
+                            Navigator.of(bottomSheetCtx).pop();
+                          }
+                        },
+                      );
+                    }),
+                  ],
+                ),
+              ),
+            );
+          },
         );
       },
     );
@@ -235,6 +344,16 @@ class _SettingsView extends BaseScreen {
                   title: AppStrings.hapticFeedback,
                   value: hapticFeedback,
                   onChanged: onHapticChanged,
+                ),
+                BlocBuilder<ThemeCubit, ThemeState>(
+                  builder: (context, themeState) {
+                    return AppListTileCard(
+                      icon: Icons.palette_outlined,
+                      title: 'App Theme',
+                      subtitle: themeState.mode.displayName,
+                      onTap: () => _showThemeSheet(context),
+                    );
+                  },
                 ),
                 AppListTileCard(
                   icon: Icons.account_balance_wallet_outlined,

@@ -84,17 +84,22 @@ class _SavingsGoalDialogState extends State<SavingsGoalDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final isLight = theme.brightness == Brightness.light;
+    final secondaryText = isLight ? AppColors.lightSecondaryOnSurface : AppColors.secondaryText;
+
     final isEditing = widget.currentGoal != null && widget.currentGoal! > 0;
 
     return AlertDialog(
-      backgroundColor: AppColors.surface,
+      backgroundColor: isLight ? Colors.white : scheme.surface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppSizes.radiusLg),
       ),
       title: Text(
         isEditing ? AppStrings.editSavingsGoal : AppStrings.addSavingsGoal,
-        style: const TextStyle(
-          color: AppColors.whiteColor,
+        style: TextStyle(
+          color: scheme.onSurface,
           fontSize: AppSizes.fontTitleSm,
           fontWeight: FontWeight.bold,
         ),
@@ -105,8 +110,8 @@ class _SavingsGoalDialogState extends State<SavingsGoalDialog> {
         children: [
           Text(
             '${AppStrings.targetAmount} (${AppStrings.optional})',
-            style: const TextStyle(
-              color: AppColors.secondaryText,
+            style: TextStyle(
+              color: secondaryText,
               fontSize: AppSizes.fontBodySm,
             ),
           ),
@@ -114,8 +119,8 @@ class _SavingsGoalDialogState extends State<SavingsGoalDialog> {
           TextField(
             controller: _controller,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            style: const TextStyle(
-              color: AppColors.whiteColor,
+            style: TextStyle(
+              color: scheme.onSurface,
               fontSize: AppSizes.fontTitleSm,
             ),
             decoration: InputDecoration(
@@ -126,9 +131,11 @@ class _SavingsGoalDialogState extends State<SavingsGoalDialog> {
                 fontWeight: FontWeight.bold,
               ),
               hintText: AppStrings.sampleSavingsGoal,
-              hintStyle: const TextStyle(color: AppColors.secondaryText),
+              hintStyle: TextStyle(color: secondaryText),
               filled: true,
-              fillColor: Colors.black26,
+              fillColor: isLight
+                  ? scheme.surfaceContainerHighest
+                  : Colors.black26,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(AppSizes.radiusSm),
                 borderSide: BorderSide.none,
@@ -142,12 +149,12 @@ class _SavingsGoalDialogState extends State<SavingsGoalDialog> {
           onPressed: () => Navigator.pop(context),
           child: Text(
             AppStrings.cancel,
-            style: const TextStyle(color: AppColors.secondaryText),
+            style: TextStyle(color: secondaryText),
           ),
         ),
         ElevatedButton(
           style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primaryPurple,
+            backgroundColor: scheme.primary,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(AppSizes.radiusSm),
             ),
@@ -156,7 +163,7 @@ class _SavingsGoalDialogState extends State<SavingsGoalDialog> {
           child: Text(
             AppStrings.submit,
             style: const TextStyle(
-              color: AppColors.whiteColor,
+              color: Colors.white,
               fontWeight: FontWeight.bold,
             ),
           ),

@@ -19,6 +19,11 @@ class SpendingGraphCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final isLight = theme.brightness == Brightness.light;
+    final secondaryText = isLight ? AppColors.lightSecondaryOnSurface : AppColors.secondaryText;
+
     final dailyTotals = List<double>.filled(7, 0.0);
     final now = DateTime.now();
 
@@ -36,10 +41,10 @@ class SpendingGraphCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(AppSizes.xl),
       decoration: BoxDecoration(
-        color: AppColors.surfaceDeep,
+        color: isLight ? scheme.surfaceContainerHighest : AppColors.surfaceDeep,
         borderRadius: BorderRadius.circular(AppSizes.radiusXl),
         border: Border.all(
-          color: AppColors.whiteColor.withValues(alpha: 0.06),
+          color: scheme.onSurface.withValues(alpha: 0.06),
         ),
       ),
       child: Column(
@@ -52,21 +57,21 @@ class SpendingGraphCard extends StatelessWidget {
                 style: TextStyle(
                   fontSize: AppSizes.fontSubheading,
                   fontWeight: FontWeight.bold,
-                  color: Theme.of(context).secondaryHeaderColor,
+                  color: theme.secondaryHeaderColor,
                 ),
               ),
               DropdownButtonHideUnderline(
                 child: DropdownButton<String>(
                   value: selectedPeriod,
-                  icon: const Icon(
+                  icon: Icon(
                     Icons.keyboard_arrow_down_rounded,
-                    color: AppColors.accentLavender,
+                    color: scheme.secondary,
                     size: AppSizes.fontTitleSm,
                   ),
-                  dropdownColor: AppColors.surface,
-                  style: const TextStyle(
+                  dropdownColor: isLight ? scheme.surface : AppColors.surface,
+                  style: TextStyle(
                     fontSize: AppSizes.fontCaption,
-                    color: AppColors.accentLavender,
+                    color: scheme.secondary,
                     fontWeight: FontWeight.w600,
                   ),
                   onChanged: (val) {
@@ -91,20 +96,25 @@ class SpendingGraphCard extends StatelessWidget {
             height: 160,
             width: double.infinity,
             child: CustomPaint(
-              painter: _DynamicSpendingGraphPainter(dailyAmounts: dailyTotals),
+              painter: _DynamicSpendingGraphPainter(
+                dailyAmounts: dailyTotals,
+                gridColor: scheme.onSurface.withValues(alpha: 0.04),
+                lineColor: scheme.secondary,
+                fillColor: AppColors.primaryPurpleLight,
+              ),
             ),
           ),
           const SizedBox(height: AppSizes.sm),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildDayLabel(AppStrings.daysMon),
-              _buildDayLabel(AppStrings.daysTue),
-              _buildDayLabel(AppStrings.daysWed),
-              _buildDayLabel(AppStrings.daysThu),
-              _buildDayLabel(AppStrings.daysFri),
-              _buildDayLabel(AppStrings.daysSat),
-              _buildDayLabel(AppStrings.daysSun),
+              _buildDayLabel(AppStrings.daysMon, secondaryText),
+              _buildDayLabel(AppStrings.daysTue, secondaryText),
+              _buildDayLabel(AppStrings.daysWed, secondaryText),
+              _buildDayLabel(AppStrings.daysThu, secondaryText),
+              _buildDayLabel(AppStrings.daysFri, secondaryText),
+              _buildDayLabel(AppStrings.daysSat, secondaryText),
+              _buildDayLabel(AppStrings.daysSun, secondaryText),
             ],
           ),
         ],
@@ -112,11 +122,11 @@ class SpendingGraphCard extends StatelessWidget {
     );
   }
 
-  Widget _buildDayLabel(String label) {
+  Widget _buildDayLabel(String label, Color color) {
     return Text(
       label,
-      style: const TextStyle(
-        color: AppColors.secondaryText,
+      style: TextStyle(
+        color: color,
         fontSize: AppSizes.fontSm,
       ),
     );
@@ -125,13 +135,21 @@ class SpendingGraphCard extends StatelessWidget {
 
 class _DynamicSpendingGraphPainter extends CustomPainter {
   final List<double> dailyAmounts;
+  final Color gridColor;
+  final Color lineColor;
+  final Color fillColor;
 
-  _DynamicSpendingGraphPainter({required this.dailyAmounts});
+  _DynamicSpendingGraphPainter({
+    required this.dailyAmounts,
+    required this.gridColor,
+    required this.lineColor,
+    required this.fillColor,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
     final gridPaint = Paint()
-      ..color = AppColors.whiteColor.withValues(alpha: 0.04)
+      ..color = gridColor
       ..strokeWidth = 1.0;
 
     const int lines = 4;
@@ -175,15 +193,15 @@ class _DynamicSpendingGraphPainter extends CustomPainter {
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
         colors: [
-          AppColors.primaryPurpleLight.withValues(alpha: 0.35),
-          AppColors.primaryPurpleLight.withValues(alpha: 0.0),
+          fillColor.withValues(alpha: 0.35),
+          fillColor.withValues(alpha: 0.0),
         ],
       ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
 
     canvas.drawPath(fillPath, fillPaint);
 
     final linePaint = Paint()
-      ..color = AppColors.accentLavender
+      ..color = lineColor
       ..strokeWidth = 3.0
       ..style = PaintingStyle.stroke;
 
@@ -192,6 +210,7 @@ class _DynamicSpendingGraphPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _DynamicSpendingGraphPainter oldDelegate) {
-    return oldDelegate.dailyAmounts != dailyAmounts;
+    return oldDelegate.dailyAmounts != dailyAmounts ||
+        oldDelegate.lineColor != lineColor;
   }
 }

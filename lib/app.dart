@@ -10,6 +10,7 @@ import 'package:quick_actions/quick_actions.dart';
 import 'app_providers.dart';
 import 'config/router/route_generator.dart';
 import 'config/theme/app_theme.dart';
+import 'config/theme/theme_cubit.dart';
 import 'core/network/internet_connectivity.dart';
 import 'instance/locator.dart';
 
@@ -70,34 +71,38 @@ class _MyAppState extends State<MyApp> {
         splitScreenMode: true,
         designSize: const Size(412, 846),
         builder: (context, child) {
-          return MaterialApp.router(
-            title: FlavorConfig.title,
-            routerConfig: AppRouter.router,
-            theme: AppTheme.getPrimaryTheme(),
-            localizationsDelegates: context.localizationDelegates,
-            supportedLocales: context.supportedLocales,
-            locale: context.locale,
-            debugShowCheckedModeBanner: false,
-            builder: (context, child) {
-              return BlocListener<ConnectivityCubit, ConnectivityStatus>(
-                listener: (context, state) {
-                  if (!_firstCheckDone &&
-                      state != ConnectivityStatus.disconnected) {
-                    _firstCheckDone = true; // skip first state
-                    return;
-                  }
+          return BlocBuilder<ThemeCubit, ThemeState>(
+            builder: (context, themeState) {
+              return MaterialApp.router(
+                title: FlavorConfig.title,
+                routerConfig: AppRouter.router,
+                theme: themeState.themeData,
+                localizationsDelegates: context.localizationDelegates,
+                supportedLocales: context.supportedLocales,
+                locale: context.locale,
+                debugShowCheckedModeBanner: false,
+                builder: (context, child) {
+                  return BlocListener<ConnectivityCubit, ConnectivityStatus>(
+                    listener: (context, state) {
+                      if (!_firstCheckDone &&
+                          state != ConnectivityStatus.disconnected) {
+                        _firstCheckDone = true; // skip first state
+                        return;
+                      }
 
-                  if (state == ConnectivityStatus.disconnected) {
-                    _firstCheckDone = true;
-                    SnackBarHelper.networkError(
-                      context,
-                      "No Internet Connection",
-                    );
-                  } else {
-                    SnackBarHelper.showSuccess(context, "Back Online");
-                  }
+                      if (state == ConnectivityStatus.disconnected) {
+                        _firstCheckDone = true;
+                        SnackBarHelper.networkError(
+                          context,
+                          "No Internet Connection",
+                        );
+                      } else {
+                        SnackBarHelper.showSuccess(context, "Back Online");
+                      }
+                    },
+                    child: child!,
+                  );
                 },
-                child: child!,
               );
             },
           );
@@ -105,6 +110,7 @@ class _MyAppState extends State<MyApp> {
       ),
     );
   }
+
 
   // Handle navigation centrally so we can ensure go_router is ready.
   Future<void> _handleShortcut(String shortcutType) async {

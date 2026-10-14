@@ -22,6 +22,11 @@ class TransactionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final isLight = theme.brightness == Brightness.light;
+    final secondaryText = isLight ? AppColors.lightSecondaryOnSurface : AppColors.secondaryText;
+
     final isExpense = transaction.type == 'expense';
 
     return InkWell(
@@ -33,10 +38,10 @@ class TransactionTile extends StatelessWidget {
           vertical: AppSizes.fontBody,
         ),
         decoration: BoxDecoration(
-          color: AppColors.surfaceDeep,
+          color: isLight ? scheme.surfaceContainerHighest : AppColors.surfaceDeep,
           borderRadius: BorderRadius.circular(AppSizes.radiusLg - 2),
           border: Border.all(
-            color: AppColors.whiteColor.withValues(alpha: 0.05),
+            color: scheme.onSurface.withValues(alpha: 0.05),
           ),
         ),
         child: Row(
@@ -67,18 +72,18 @@ class TransactionTile extends StatelessWidget {
                 children: [
                   Text(
                     AppStrings.getCategoryName(transaction.title),
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: AppSizes.fontBody,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.whiteColor,
+                      color: scheme.onSurface,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     DateFormat('dd MMM, hh:mm a').format(transaction.time),
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: AppSizes.fontSm,
-                      color: AppColors.secondaryText,
+                      color: secondaryText,
                     ),
                   ),
                 ],
@@ -100,9 +105,9 @@ class TransactionTile extends StatelessWidget {
                     transaction.note!,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: AppSizes.fontXs,
-                      color: AppColors.secondaryText,
+                      color: secondaryText,
                     ),
                   ),
               ],
@@ -110,9 +115,9 @@ class TransactionTile extends StatelessWidget {
             if (onDelete != null) ...[
               const SizedBox(width: AppSizes.xs),
               IconButton(
-                icon: const Icon(
+                icon: Icon(
                   Icons.delete_outline_rounded,
-                  color: AppColors.secondaryText,
+                  color: secondaryText,
                   size: AppSizes.iconSm,
                 ),
                 tooltip: AppStrings.delete,

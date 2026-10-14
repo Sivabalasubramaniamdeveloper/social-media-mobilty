@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:mineai/config/router/route_names.dart';
 import 'package:mineai/core/constants/app_colors.dart';
 import 'package:mineai/core/constants/app_sizes.dart';
 import 'package:mineai/core/constants/app_strings.dart';
+import 'package:mineai/core/database/app_database.dart';
+import 'package:mineai/core/utils/user_helper.dart';
 import 'package:mineai/core/widgets/app_widgets.dart';
 import 'package:mineai/core/widgets/gradiant_background.dart';
 import 'package:mineai/features/expenses/presentation/expense_tracker_screen.dart';
 import 'package:mineai/features/profile/cubit/user_profile_cubit.dart';
 import 'package:mineai/features/profile/cubit/user_profile_state.dart';
 import 'package:mineai/features/profile/presentation/settings_screen.dart';
+
 
 class HomeDashboardScreen extends StatefulWidget {
   const HomeDashboardScreen({super.key});
@@ -45,8 +49,8 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
             index: _navIndex,
             children: [
               _buildHomeContent(),
-              const Center(
-                child: Text('History', style: TextStyle(color: Colors.white)),
+              Center(
+                child: Text('History', style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
               ),
               const ExpenseTrackerScreen(),
               const SettingsScreen(),
@@ -94,6 +98,9 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
   Widget _buildHeader() {
     return BlocBuilder<UserProfileCubit, UserProfileState>(
       builder: (context, state) {
+        final theme = Theme.of(context);
+        final scheme = theme.colorScheme;
+
         String greetingName = 'User';
         if (state is UserProfileLoaded) {
           greetingName = state.profile.fullName.split(' ').first;
@@ -116,9 +123,9 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
                 const SizedBox(height: 4),
                 Text(
                   AppStrings.yourAiProductivityHub,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 14,
-                    color: AppColors.primaryPurple,
+                    color: scheme.primary,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -213,6 +220,11 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
   }
 
   Widget _buildRecentActivityList() {
+    final theme = Theme.of(context);
+    final isLight = theme.brightness == Brightness.light;
+    final secondaryTextColor =
+        isLight ? AppColors.lightSecondaryOnSurface : AppColors.secondaryText;
+
     final List<_ActivityItem> activities = [
       _ActivityItem(
         title: AppStrings.resumeUpdated,
@@ -244,9 +256,9 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
               showChevron: false,
               trailing: Text(
                 item.time,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 12,
-                  color: AppColors.secondaryText,
+                  color: secondaryTextColor,
                 ),
               ),
             ),
@@ -256,12 +268,19 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
   }
 
   Widget _buildBottomNav() {
+    final theme = Theme.of(context);
+    final isLight = theme.brightness == Brightness.light;
+
     return Container(
       height: AppSizes.bottomNavHeight,
       decoration: BoxDecoration(
-        color: const Color(0xFF110E24).withValues(alpha: 0.96),
+        color: isLight
+            ? theme.colorScheme.surfaceContainerHighest
+            : theme.colorScheme.surface.withValues(alpha: 0.96),
         border: Border(
-          top: BorderSide(color: AppColors.whiteColor.withValues(alpha: 0.08)),
+          top: BorderSide(
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.08),
+          ),
         ),
       ),
       child: Row(
@@ -277,13 +296,32 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
   }
 
   Widget _navItem(int index, IconData icon, String label) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final isLight = theme.brightness == Brightness.light;
     final isSelected = _navIndex == index;
+
     final color = isSelected
-        ? AppColors.accentLavender
-        : AppColors.secondaryText;
+        ? scheme.primary
+        : (isLight ? AppColors.lightSecondaryOnSurface : AppColors.secondaryText);
 
     return InkWell(
-      onTap: () => setState(() => _navIndex = index),
+      onTap: () async {
+        if (index == 2) {
+          final userId = await UserHelper.getCurrentUserId();
+          final monthYear = DateFormat('yyyy-MM').format(DateTime.now());
+          final budgets = await ExpenseDatabaseService.instance
+              .getAllBudgets(userId, monthYear);
+          final txs =
+              await ExpenseDatabaseService.instance.getTransactions(userId);
+          if (budgets.isEmpty && txs.isEmpty && mounted) {
+            await context.push(RouteNames.incomeBudget);
+            if (mounted) setState(() => _navIndex = 2);
+            return;
+          }
+        }
+        setState(() => _navIndex = index);
+      },
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -300,6 +338,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
         ],
       ),
     );
+
   }
 }
 

@@ -21,6 +21,10 @@ class SavingsGoalCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final isLight = theme.brightness == Brightness.light;
+
     if (monthlySavingsGoal == null) {
       return InkWell(
         onTap: onTap,
@@ -31,10 +35,12 @@ class SavingsGoalCard extends StatelessWidget {
             vertical: AppSizes.md,
           ),
           decoration: BoxDecoration(
-            color: AppColors.surfaceElevated.withValues(alpha: 0.5),
+            color: isLight
+                ? scheme.surfaceContainerHighest.withValues(alpha: 0.5)
+                : AppColors.surfaceElevated.withValues(alpha: 0.5),
             borderRadius: BorderRadius.circular(AppSizes.radiusMd),
             border: Border.all(
-              color: AppColors.primaryPurple.withValues(alpha: 0.2),
+              color: scheme.primary.withValues(alpha: 0.2),
             ),
           ),
           child: Row(
@@ -42,16 +48,16 @@ class SavingsGoalCard extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.savings_rounded,
-                    color: AppColors.accentLavender,
+                    color: scheme.secondary,
                     size: AppSizes.iconSm,
                   ),
                   const SizedBox(width: AppSizes.sm),
                   Text(
                     '${AppStrings.savingsGoal} (${AppStrings.optional})',
-                    style: const TextStyle(
-                      color: AppColors.whiteColor,
+                    style: TextStyle(
+                      color: scheme.onSurface,
                       fontSize: AppSizes.fontBodySm,
                     ),
                   ),
@@ -59,8 +65,8 @@ class SavingsGoalCard extends StatelessWidget {
               ),
               Text(
                 '+ ${AppStrings.addSavingsGoal}',
-                style: const TextStyle(
-                  color: AppColors.primaryPurple,
+                style: TextStyle(
+                  color: scheme.primary,
                   fontSize: AppSizes.fontCaption,
                   fontWeight: FontWeight.bold,
                 ),
@@ -81,10 +87,12 @@ class SavingsGoalCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(AppSizes.lg),
         decoration: BoxDecoration(
-          color: AppColors.surfaceElevated.withValues(alpha: 0.6),
+          color: isLight
+              ? scheme.surfaceContainerHighest.withValues(alpha: 0.6)
+              : AppColors.surfaceElevated.withValues(alpha: 0.6),
           borderRadius: BorderRadius.circular(AppSizes.radiusLg),
           border: Border.all(
-            color: AppColors.primaryPurple.withValues(alpha: 0.3),
+            color: scheme.primary.withValues(alpha: 0.3),
           ),
         ),
         child: Column(
@@ -95,16 +103,16 @@ class SavingsGoalCard extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.savings_rounded,
-                      color: AppColors.accentLavender,
+                      color: scheme.secondary,
                       size: AppSizes.iconSm - 2,
                     ),
                     const SizedBox(width: 6),
                     Text(
                       AppStrings.savingsGoal,
-                      style: const TextStyle(
-                        color: AppColors.accentLavender,
+                      style: TextStyle(
+                        color: scheme.secondary,
                         fontSize: AppSizes.fontBodySm,
                         fontWeight: FontWeight.bold,
                       ),
@@ -113,8 +121,8 @@ class SavingsGoalCard extends StatelessWidget {
                 ),
                 Text(
                   '${currencyFormat.format(savedSoFar)} / ${currencyFormat.format(goal)}',
-                  style: const TextStyle(
-                    color: AppColors.whiteColor,
+                  style: TextStyle(
+                    color: scheme.onSurface,
                     fontSize: AppSizes.fontBodySm,
                     fontWeight: FontWeight.bold,
                   ),
@@ -126,7 +134,7 @@ class SavingsGoalCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(AppSizes.xs),
               child: LinearProgressIndicator(
                 value: pct,
-                backgroundColor: AppColors.whiteColor.withValues(alpha: 0.1),
+                backgroundColor: scheme.onSurface.withValues(alpha: 0.1),
                 color: AppColors.incomeGreen,
                 minHeight: 6,
               ),

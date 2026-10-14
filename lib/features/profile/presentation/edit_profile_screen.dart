@@ -151,6 +151,10 @@ class _EditProfileFormView extends BaseFormScreen {
 
   @override
   List<Widget> buildFormFields(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final isLight = theme.brightness == Brightness.light;
+
     return [
       Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
@@ -163,18 +167,18 @@ class _EditProfileFormView extends BaseFormScreen {
               children: [
                 IconButton(
                   onPressed: () => context.pop(),
-                  icon: const Icon(
+                  icon: Icon(
                     Icons.arrow_back_ios_new_rounded,
-                    color: AppColors.whiteColor,
+                    color: scheme.onSurface,
                     size: 20,
                   ),
                 ),
                 Text(
                   AppStrings.editProfile,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.whiteColor,
+                    color: scheme.onSurface,
                   ),
                 ),
                 const SizedBox(width: 48),
@@ -192,7 +196,7 @@ class _EditProfileFormView extends BaseFormScreen {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: AppColors.primaryPurple,
+                        color: scheme.primary,
                         width: 2.5,
                       ),
                       image: const DecorationImage(
@@ -208,14 +212,14 @@ class _EditProfileFormView extends BaseFormScreen {
                     right: 0,
                     child: Container(
                       padding: const EdgeInsets.all(6),
-                      decoration: const BoxDecoration(
-                        color: AppColors.primaryPurple,
+                      decoration: BoxDecoration(
+                        color: scheme.primary,
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.camera_alt_rounded,
                         size: 16,
-                        color: AppColors.whiteColor,
+                        color: scheme.onPrimary,
                       ),
                     ),
                   ),
@@ -265,9 +269,11 @@ class _EditProfileFormView extends BaseFormScreen {
             // Gender Selector
             Text(
               AppStrings.gender,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 13,
-                color: AppColors.secondaryText,
+                color: isLight
+                    ? AppColors.lightSecondaryOnSurface
+                    : AppColors.secondaryText,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -275,23 +281,29 @@ class _EditProfileFormView extends BaseFormScreen {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               decoration: BoxDecoration(
-                color: const Color(0xFF1E1B38).withOpacity(0.6),
+                color: isLight
+                    ? scheme.surfaceContainerHighest
+                    : const Color(0xFF1E1B38).withValues(alpha: 0.6),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: AppColors.whiteColor.withOpacity(0.08),
+                  color: isLight
+                      ? scheme.primary.withValues(alpha: 0.1)
+                      : Colors.white.withValues(alpha: 0.08),
                 ),
               ),
               child: DropdownButtonHideUnderline(
                 child: DropdownButton<String>(
                   value: selectedGender,
                   isExpanded: true,
-                  dropdownColor: const Color(0xFF1B192E),
-                  icon: const Icon(
+                  dropdownColor: isLight
+                      ? scheme.surfaceContainerHighest
+                      : const Color(0xFF1B192E),
+                  icon: Icon(
                     Icons.keyboard_arrow_down,
-                    color: Colors.white70,
+                    color: scheme.onSurface.withValues(alpha: 0.7),
                   ),
-                  style: const TextStyle(
-                    color: AppColors.whiteColor,
+                  style: TextStyle(
+                    color: scheme.onSurface,
                     fontSize: 14,
                   ),
                   items: [
@@ -323,9 +335,11 @@ class _EditProfileFormView extends BaseFormScreen {
             // Language Selector
             Text(
               AppStrings.language,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 13,
-                color: AppColors.secondaryText,
+                color: isLight
+                    ? AppColors.lightSecondaryOnSurface
+                    : AppColors.secondaryText,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -333,23 +347,29 @@ class _EditProfileFormView extends BaseFormScreen {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               decoration: BoxDecoration(
-                color: const Color(0xFF1E1B38).withOpacity(0.6),
+                color: isLight
+                    ? scheme.surfaceContainerHighest
+                    : const Color(0xFF1E1B38).withValues(alpha: 0.6),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: AppColors.whiteColor.withOpacity(0.08),
+                  color: isLight
+                      ? scheme.primary.withValues(alpha: 0.1)
+                      : Colors.white.withValues(alpha: 0.08),
                 ),
               ),
               child: DropdownButtonHideUnderline(
                 child: DropdownButton<String>(
                   value: selectedLanguage,
                   isExpanded: true,
-                  dropdownColor: const Color(0xFF1B192E),
-                  icon: const Icon(
+                  dropdownColor: isLight
+                      ? scheme.surfaceContainerHighest
+                      : const Color(0xFF1B192E),
+                  icon: Icon(
                     Icons.keyboard_arrow_down,
-                    color: Colors.white70,
+                    color: scheme.onSurface.withValues(alpha: 0.7),
                   ),
-                  style: const TextStyle(
-                    color: AppColors.whiteColor,
+                  style: TextStyle(
+                    color: scheme.onSurface,
                     fontSize: 14,
                   ),
                   items: const [
@@ -372,8 +392,8 @@ class _EditProfileFormView extends BaseFormScreen {
               child: DecoratedBox(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(30),
-                  gradient: const LinearGradient(
-                    colors: [AppColors.primaryPurple, AppColors.accentBlue],
+                  gradient: LinearGradient(
+                    colors: [scheme.primary, scheme.secondary],
                   ),
                 ),
                 child: ElevatedButton(
@@ -390,16 +410,16 @@ class _EditProfileFormView extends BaseFormScreen {
                           height: 22,
                           width: 22,
                           child: CircularProgressIndicator(
-                            color: AppColors.whiteColor,
+                            color: Colors.white,
                             strokeWidth: 2.2,
                           ),
                         )
                       : Text(
                           AppStrings.saveChanges,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
-                            color: AppColors.whiteColor,
+                            color: scheme.onPrimary,
                           ),
                         ),
                 ),

@@ -13,10 +13,12 @@ import 'package:mineai/features/profile/repository/user_profile_repository.dart'
 import 'package:mineai/features/profile/service/user_profile_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../config/responsive/responsive_config.dart';
+import '../config/theme/theme_cubit.dart';
 import '../core/constants/app_text_styles.dart';
 import '../core/network/custom_api_call.dart';
 import '../core/utils/secure_storage.dart';
 import '../config/supabase/supabase.config.dart';
+
 
 final GetIt getIt = GetIt.instance;
 
@@ -64,5 +66,7 @@ Future<void> setupLocator(BuildContext context) async {
   getIt.registerFactory<FinanceCubit>(
     () => FinanceCubit(repository: getIt<ExpenseRepository>()),
   );
+  getIt.registerLazySingleton<ThemeCubit>(() => ThemeCubit());
   await getIt.allReady();
 }
+

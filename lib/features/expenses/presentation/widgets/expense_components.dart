@@ -18,15 +18,20 @@ class TransactionTypeSwitch extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final isLight = theme.brightness == Brightness.light;
+    final secondaryText = isLight ? AppColors.lightSecondaryOnSurface : AppColors.secondaryText;
+
     final isExpense = activeType == 'expense';
     return Container(
       height: AppSizes.buttonHeightSm,
       padding: const EdgeInsets.all(AppSizes.xs),
       decoration: BoxDecoration(
-        color: AppColors.surfaceDeep,
+        color: isLight ? scheme.surfaceContainerHighest : AppColors.surfaceDeep,
         borderRadius: BorderRadius.circular(AppSizes.radiusMd),
         border: Border.all(
-          color: AppColors.whiteColor.withValues(alpha: 0.08),
+          color: scheme.onSurface.withValues(alpha: 0.08),
         ),
       ),
       child: Row(
@@ -36,12 +41,16 @@ class TransactionTypeSwitch extends StatelessWidget {
             isSelected: isExpense,
             color: AppColors.expenseRedBg.withValues(alpha: 0.85),
             onTap: () => onTypeChanged('expense'),
+            selectedTextColor: scheme.onSurface,
+            unselectedTextColor: secondaryText,
           ),
           _buildItem(
             label: AppStrings.income,
             isSelected: !isExpense,
             color: AppColors.incomeGreenBg.withValues(alpha: 0.85),
             onTap: () => onTypeChanged('income'),
+            selectedTextColor: scheme.onSurface,
+            unselectedTextColor: secondaryText,
           ),
         ],
       ),
@@ -53,6 +62,8 @@ class TransactionTypeSwitch extends StatelessWidget {
     required bool isSelected,
     required Color color,
     required VoidCallback onTap,
+    required Color selectedTextColor,
+    required Color unselectedTextColor,
   }) {
     return Expanded(
       child: InkWell(
@@ -69,7 +80,7 @@ class TransactionTypeSwitch extends StatelessWidget {
             style: TextStyle(
               fontSize: AppSizes.fontBody,
               fontWeight: FontWeight.bold,
-              color: isSelected ? AppColors.whiteColor : AppColors.secondaryText,
+              color: isSelected ? selectedTextColor : unselectedTextColor,
             ),
           ),
         ),
@@ -93,16 +104,21 @@ class AmountInputField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final isLight = theme.brightness == Brightness.light;
+    final secondaryText = isLight ? AppColors.lightSecondaryOnSurface : AppColors.secondaryText;
+
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSizes.fontTitleSm,
         vertical: AppSizes.sm,
       ),
       decoration: BoxDecoration(
-        color: AppColors.surfaceDeep,
+        color: isLight ? scheme.surfaceContainerHighest : AppColors.surfaceDeep,
         borderRadius: BorderRadius.circular(AppSizes.fontTitleSm),
         border: Border.all(
-          color: AppColors.whiteColor.withValues(alpha: 0.08),
+          color: scheme.onSurface.withValues(alpha: 0.08),
         ),
       ),
       child: Row(
@@ -119,14 +135,14 @@ class AmountInputField extends StatelessWidget {
             child: TextFormField(
               controller: controller,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: AppSizes.fontAmount,
                 fontWeight: FontWeight.bold,
-                color: AppColors.whiteColor,
+                color: scheme.onSurface,
               ),
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 hintText: '0.00',
-                hintStyle: TextStyle(color: AppColors.secondaryText),
+                hintStyle: TextStyle(color: secondaryText),
                 border: InputBorder.none,
               ),
               validator: validator,
@@ -153,6 +169,11 @@ class CategoryDropdownField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final isLight = theme.brightness == Brightness.light;
+    final secondaryText = isLight ? AppColors.lightSecondaryOnSurface : AppColors.secondaryText;
+
     final effectiveId = categories.any((c) => c.id == selectedCategoryId)
         ? selectedCategoryId
         : (categories.isNotEmpty ? categories.first.id : null);
@@ -161,24 +182,24 @@ class CategoryDropdownField extends StatelessWidget {
       height: AppSizes.buttonHeight,
       padding: const EdgeInsets.symmetric(horizontal: AppSizes.lg),
       decoration: BoxDecoration(
-        color: AppColors.surfaceDeep,
+        color: isLight ? scheme.surfaceContainerHighest : AppColors.surfaceDeep,
         borderRadius: BorderRadius.circular(AppSizes.radiusMd),
         border: Border.all(
-          color: AppColors.whiteColor.withValues(alpha: 0.08),
+          color: scheme.onSurface.withValues(alpha: 0.08),
         ),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           value: effectiveId,
           isExpanded: true,
-          dropdownColor: AppColors.surface,
-          style: const TextStyle(
-            color: AppColors.whiteColor,
+          dropdownColor: isLight ? scheme.surface : AppColors.surface,
+          style: TextStyle(
+            color: scheme.onSurface,
             fontSize: AppSizes.fontBody,
           ),
-          icon: const Icon(
+          icon: Icon(
             Icons.keyboard_arrow_down_rounded,
-            color: AppColors.secondaryText,
+            color: secondaryText,
           ),
           onChanged: (val) {
             if (val != null) onCategoryChanged(val);

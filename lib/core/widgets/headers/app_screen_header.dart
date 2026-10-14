@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:mineai/core/constants/app_colors.dart';
 import 'package:mineai/core/constants/app_sizes.dart';
 import 'package:mineai/core/constants/app_strings.dart';
 import 'package:mineai/core/widgets/logo/app_logo.dart';
@@ -28,7 +27,7 @@ class AppScreenHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = titleColor ?? AppColors.whiteColor;
+    final color = titleColor ?? Theme.of(context).colorScheme.onSurface;
     final back = IconButton(
       onPressed:
           onBack ??

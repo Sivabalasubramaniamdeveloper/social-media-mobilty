@@ -24,15 +24,15 @@ class AppIconActionButton extends StatelessWidget {
       width: size,
       height: size,
       decoration: AppDecorations.glass(
+        context: context,
         radius: 14,
         fillOpacity: 0.7,
-        color: AppColors.surface,
       ),
       child: IconButton(
         padding: EdgeInsets.zero,
         icon: Icon(
           icon,
-          color: iconColor ?? AppColors.whiteColor,
+          color: iconColor ?? Theme.of(context).colorScheme.onSurface,
           size: AppSizes.iconMd,
         ),
         onPressed: onTap,

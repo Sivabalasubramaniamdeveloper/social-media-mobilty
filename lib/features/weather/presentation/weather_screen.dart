@@ -67,10 +67,18 @@ class _WeatherView extends BaseScreen {
   bool get useGradientBackground => true;
 
   @override
-  Color? get backgroundColor => const Color(0xFF0F0E17);
+  Color? get backgroundColor {
+    // Resolved in buildBody; returning null here lets BaseScreen use default.
+    // The actual override is applied inside buildBody via theme awareness.
+    return null;
+  }
 
   @override
   Widget buildBody(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final isLight = theme.brightness == Brightness.light;
+
     final size = MediaQuery.of(context).size;
     final isTablet = size.width > 600;
 
@@ -95,16 +103,16 @@ class _WeatherView extends BaseScreen {
                           context.go(RouteNames.dashboard);
                         }
                       },
-                      icon: const Icon(
+                      icon: Icon(
                         Icons.arrow_back_ios_new_rounded,
-                        color: Colors.white,
+                        color: scheme.onSurface,
                         size: 20,
                       ),
                     ),
                     const SizedBox(width: 12),
-                    const Icon(
+                    Icon(
                       Icons.location_on_outlined,
-                      color: Color(0xFF8B5CF6),
+                      color: scheme.primary,
                       size: 24,
                     ),
                     const SizedBox(width: 8),
@@ -115,31 +123,33 @@ class _WeatherView extends BaseScreen {
                           children: [
                             Text(
                               currentLocation,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.white,
+                                color: scheme.onSurface,
                               ),
                             ),
                             if (isLoadingLocation) ...[
                               const SizedBox(width: 8),
-                              const SizedBox(
+                              SizedBox(
                                 width: 12,
                                 height: 12,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
-                                  color: Color(0xFF8B5CF6),
+                                  color: scheme.primary,
                                 ),
                               ),
                             ],
                           ],
                         ),
                         const SizedBox(height: 2),
-                        const Text(
+                        Text(
                           'Updated just now',
                           style: TextStyle(
                             fontSize: 11,
-                            color: AppColors.secondaryText,
+                            color: isLight
+                                ? AppColors.lightSecondaryOnSurface
+                                : AppColors.secondaryText,
                           ),
                         ),
                       ],
@@ -150,14 +160,20 @@ class _WeatherView extends BaseScreen {
                   width: 42,
                   height: 42,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF1B192E),
+                    color: isLight
+                        ? scheme.surfaceContainerHighest
+                        : const Color(0xFF1B192E),
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: Colors.white.withOpacity(0.06)),
+                    border: Border.all(
+                      color: isLight
+                          ? scheme.primary.withValues(alpha: 0.06)
+                          : Colors.white.withValues(alpha: 0.06),
+                    ),
                   ),
                   child: IconButton(
-                    icon: const Icon(
+                    icon: Icon(
                       Icons.refresh_rounded,
-                      color: Colors.white,
+                      color: scheme.onSurface,
                       size: 20,
                     ),
                     onPressed: onRefreshLocation,
@@ -178,41 +194,41 @@ class _WeatherView extends BaseScreen {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Hero Weather Card
-                  _buildHeroCard(),
+                  _buildHeroCard(context),
                   const SizedBox(height: 18),
 
                   // AI Daily Recommendation Card
-                  _buildAiRecommendationCard(),
+                  _buildAiRecommendationCard(context),
                   const SizedBox(height: 18),
 
                   // 2x2 Metric Cards Grid
-                  _buildMetricsGrid(),
+                  _buildMetricsGrid(context),
                   const SizedBox(height: 24),
 
                   // Hourly Forecast
                   Text(
                     AppStrings.hourlyForecast,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 17,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.whiteColor,
+                      color: scheme.onSurface,
                     ),
                   ),
                   const SizedBox(height: 12),
-                  _buildHourlyList(),
+                  _buildHourlyList(context),
                   const SizedBox(height: 24),
 
                   // Weekly Forecast
                   Text(
                     AppStrings.weeklyForecast,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 17,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.whiteColor,
+                      color: scheme.onSurface,
                     ),
                   ),
                   const SizedBox(height: 12),
-                  _buildWeeklyForecast(),
+                  _buildWeeklyForecast(context),
                   const SizedBox(height: 30),
                 ],
               ),
@@ -223,7 +239,11 @@ class _WeatherView extends BaseScreen {
     );
   }
 
-  Widget _buildHeroCard() {
+  Widget _buildHeroCard(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final isLight = theme.brightness == Brightness.light;
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
@@ -232,15 +252,22 @@ class _WeatherView extends BaseScreen {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            const Color(0xFF7C3AED).withOpacity(0.35),
-            const Color(0xFF1E1B38).withOpacity(0.85),
-          ],
+          colors: isLight
+              ? [
+                  scheme.primary.withValues(alpha: 0.1),
+                  scheme.surface,
+                ]
+              : [
+                  const Color(0xFF7C3AED).withValues(alpha: 0.35),
+                  const Color(0xFF1E1B38).withValues(alpha: 0.85),
+                ],
         ),
-        border: Border.all(color: AppColors.primaryPurple.withOpacity(0.35)),
+        border: Border.all(
+          color: scheme.primary.withValues(alpha: 0.35),
+        ),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primaryPurple.withOpacity(0.18),
+            color: scheme.primary.withValues(alpha: 0.18),
             blurRadius: 28,
             spreadRadius: 2,
           ),
@@ -255,22 +282,22 @@ class _WeatherView extends BaseScreen {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     '72°',
                     style: TextStyle(
                       fontSize: 64,
                       fontWeight: FontWeight.w800,
-                      color: AppColors.whiteColor,
+                      color: scheme.onSurface,
                       height: 1,
                     ),
                   ),
                   const SizedBox(height: 6),
                   Text(
                     AppStrings.partlyCloudy,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w500,
-                      color: Color(0xFFA78BFA),
+                      color: scheme.secondary,
                     ),
                   ),
                 ],
@@ -280,15 +307,17 @@ class _WeatherView extends BaseScreen {
                 height: 76,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: const Color(0xFF2E2752).withOpacity(0.7),
+                  color: isLight
+                      ? scheme.surfaceContainerHighest.withValues(alpha: 0.7)
+                      : const Color(0xFF2E2752).withValues(alpha: 0.7),
                   border: Border.all(
-                    color: const Color(0xFFA78BFA).withOpacity(0.4),
+                    color: scheme.secondary.withValues(alpha: 0.4),
                   ),
                 ),
                 child: const Icon(
                   Icons.wb_cloudy_rounded,
                   size: 42,
-                  color: Color(0xFFFBBF24),
+                  color: Color(0xFFFBBF24), // Semantic amber — weather sun/cloud icon
                 ),
               ),
             ],
@@ -296,9 +325,9 @@ class _WeatherView extends BaseScreen {
           const SizedBox(height: 16),
           Row(
             children: [
-              _pillTag('H: 76°  L: 58°'),
+              _pillTag(context, 'H: 76°  L: 58°'),
               const SizedBox(width: 10),
-              _pillTag('Air Quality: 32 (Good)'),
+              _pillTag(context, 'Air Quality: 32 (Good)'),
             ],
           ),
         ],
@@ -306,37 +335,55 @@ class _WeatherView extends BaseScreen {
     );
   }
 
-  Widget _pillTag(String label) {
+  Widget _pillTag(BuildContext context, String label) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final isLight = theme.brightness == Brightness.light;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
       decoration: BoxDecoration(
-        color: AppColors.whiteColor.withOpacity(0.08),
+        color: isLight
+            ? scheme.primary.withValues(alpha: 0.08)
+            : Colors.white.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.whiteColor.withOpacity(0.1)),
+        border: Border.all(
+          color: isLight
+              ? scheme.primary.withValues(alpha: 0.1)
+              : Colors.white.withValues(alpha: 0.1),
+        ),
       ),
       child: Text(
         label,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w500,
-          color: AppColors.whiteColor,
+          color: scheme.onSurface,
         ),
       ),
     );
   }
 
-  Widget _buildAiRecommendationCard() {
+  Widget _buildAiRecommendationCard(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final isLight = theme.brightness == Brightness.light;
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFF2E1A47), Color(0xFF1B1832)],
+          colors: isLight
+              ? [scheme.surfaceContainerHighest, scheme.surface]
+              : [const Color(0xFF2E1A47), const Color(0xFF1B1832)],
         ),
-        border: Border.all(color: const Color(0xFF8B5CF6).withOpacity(0.35)),
+        border: Border.all(
+          color: scheme.primary.withValues(alpha: 0.35),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -346,23 +393,23 @@ class _WeatherView extends BaseScreen {
               Container(
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF8B5CF6).withOpacity(0.2),
+                  color: scheme.primary.withValues(alpha: 0.2),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.auto_awesome_rounded,
                   size: 16,
-                  color: Color(0xFFA78BFA),
+                  color: scheme.secondary,
                 ),
               ),
               const SizedBox(width: 8),
               Text(
                 AppStrings.aiDailyRecommendation,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.bold,
                   letterSpacing: 0.8,
-                  color: Color(0xFFA78BFA),
+                  color: scheme.secondary,
                 ),
               ),
             ],
@@ -370,10 +417,10 @@ class _WeatherView extends BaseScreen {
           const SizedBox(height: 10),
           Text(
             AppStrings.weatherRecommendationBody,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 13,
               height: 1.5,
-              color: AppColors.whiteColor,
+              color: scheme.onSurface,
             ),
           ),
         ],
@@ -381,19 +428,21 @@ class _WeatherView extends BaseScreen {
     );
   }
 
-  Widget _buildMetricsGrid() {
+  Widget _buildMetricsGrid(BuildContext context) {
     return Row(
       children: [
         Expanded(
           child: Column(
             children: [
               _metricTile(
+                context: context,
                 icon: Icons.water_drop_outlined,
                 title: AppStrings.precipitation,
                 value: '0%',
               ),
               const SizedBox(height: 12),
               _metricTile(
+                context: context,
                 icon: Icons.air_rounded,
                 title: AppStrings.windSpeed,
                 value: '8 mph',
@@ -406,12 +455,14 @@ class _WeatherView extends BaseScreen {
           child: Column(
             children: [
               _metricTile(
+                context: context,
                 icon: Icons.waves_rounded,
                 title: AppStrings.humidity,
                 value: '48%',
               ),
               const SizedBox(height: 12),
               _metricTile(
+                context: context,
                 icon: Icons.wb_sunny_outlined,
                 title: AppStrings.uvIndex,
                 value: '6 High',
@@ -424,31 +475,44 @@ class _WeatherView extends BaseScreen {
   }
 
   Widget _metricTile({
+    required BuildContext context,
     required IconData icon,
     required String title,
     required String value,
   }) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final isLight = theme.brightness == Brightness.light;
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E1B38).withOpacity(0.65),
+        color: isLight
+            ? scheme.surfaceContainerHighest
+            : const Color(0xFF1E1B38).withValues(alpha: 0.65),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppColors.whiteColor.withOpacity(0.06)),
+        border: Border.all(
+          color: isLight
+              ? scheme.primary.withValues(alpha: 0.06)
+              : Colors.white.withValues(alpha: 0.06),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(icon, size: 16, color: const Color(0xFFA78BFA)),
+              Icon(icon, size: 16, color: scheme.secondary),
               const SizedBox(width: 6),
               Text(
                 title,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.secondaryText,
+                  color: isLight
+                      ? AppColors.lightSecondaryOnSurface
+                      : AppColors.secondaryText,
                   letterSpacing: 0.5,
                 ),
               ),
@@ -457,10 +521,10 @@ class _WeatherView extends BaseScreen {
           const SizedBox(height: 8),
           Text(
             value,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
-              color: AppColors.whiteColor,
+              color: scheme.onSurface,
             ),
           ),
         ],
@@ -468,7 +532,11 @@ class _WeatherView extends BaseScreen {
     );
   }
 
-  Widget _buildHourlyList() {
+  Widget _buildHourlyList(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final isLight = theme.brightness == Brightness.light;
+
     final hours = [
       {'time': AppStrings.now, 'temp': '72°', 'icon': Icons.wb_cloudy_rounded},
       {'time': '2 PM', 'temp': '74°', 'icon': Icons.wb_sunny_rounded},
@@ -493,13 +561,19 @@ class _WeatherView extends BaseScreen {
             padding: const EdgeInsets.symmetric(vertical: 12),
             decoration: BoxDecoration(
               color: isFirst
-                  ? const Color(0xFF7C3AED).withOpacity(0.35)
-                  : const Color(0xFF1E1B38).withOpacity(0.65),
+                  ? isLight
+                      ? scheme.primary.withValues(alpha: 0.1)
+                      : const Color(0xFF7C3AED).withValues(alpha: 0.35)
+                  : isLight
+                      ? scheme.surfaceContainerHighest
+                      : const Color(0xFF1E1B38).withValues(alpha: 0.65),
               borderRadius: BorderRadius.circular(18),
               border: Border.all(
                 color: isFirst
-                    ? AppColors.primaryPurple.withOpacity(0.5)
-                    : AppColors.whiteColor.withOpacity(0.06),
+                    ? scheme.primary.withValues(alpha: 0.5)
+                    : isLight
+                        ? scheme.primary.withValues(alpha: 0.06)
+                        : Colors.white.withValues(alpha: 0.06),
               ),
             ),
             child: Column(
@@ -507,22 +581,24 @@ class _WeatherView extends BaseScreen {
               children: [
                 Text(
                   item['time'] as String,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
-                    color: AppColors.secondaryText,
+                    color: isLight
+                        ? AppColors.lightSecondaryOnSurface
+                        : AppColors.secondaryText,
                   ),
                 ),
                 Icon(
                   item['icon'] as IconData,
                   size: 24,
-                  color: const Color(0xFFFBBF24),
+                  color: const Color(0xFFFBBF24), // Semantic amber — weather icon
                 ),
                 Text(
                   item['temp'] as String,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.whiteColor,
+                    color: scheme.onSurface,
                   ),
                 ),
               ],
@@ -533,7 +609,11 @@ class _WeatherView extends BaseScreen {
     );
   }
 
-  Widget _buildWeeklyForecast() {
+  Widget _buildWeeklyForecast(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final isLight = theme.brightness == Brightness.light;
+
     final days = [
       {
         'day': 'Today',
@@ -565,9 +645,15 @@ class _WeatherView extends BaseScreen {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E1B38).withOpacity(0.65),
+        color: isLight
+            ? scheme.surfaceContainerHighest
+            : const Color(0xFF1E1B38).withValues(alpha: 0.65),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.whiteColor.withOpacity(0.06)),
+        border: Border.all(
+          color: isLight
+              ? scheme.primary.withValues(alpha: 0.06)
+              : Colors.white.withValues(alpha: 0.06),
+        ),
       ),
       child: Column(
         children: days.map((item) {
@@ -580,28 +666,28 @@ class _WeatherView extends BaseScreen {
                   width: 90,
                   child: Text(
                     item['day']!,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
-                      color: AppColors.whiteColor,
+                      color: scheme.onSurface,
                     ),
                   ),
                 ),
                 Expanded(
                   child: Text(
                     item['status']!,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 13,
-                      color: Color(0xFFA78BFA),
+                      color: scheme.secondary,
                     ),
                   ),
                 ),
                 Text(
                   '${item['min']} / ${item['max']}',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.whiteColor,
+                    color: scheme.onSurface,
                   ),
                 ),
               ],

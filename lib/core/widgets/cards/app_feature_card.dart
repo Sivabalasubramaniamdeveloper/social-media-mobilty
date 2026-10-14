@@ -56,9 +56,11 @@ class AppFeatureCard extends StatelessWidget {
                   description,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
-                    color: AppColors.secondaryText,
+                    color: Theme.of(context).brightness == Brightness.light
+                        ? AppColors.lightSecondaryOnSurface
+                        : AppColors.secondaryText,
                   ),
                 ),
               ],

@@ -33,10 +33,17 @@ class _VerifyEmailView extends BaseScreen {
 
   @override
   Widget buildBody(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final isLight = theme.brightness == Brightness.light;
+
     final size = MediaQuery.of(context).size;
     final width = size.width;
     final height = size.height;
     final isTablet = width > 600;
+
+    final secondaryTextColor =
+        isLight ? AppColors.lightSecondaryOnSurface : AppColors.secondaryText;
 
     return SafeArea(
       child: Padding(
@@ -89,26 +96,26 @@ class _VerifyEmailView extends BaseScreen {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    AppColors.primaryPurple.withOpacity(0.3),
-                    AppColors.accentBlue.withOpacity(0.15),
+                    scheme.primary.withValues(alpha: 0.3),
+                    scheme.secondary.withValues(alpha: 0.15),
                   ],
                 ),
                 border: Border.all(
-                  color: AppColors.primaryPurple.withOpacity(0.4),
+                  color: scheme.primary.withValues(alpha: 0.4),
                   width: 1.5,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.primaryPurple.withOpacity(0.25),
+                    color: scheme.primary.withValues(alpha: 0.25),
                     blurRadius: 36,
                     spreadRadius: 4,
                   ),
                 ],
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.mark_email_read_outlined,
                 size: 50,
-                color: AppColors.whiteColor,
+                color: scheme.onSurface,
               ),
             ),
 
@@ -131,18 +138,18 @@ class _VerifyEmailView extends BaseScreen {
             RichText(
               textAlign: TextAlign.center,
               text: TextSpan(
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 14,
                   height: 1.5,
-                  color: AppColors.secondaryText,
+                  color: secondaryTextColor,
                 ),
                 children: [
                   TextSpan(text: '${AppStrings.weSentLinkTo}\n'),
                   TextSpan(
                     text: email,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontWeight: FontWeight.w600,
-                      color: AppColors.primaryPurple,
+                      color: scheme.primary,
                     ),
                   ),
                 ],
@@ -154,10 +161,10 @@ class _VerifyEmailView extends BaseScreen {
             Text(
               AppStrings.checkInboxDesc,
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 13,
                 height: 1.4,
-                color: AppColors.secondaryText,
+                color: secondaryTextColor,
               ),
             ),
 
@@ -170,8 +177,8 @@ class _VerifyEmailView extends BaseScreen {
               child: DecoratedBox(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(30),
-                  gradient: const LinearGradient(
-                    colors: [AppColors.primaryPurple, AppColors.accentBlue],
+                  gradient: LinearGradient(
+                    colors: [scheme.primary, scheme.secondary],
                   ),
                 ),
                 child: ElevatedButton(
@@ -188,17 +195,17 @@ class _VerifyEmailView extends BaseScreen {
                     children: [
                       Text(
                         AppStrings.iHaveVerified,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: AppColors.whiteColor,
+                          color: scheme.onPrimary,
                         ),
                       ),
                       const SizedBox(width: 8),
-                      const Icon(
+                      Icon(
                         Icons.arrow_forward_rounded,
                         size: 20,
-                        color: AppColors.whiteColor,
+                        color: scheme.onPrimary,
                       ),
                     ],
                   ),
@@ -216,12 +223,14 @@ class _VerifyEmailView extends BaseScreen {
                 onPressed: () {},
                 style: OutlinedButton.styleFrom(
                   side: BorderSide(
-                    color: AppColors.secondaryText.withOpacity(0.3),
+                    color: scheme.onSurface.withValues(alpha: 0.2),
                   ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(30),
                   ),
-                  backgroundColor: AppColors.whiteColor.withOpacity(0.04),
+                  backgroundColor: isLight
+                      ? Colors.white
+                      : AppColors.whiteColor.withValues(alpha: 0.04),
                 ),
                 child: Text(
                   AppStrings.resendEmail,
@@ -240,9 +249,9 @@ class _VerifyEmailView extends BaseScreen {
             Center(
               child: Text(
                 AppStrings.checkSpamFolder,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 12,
-                  color: AppColors.secondaryText,
+                  color: secondaryTextColor,
                 ),
               ),
             ),

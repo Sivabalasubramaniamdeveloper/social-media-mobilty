@@ -29,13 +29,18 @@ class IncomeEntryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final isLight = theme.brightness == Brightness.light;
+    final secondaryText = isLight ? AppColors.lightSecondaryOnSurface : AppColors.secondaryText;
+
     return Container(
       padding: const EdgeInsets.all(AppSizes.lg + 2),
       decoration: BoxDecoration(
-        color: AppColors.surfaceDeep,
+        color: isLight ? scheme.surfaceContainerHighest : AppColors.surfaceDeep,
         borderRadius: BorderRadius.circular(AppSizes.radiusLg),
         border: Border.all(
-          color: AppColors.whiteColor.withValues(alpha: 0.06),
+          color: scheme.onSurface.withValues(alpha: 0.06),
         ),
       ),
       child: Column(
@@ -43,24 +48,24 @@ class IncomeEntryCard extends StatelessWidget {
           TextField(
             controller: amountController,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            style: const TextStyle(
-              color: AppColors.whiteColor,
+            style: TextStyle(
+              color: scheme.onSurface,
               fontSize: AppSizes.fontHeaderLg,
               fontWeight: FontWeight.bold,
             ),
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               prefixText: '\$ ',
-              prefixStyle: TextStyle(
+              prefixStyle: const TextStyle(
                 color: AppColors.incomeGreen,
                 fontSize: AppSizes.fontHeaderLg,
                 fontWeight: FontWeight.bold,
               ),
               hintText: '0.00',
-              hintStyle: TextStyle(color: AppColors.secondaryText),
+              hintStyle: TextStyle(color: secondaryText),
               border: InputBorder.none,
             ),
           ),
-          Divider(color: AppColors.whiteColor.withValues(alpha: 0.12)),
+          Divider(color: scheme.onSurface.withValues(alpha: 0.12)),
           Row(
             children: [
               Expanded(
@@ -70,9 +75,9 @@ class IncomeEntryCard extends StatelessWidget {
                     value: sourceOptions.contains(selectedSource)
                         ? selectedSource
                         : (sourceOptions.isNotEmpty ? sourceOptions.first : null),
-                    dropdownColor: AppColors.surface,
-                    style: const TextStyle(
-                      color: AppColors.whiteColor,
+                    dropdownColor: isLight ? scheme.surface : AppColors.surface,
+                    style: TextStyle(
+                      color: scheme.onSurface,
                       fontSize: AppSizes.fontBodySm,
                     ),
                     items: sourceOptions
@@ -106,16 +111,16 @@ class IncomeEntryCard extends StatelessWidget {
                     children: [
                       Text(
                         DateFormat('dd/MM/yyyy').format(selectedDate),
-                        style: const TextStyle(
-                          color: AppColors.secondaryText,
+                        style: TextStyle(
+                          color: secondaryText,
                           fontSize: AppSizes.fontCaption,
                         ),
                       ),
                       const SizedBox(width: AppSizes.xs),
-                      const Icon(
+                      Icon(
                         Icons.calendar_today_rounded,
                         size: AppSizes.iconXs,
-                        color: AppColors.secondaryText,
+                        color: secondaryText,
                       ),
                     ],
                   ),
@@ -126,15 +131,17 @@ class IncomeEntryCard extends StatelessWidget {
           const SizedBox(height: AppSizes.md),
           TextField(
             controller: noteController,
-            style: const TextStyle(
-              color: AppColors.whiteColor,
+            style: TextStyle(
+              color: scheme.onSurface,
               fontSize: AppSizes.fontBodySm,
             ),
             decoration: InputDecoration(
               hintText: AppStrings.incomeSourceDetails,
-              hintStyle: const TextStyle(color: AppColors.secondaryText),
+              hintStyle: TextStyle(color: secondaryText),
               filled: true,
-              fillColor: Colors.black26,
+              fillColor: isLight
+                  ? scheme.surfaceContainerHighest
+                  : Colors.black26,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(AppSizes.radiusSm),
                 borderSide: BorderSide.none,
@@ -160,7 +167,7 @@ class IncomeEntryCard extends StatelessWidget {
               child: Text(
                 AppStrings.addIncome,
                 style: const TextStyle(
-                  color: AppColors.whiteColor,
+                  color: Colors.white,
                   fontSize: AppSizes.fontBodyLg,
                   fontWeight: FontWeight.bold,
                 ),
