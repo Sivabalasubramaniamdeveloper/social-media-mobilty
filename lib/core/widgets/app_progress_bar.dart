@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mineai/core/constants/app_strings.dart';
 
 class AppProgressBar extends StatelessWidget {
   final double progress;
@@ -18,7 +19,7 @@ class AppProgressBar extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              "SYSTEM INITIALIZING",
+              AppStrings.systemInitializing,
               style: TextStyle(
                 fontSize: 13,
                 letterSpacing: 1.5,

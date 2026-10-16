@@ -14,7 +14,9 @@ import 'package:mineai/features/expenses/presentation/widgets/widgets.dart';
 import 'package:mineai/features/expenses/repositories/expense_repository.dart';
 
 class AddExpenseScreen extends StatefulWidget {
-  const AddExpenseScreen({super.key});
+  final String initialType;
+
+  const AddExpenseScreen({super.key, this.initialType = 'expense'});
 
   @override
   State<AddExpenseScreen> createState() => _AddExpenseScreenState();
@@ -26,7 +28,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   final _amountController = TextEditingController();
   final _noteController = TextEditingController();
 
-  String _type = 'expense';
+  late String _type = widget.initialType;
   String _selectedCatId = '';
   DateTime _date = DateTime.now();
   TimeOfDay _time = TimeOfDay.now();
@@ -87,9 +89,13 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   }
 
   void _addQuickAmount(double delta) {
-    final current = double.tryParse(_amountController.text.trim().replaceAll(',', '.')) ?? 0.0;
+    final current =
+        double.tryParse(_amountController.text.trim().replaceAll(',', '.')) ??
+        0.0;
     final total = current + delta;
-    _amountController.text = total.toStringAsFixed(total.truncateToDouble() == total ? 0 : 2);
+    _amountController.text = total.toStringAsFixed(
+      total.truncateToDouble() == total ? 0 : 2,
+    );
   }
 
   Future<void> _onSave() async {
@@ -100,8 +106,8 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     );
     if (amt == null || amt <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter a valid amount greater than 0'),
+        SnackBar(
+          content: Text(AppStrings.validAmountRequired),
           backgroundColor: AppColors.error,
         ),
       );
@@ -140,7 +146,9 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
             : _noteController.text.trim(),
       );
 
-      debugPrint('Saving transaction for user: $userId, amount: $amt, type: $_type');
+      debugPrint(
+        'Saving transaction for user: $userId, amount: $amt, type: $_type',
+      );
       await ExpenseRepositoryImpl().addTransaction(transaction, false);
       debugPrint('Transaction successfully logged!');
 
@@ -148,7 +156,9 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              _type == 'expense' ? 'Expense logged successfully!' : 'Income recorded successfully!',
+              _type == 'expense'
+                  ? AppStrings.expenseSaved
+                  : AppStrings.incomeSaved,
             ),
             backgroundColor: AppColors.statusSuccess,
             duration: const Duration(seconds: 2),
@@ -161,7 +171,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to save: $e'),
+            content: Text(AppStrings.failedToSave(e.toString())),
             backgroundColor: AppColors.error,
           ),
         );
@@ -184,9 +194,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child: _isLoading
-            ? Center(
-                child: CircularProgressIndicator(color: scheme.primary),
-              )
+            ? Center(child: CircularProgressIndicator(color: scheme.primary))
             : SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(
                   horizontal: AppSizes.pagePadding,
@@ -210,7 +218,9 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                       Container(
                         padding: const EdgeInsets.all(4),
                         decoration: BoxDecoration(
-                          color: isLight ? scheme.surfaceContainerHighest : AppColors.surfaceDeep,
+                          color: isLight
+                              ? scheme.surfaceContainerHighest
+                              : AppColors.surfaceDeep,
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
                             color: scheme.onSurface.withValues(alpha: 0.06),
@@ -230,7 +240,9 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                                   });
                                 },
                                 child: Container(
-                                  padding: const EdgeInsets.symmetric(vertical: 12),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 12,
+                                  ),
                                   decoration: BoxDecoration(
                                     color: isExpense
                                         ? AppColors.expenseRedBg
@@ -245,7 +257,10 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                                         size: 18,
                                         color: isExpense
                                             ? Colors.white
-                                            : (isLight ? AppColors.lightSecondaryOnSurface : AppColors.secondaryText),
+                                            : (isLight
+                                                  ? AppColors
+                                                        .lightSecondaryOnSurface
+                                                  : AppColors.secondaryText),
                                       ),
                                       const SizedBox(width: 6),
                                       Text(
@@ -255,7 +270,10 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                                           fontSize: 14,
                                           color: isExpense
                                               ? Colors.white
-                                              : (isLight ? AppColors.lightSecondaryOnSurface : AppColors.secondaryText),
+                                              : (isLight
+                                                    ? AppColors
+                                                          .lightSecondaryOnSurface
+                                                    : AppColors.secondaryText),
                                         ),
                                       ),
                                     ],
@@ -275,7 +293,9 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                                   });
                                 },
                                 child: Container(
-                                  padding: const EdgeInsets.symmetric(vertical: 12),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 12,
+                                  ),
                                   decoration: BoxDecoration(
                                     color: !isExpense
                                         ? AppColors.incomeGreenBg
@@ -290,7 +310,10 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                                         size: 18,
                                         color: !isExpense
                                             ? Colors.white
-                                            : (isLight ? AppColors.lightSecondaryOnSurface : AppColors.secondaryText),
+                                            : (isLight
+                                                  ? AppColors
+                                                        .lightSecondaryOnSurface
+                                                  : AppColors.secondaryText),
                                       ),
                                       const SizedBox(width: 6),
                                       Text(
@@ -300,7 +323,10 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                                           fontSize: 14,
                                           color: !isExpense
                                               ? Colors.white
-                                              : (isLight ? AppColors.lightSecondaryOnSurface : AppColors.secondaryText),
+                                              : (isLight
+                                                    ? AppColors
+                                                          .lightSecondaryOnSurface
+                                                    : AppColors.secondaryText),
                                         ),
                                       ),
                                     ],
@@ -318,20 +344,24 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                       Container(
                         padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
-                          color: isLight ? scheme.surfaceContainerHighest : AppColors.surfaceDeep,
+                          color: isLight
+                              ? scheme.surfaceContainerHighest
+                              : AppColors.surfaceDeep,
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
-                            color: (isExpense
-                                    ? AppColors.expenseRed
-                                    : AppColors.incomeGreen)
-                                .withValues(alpha: 0.25),
+                            color:
+                                (isExpense
+                                        ? AppColors.expenseRed
+                                        : AppColors.incomeGreen)
+                                    .withValues(alpha: 0.25),
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: (isExpense
-                                      ? AppColors.expenseRed
-                                      : AppColors.incomeGreen)
-                                  .withValues(alpha: 0.08),
+                              color:
+                                  (isExpense
+                                          ? AppColors.expenseRed
+                                          : AppColors.incomeGreen)
+                                      .withValues(alpha: 0.08),
                               blurRadius: 18,
                               offset: const Offset(0, 4),
                             ),
@@ -341,7 +371,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'AMOUNT',
+                              AppStrings.amountLabel,
                               style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.bold,
@@ -370,8 +400,8 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                                     controller: _amountController,
                                     keyboardType:
                                         const TextInputType.numberWithOptions(
-                                      decimal: true,
-                                    ),
+                                          decimal: true,
+                                        ),
                                     style: TextStyle(
                                       fontSize: 36,
                                       fontWeight: FontWeight.bold,
@@ -379,9 +409,11 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                                     ),
                                     decoration: InputDecoration(
                                       border: InputBorder.none,
-                                      hintText: '0.00',
+                                      hintText: AppStrings.sampleAmount,
                                       hintStyle: TextStyle(
-                                        color: scheme.onSurface.withValues(alpha: 0.3),
+                                        color: scheme.onSurface.withValues(
+                                          alpha: 0.3,
+                                        ),
                                         fontSize: 34,
                                       ),
                                     ),
@@ -407,11 +439,31 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                               scrollDirection: Axis.horizontal,
                               child: Row(
                                 children: [
-                                  _quickPill('+\$10', () => _addQuickAmount(10), scheme),
-                                  _quickPill('+\$50', () => _addQuickAmount(50), scheme),
-                                  _quickPill('+\$100', () => _addQuickAmount(100), scheme),
-                                  _quickPill('+\$500', () => _addQuickAmount(500), scheme),
-                                  _quickPill('+\$1,000', () => _addQuickAmount(1000), scheme),
+                                  _quickPill(
+                                    '+\$10',
+                                    () => _addQuickAmount(10),
+                                    scheme,
+                                  ),
+                                  _quickPill(
+                                    '+\$50',
+                                    () => _addQuickAmount(50),
+                                    scheme,
+                                  ),
+                                  _quickPill(
+                                    '+\$100',
+                                    () => _addQuickAmount(100),
+                                    scheme,
+                                  ),
+                                  _quickPill(
+                                    '+\$500',
+                                    () => _addQuickAmount(500),
+                                    scheme,
+                                  ),
+                                  _quickPill(
+                                    '+\$1,000',
+                                    () => _addQuickAmount(1000),
+                                    scheme,
+                                  ),
                                 ],
                               ),
                             ),
@@ -466,10 +518,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                             ? AppStrings.addNewExpense
                             : AppStrings.saveIncome,
                         gradientColors: isExpense
-                            ? [
-                                AppColors.expenseRed,
-                                AppColors.expenseRedDark,
-                              ]
+                            ? [AppColors.expenseRed, AppColors.expenseRedDark]
                             : [
                                 AppColors.incomeGreen,
                                 AppColors.incomeGreenDark,
@@ -556,7 +605,11 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     );
   }
 
-  Widget _box({required IconData icon, required String label, required ColorScheme scheme}) {
+  Widget _box({
+    required IconData icon,
+    required String label,
+    required ColorScheme scheme,
+  }) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       decoration: BoxDecoration(
@@ -566,11 +619,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       ),
       child: Row(
         children: [
-          Icon(
-            icon,
-            size: AppSizes.fontTitleSm,
-            color: scheme.secondary,
-          ),
+          Icon(icon, size: AppSizes.fontTitleSm, color: scheme.secondary),
           const SizedBox(width: AppSizes.sm),
           Expanded(
             child: Text(

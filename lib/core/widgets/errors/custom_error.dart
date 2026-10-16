@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mineai/core/constants/app_strings.dart';
 import 'package:mineai/core/logger/app_logger.dart';
 
 class MyCustomErrorWidget extends StatefulWidget {
@@ -33,8 +34,8 @@ class _MyCustomErrorWidgetState extends State<MyCustomErrorWidget> {
             children: [
               Icon(Icons.error_outline, color: Colors.red, size: 80),
               const SizedBox(height: 16),
-              const Text(
-                "Oops! Something went wrong.",
+              Text(
+                AppStrings.genericUnexpectedError,
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),

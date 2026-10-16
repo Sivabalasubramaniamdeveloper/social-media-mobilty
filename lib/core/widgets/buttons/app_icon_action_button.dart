@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:mineai/core/constants/app_colors.dart';
 import 'package:mineai/core/constants/app_sizes.dart';
 import 'package:mineai/core/theme/app_decorations.dart';
 

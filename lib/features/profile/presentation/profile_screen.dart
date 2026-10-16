@@ -7,12 +7,30 @@ import 'package:mineai/core/constants/app_colors.dart';
 import 'package:mineai/core/constants/app_strings.dart';
 import 'package:mineai/core/widgets/app_widgets.dart';
 import 'package:mineai/features/profile/models/user_profile_model.dart';
+import 'package:mineai/features/subscription/cubit/subscription_cubit.dart';
+import 'package:mineai/features/subscription/cubit/subscription_state.dart';
+import 'package:mineai/features/subscription/models/subscription_plan.dart';
 import '../cubit/user_profile_cubit.dart';
 import '../cubit/user_profile_state.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  /// Reloads the plan on entry so external database changes appear on this screen.
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) context.read<SubscriptionCubit>().fetchUserPlan();
+    });
+  }
+
+  /// Creates the shared profile view after scheduling the plan refresh.
   @override
   Widget build(BuildContext context) {
     return const _ProfileView();
@@ -32,6 +50,7 @@ class _ProfileView extends BaseScreen {
   bool get useGradientBackground => true;
 
   @override
+  /// Builds profile content and reads subscription status from the shared API-backed cubit.
   Widget buildBody(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
@@ -104,7 +123,7 @@ class _ProfileView extends BaseScreen {
 
                 const SizedBox(height: 14),
 
-                // User Full Name & Pro Plan Chip
+                // Show the user's name beside the plan tier loaded from the API.
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -117,26 +136,33 @@ class _ProfileView extends BaseScreen {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 3,
-                      ),
-                      decoration: BoxDecoration(
-                        color: isLight
-                            ? scheme.surfaceContainerHighest
-                            : const Color(0xFF2E2752),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        AppStrings.proPlan,
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
-                          color: scheme.secondary,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
+                    BlocBuilder<SubscriptionCubit, SubscriptionState>(
+                      builder: (context, subscriptionState) {
+                        if (subscriptionState is! SubscriptionLoaded) {
+                          return const SizedBox.shrink();
+                        }
+                        return Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 3,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isLight
+                                ? scheme.surfaceContainerHighest
+                                : const Color(0xFF2E2752),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            _planName(subscriptionState.plan.tier),
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                              color: scheme.secondary,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        );
+                      },
                     ),
                   ],
                 ),
@@ -153,29 +179,6 @@ class _ProfileView extends BaseScreen {
 
                 const SizedBox(height: 16),
 
-                // Edit Profile Button
-                // SizedBox(
-                //   width: 140,
-                //   height: 40,
-                //   child: ElevatedButton(
-                //     onPressed: () => context.push(RouteNames.editProfile),
-                //     style: ElevatedButton.styleFrom(
-                //       backgroundColor: const Color(0xFF7C3AED),
-                //       shape: RoundedRectangleBorder(
-                //         borderRadius: BorderRadius.circular(20),
-                //       ),
-                //       elevation: 0,
-                //     ),
-                //     child: Text(
-                //       AppStrings.editProfile,
-                //       style: const TextStyle(
-                //         fontSize: 13,
-                //         fontWeight: FontWeight.w600,
-                //         color: AppColors.whiteColor,
-                //       ),
-                //     ),
-                //   ),
-                // ),
                 const SizedBox(height: 24),
 
                 // 2x2 Metric Cards Grid
@@ -422,6 +425,14 @@ class _ProfileView extends BaseScreen {
     );
   }
 
+  /// Maps the API plan tier to the active app language.
+  String _planName(PlanTier tier) => switch (tier) {
+    PlanTier.basic => AppStrings.basicPlan,
+    PlanTier.pro => AppStrings.proPlan,
+    PlanTier.premium => AppStrings.premiumPlan,
+  };
+
+  /// Builds a themed metric card from the supplied profile statistic.
   Widget _buildMetricCard({
     required BuildContext context,
     required IconData icon,

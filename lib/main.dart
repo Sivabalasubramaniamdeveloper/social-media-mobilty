@@ -3,9 +3,9 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_alice/alice.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:mineai/config/env/env_config.dart';
 import 'package:mineai/config/firebase/notification_service.dart';
 import 'package:overlay_support/overlay_support.dart';
 import 'app.dart';
@@ -30,7 +30,7 @@ Future<void> main() async {
       await EasyLocalization.ensureInitialized();
 
       try {
-        await dotenv.load(fileName: ".env");
+        await EnvConfig.init();
       } catch (e) {
         throw Exception('Error loading .env file: $e');
       }

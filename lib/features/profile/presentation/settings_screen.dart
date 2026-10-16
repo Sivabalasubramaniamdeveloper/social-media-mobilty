@@ -10,6 +10,10 @@ import 'package:mineai/core/base/abstract/base_screen.dart';
 import 'package:mineai/core/constants/app_colors.dart';
 import 'package:mineai/core/constants/app_strings.dart';
 import 'package:mineai/core/widgets/app_widgets.dart';
+import 'package:mineai/features/subscription/cubit/subscription_cubit.dart';
+import 'package:mineai/features/subscription/cubit/subscription_state.dart';
+import 'package:mineai/features/subscription/models/subscription_plan.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../auth/cubit/auth_cubit.dart';
 
@@ -25,6 +29,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _autoSummarize = true;
   bool _hapticFeedback = true;
 
+  /// Refreshes plan status whenever settings is opened to reflect server-side changes.
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) context.read<SubscriptionCubit>().fetchUserPlan();
+    });
+  }
+
+  /// Passes local preference values and callbacks to the settings view.
   @override
   Widget build(BuildContext context) {
     return _SettingsView(
@@ -55,15 +69,19 @@ class _SettingsView extends BaseScreen {
     required this.onHapticChanged,
   });
 
+  /// Returns the localized page title used by the shared screen scaffold.
   @override
   String get title => AppStrings.settings;
 
+  /// Hides the default app bar because the page renders its own header.
   @override
   bool get showAppBar => false;
 
+  /// Keeps the app's shared gradient background behind the settings content.
   @override
   bool get useGradientBackground => true;
 
+  /// Confirms logout, clears the session, and returns to sign-in.
   void _showLogoutDialog(BuildContext context) {
     showCupertinoDialog(
       context: context,
@@ -94,6 +112,7 @@ class _SettingsView extends BaseScreen {
     );
   }
 
+  /// Presents the supported app languages and applies the chosen locale.
   void _showLanguageSheet(BuildContext context) {
     final theme = Theme.of(context);
     final isLight = theme.brightness == Brightness.light;
@@ -162,6 +181,7 @@ class _SettingsView extends BaseScreen {
     );
   }
 
+  /// Presents theme choices and applies the selected theme mode.
   void _showThemeSheet(BuildContext context) {
     final theme = Theme.of(context);
     final isLight = theme.brightness == Brightness.light;
@@ -195,7 +215,7 @@ class _SettingsView extends BaseScreen {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Choose App Theme',
+                      AppStrings.chooseAppTheme,
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -204,7 +224,7 @@ class _SettingsView extends BaseScreen {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      'Changes theme instantly and saves as your default',
+                      AppStrings.themeSavedDescription,
                       style: TextStyle(fontSize: 13, color: subtitleColor),
                     ),
                     const SizedBox(height: 16),
@@ -270,6 +290,7 @@ class _SettingsView extends BaseScreen {
     );
   }
 
+  /// Builds settings sections, including the current API-backed subscription tier.
   @override
   Widget buildBody(BuildContext context) {
     return SafeArea(
@@ -301,16 +322,23 @@ class _SettingsView extends BaseScreen {
                 AppListTileCard(
                   icon: Icons.workspace_premium_outlined,
                   title: AppStrings.subscriptionPlan,
-                  subtitle: AppStrings.manageProPlanCredits,
-                  trailing: Text(
-                    AppStrings.proBadge,
-                    style: const TextStyle(
-                      color: AppColors.accentLavender,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                    ),
+                  subtitle: AppStrings.managePlanCredits,
+                  trailing: BlocBuilder<SubscriptionCubit, SubscriptionState>(
+                    builder: (context, subscriptionState) {
+                      if (subscriptionState is! SubscriptionLoaded) {
+                        return const SizedBox.shrink();
+                      }
+                      return Text(
+                        _planName(subscriptionState.plan.tier),
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.secondary,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                      );
+                    },
                   ),
-                  onTap: () {},
+                  onTap: () => context.push(RouteNames.subscription),
                 ),
 
                 const SizedBox(height: 20),
@@ -349,7 +377,7 @@ class _SettingsView extends BaseScreen {
                   builder: (context, themeState) {
                     return AppListTileCard(
                       icon: Icons.palette_outlined,
-                      title: 'App Theme',
+                      title: AppStrings.appTheme,
                       subtitle: themeState.mode.displayName,
                       onTap: () => _showThemeSheet(context),
                     );
@@ -367,6 +395,20 @@ class _SettingsView extends BaseScreen {
                 AppSectionHeader(
                   title: AppStrings.supportAndAbout,
                   isEyebrow: true,
+                ),
+                AppListTileCard(
+                  icon: Icons.mail_outline_rounded,
+                  title: AppStrings.contactSupport,
+                  subtitle: AppStrings.contactSupportSubtitle,
+                  onTap: () => launchUrl(
+                    Uri(
+                      scheme: 'mailto',
+                      path: AppStrings.contactSupportSubtitle,
+                      queryParameters: {
+                        'subject': AppStrings.contactEmailSubject,
+                      },
+                    ),
+                  ),
                 ),
                 AppListTileCard(
                   icon: Icons.privacy_tip_outlined,
@@ -438,4 +480,11 @@ class _SettingsView extends BaseScreen {
       ),
     );
   }
+
+  /// Maps the current plan tier to its localized display name.
+  String _planName(PlanTier tier) => switch (tier) {
+    PlanTier.basic => AppStrings.basicPlan,
+    PlanTier.pro => AppStrings.proPlan,
+    PlanTier.premium => AppStrings.premiumPlan,
+  };
 }

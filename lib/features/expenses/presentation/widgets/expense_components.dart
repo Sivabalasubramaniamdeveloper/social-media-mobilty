@@ -21,7 +21,9 @@ class TransactionTypeSwitch extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final isLight = theme.brightness == Brightness.light;
-    final secondaryText = isLight ? AppColors.lightSecondaryOnSurface : AppColors.secondaryText;
+    final secondaryText = isLight
+        ? AppColors.lightSecondaryOnSurface
+        : AppColors.secondaryText;
 
     final isExpense = activeType == 'expense';
     return Container(
@@ -30,9 +32,7 @@ class TransactionTypeSwitch extends StatelessWidget {
       decoration: BoxDecoration(
         color: isLight ? scheme.surfaceContainerHighest : AppColors.surfaceDeep,
         borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-        border: Border.all(
-          color: scheme.onSurface.withValues(alpha: 0.08),
-        ),
+        border: Border.all(color: scheme.onSurface.withValues(alpha: 0.08)),
       ),
       child: Row(
         children: [
@@ -107,7 +107,9 @@ class AmountInputField extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final isLight = theme.brightness == Brightness.light;
-    final secondaryText = isLight ? AppColors.lightSecondaryOnSurface : AppColors.secondaryText;
+    final secondaryText = isLight
+        ? AppColors.lightSecondaryOnSurface
+        : AppColors.secondaryText;
 
     return Container(
       padding: const EdgeInsets.symmetric(
@@ -117,9 +119,7 @@ class AmountInputField extends StatelessWidget {
       decoration: BoxDecoration(
         color: isLight ? scheme.surfaceContainerHighest : AppColors.surfaceDeep,
         borderRadius: BorderRadius.circular(AppSizes.fontTitleSm),
-        border: Border.all(
-          color: scheme.onSurface.withValues(alpha: 0.08),
-        ),
+        border: Border.all(color: scheme.onSurface.withValues(alpha: 0.08)),
       ),
       child: Row(
         children: [
@@ -134,14 +134,16 @@ class AmountInputField extends StatelessWidget {
           Expanded(
             child: TextFormField(
               controller: controller,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
               style: TextStyle(
                 fontSize: AppSizes.fontAmount,
                 fontWeight: FontWeight.bold,
                 color: scheme.onSurface,
               ),
               decoration: InputDecoration(
-                hintText: '0.00',
+                hintText: AppStrings.sampleAmount,
                 hintStyle: TextStyle(color: secondaryText),
                 border: InputBorder.none,
               ),
@@ -172,7 +174,9 @@ class CategoryDropdownField extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final isLight = theme.brightness == Brightness.light;
-    final secondaryText = isLight ? AppColors.lightSecondaryOnSurface : AppColors.secondaryText;
+    final secondaryText = isLight
+        ? AppColors.lightSecondaryOnSurface
+        : AppColors.secondaryText;
 
     final effectiveId = categories.any((c) => c.id == selectedCategoryId)
         ? selectedCategoryId
@@ -184,9 +188,7 @@ class CategoryDropdownField extends StatelessWidget {
       decoration: BoxDecoration(
         color: isLight ? scheme.surfaceContainerHighest : AppColors.surfaceDeep,
         borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-        border: Border.all(
-          color: scheme.onSurface.withValues(alpha: 0.08),
-        ),
+        border: Border.all(color: scheme.onSurface.withValues(alpha: 0.08)),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
@@ -197,10 +199,7 @@ class CategoryDropdownField extends StatelessWidget {
             color: scheme.onSurface,
             fontSize: AppSizes.fontBody,
           ),
-          icon: Icon(
-            Icons.keyboard_arrow_down_rounded,
-            color: secondaryText,
-          ),
+          icon: Icon(Icons.keyboard_arrow_down_rounded, color: secondaryText),
           onChanged: (val) {
             if (val != null) onCategoryChanged(val);
           },

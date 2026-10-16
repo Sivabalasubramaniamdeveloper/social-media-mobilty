@@ -35,6 +35,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     super.dispose();
   }
 
+  /// Validates the signup form and submits the account details to Supabase.
   void _onSubmit(BuildContext context) {
     if (!_agreeTerms) {
       SnackBarHelper.showError(context, AppStrings.pleaseAgreeTerms);
@@ -49,16 +50,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
     }
   }
 
+  /// Routes new accounts to email verification and surfaces signup failures.
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<AuthCubit, AuthState>(
       listener: (context, state) {
         if (state is AuthRegisterSuccess) {
-          SnackBarHelper.showSuccess(
-            context,
-            'Registration successful. Please log in.',
-          );
-          context.go(RouteNames.login);
+          context.go(RouteNames.verifyEmail, extra: state.email);
         } else if (state is AuthFailure) {
           SnackBarHelper.showError(context, state.errorMessage);
         }
@@ -125,6 +123,7 @@ class _SignUpFormView extends BaseFormScreen {
   @override
   void onSubmit(BuildContext context) => onSubmitCallback();
 
+  /// Builds the signup fields, terms toggle, and submit action.
   @override
   List<Widget> buildFormFields(BuildContext context) {
     final theme = Theme.of(context);
@@ -136,8 +135,9 @@ class _SignUpFormView extends BaseFormScreen {
     final width = size.width;
     final isTablet = width > 600;
 
-    final secondaryTextColor =
-        isLight ? AppColors.lightSecondaryOnSurface : AppColors.secondaryText;
+    final secondaryTextColor = isLight
+        ? AppColors.lightSecondaryOnSurface
+        : AppColors.secondaryText;
 
     return [
       Padding(
@@ -188,10 +188,7 @@ class _SignUpFormView extends BaseFormScreen {
             const SizedBox(height: 8),
             Text(
               AppStrings.joinFutureOfProductivity,
-              style: TextStyle(
-                fontSize: 15,
-                color: secondaryTextColor,
-              ),
+              style: TextStyle(fontSize: 15, color: secondaryTextColor),
             ),
             SizedBox(height: height * 0.035),
             AppTextField(
@@ -250,10 +247,7 @@ class _SignUpFormView extends BaseFormScreen {
                 Expanded(
                   child: RichText(
                     text: TextSpan(
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: secondaryTextColor,
-                      ),
+                      style: TextStyle(fontSize: 13, color: secondaryTextColor),
                       children: [
                         TextSpan(text: '${AppStrings.iAgreeToThe} '),
                         TextSpan(
@@ -372,10 +366,7 @@ class _SignUpFormView extends BaseFormScreen {
                 children: [
                   Text(
                     AppStrings.alreadyHaveAccount,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: secondaryTextColor,
-                    ),
+                    style: TextStyle(fontSize: 14, color: secondaryTextColor),
                   ),
                   GestureDetector(
                     onTap: () {

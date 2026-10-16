@@ -4,17 +4,22 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:mineai/config/router/route_names.dart';
 import 'package:mineai/core/constants/app_colors.dart';
-import 'package:mineai/core/constants/app_sizes.dart';
 import 'package:mineai/core/constants/app_strings.dart';
+import 'package:mineai/core/constants/app_sizes.dart';
 import 'package:mineai/core/database/app_database.dart';
-import 'package:mineai/core/utils/user_helper.dart';
-import 'package:mineai/core/widgets/app_widgets.dart';
 import 'package:mineai/core/widgets/gradiant_background.dart';
+import 'package:mineai/core/widgets/cards/app_feature_card.dart';
+import 'package:mineai/core/widgets/cards/app_list_tile_card.dart';
+import 'package:mineai/core/widgets/buttons/app_icon_action_button.dart';
+import 'package:mineai/core/widgets/forms/app_search_field.dart';
+import 'package:mineai/core/widgets/headers/app_section_header.dart';
+import 'package:mineai/features/diary/presentation/diary_dashboard_screen.dart';
 import 'package:mineai/features/expenses/presentation/expense_tracker_screen.dart';
 import 'package:mineai/features/profile/cubit/user_profile_cubit.dart';
 import 'package:mineai/features/profile/cubit/user_profile_state.dart';
+import 'package:mineai/core/utils/user_helper.dart';
 import 'package:mineai/features/profile/presentation/settings_screen.dart';
-
+import 'package:mineai/features/scraper/presentation/product_scraper_screen.dart';
 
 class HomeDashboardScreen extends StatefulWidget {
   const HomeDashboardScreen({super.key});
@@ -30,7 +35,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
   @override
   void initState() {
     super.initState();
-    // Fetch profile data from GET /api/v1/user/me
+    // Load dynamic profile details from GET /api/v1/user/me
     context.read<UserProfileCubit>().loadProfile();
   }
 
@@ -49,9 +54,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
             index: _navIndex,
             children: [
               _buildHomeContent(),
-              Center(
-                child: Text('History', style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
-              ),
+              const ProductScraperScreen(),
               const ExpenseTrackerScreen(),
               const SettingsScreen(),
             ],
@@ -64,6 +67,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
 
   Widget _buildHomeContent() {
     final size = MediaQuery.of(context).size;
+    final bottomInset = MediaQuery.paddingOf(context).bottom;
     final isTablet = size.width > 600;
 
     return GradientBackground(
@@ -74,7 +78,9 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
             isTablet ? size.width * 0.15 : AppSizes.pagePadding,
             AppSizes.lg,
             isTablet ? size.width * 0.15 : AppSizes.pagePadding,
-            90,
+            AppSizes.bottomNavHeight +
+                bottomInset +
+                20, // Avoid Android navigation bar collision
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -113,11 +119,11 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Good Evening, $greetingName 👋',
+                  AppStrings.homeGreeting(greetingName),
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
-                    color: Theme.of(context).secondaryHeaderColor,
+                    color: theme.secondaryHeaderColor,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -180,12 +186,27 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
         icon: Icons.code_rounded,
         onTap: () {},
       ),
-      // REPLACED DOC ANALYZER WITH WEATHER & INSIGHTS:
       _ToolItem(
         title: AppStrings.weatherInsights,
         description: AppStrings.weatherAiDesc,
         icon: Icons.wb_sunny_outlined,
         onTap: () => context.go(RouteNames.weather),
+      ),
+      _ToolItem(
+        title: AppStrings.personalDiary,
+        description: AppStrings.diarySubtitle,
+        icon: Icons.auto_stories_rounded,
+        onTap: () async {
+          final userId = await UserHelper.getCurrentUserId();
+          if (context.mounted) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => DiaryDashboardScreen(userId: userId),
+              ),
+            );
+          }
+        },
       ),
     ];
 
@@ -222,8 +243,9 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
   Widget _buildRecentActivityList() {
     final theme = Theme.of(context);
     final isLight = theme.brightness == Brightness.light;
-    final secondaryTextColor =
-        isLight ? AppColors.lightSecondaryOnSurface : AppColors.secondaryText;
+    final secondaryTextColor = isLight
+        ? AppColors.lightSecondaryOnSurface
+        : AppColors.secondaryText;
 
     final List<_ActivityItem> activities = [
       _ActivityItem(
@@ -256,10 +278,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
               showChevron: false,
               trailing: Text(
                 item.time,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: secondaryTextColor,
-                ),
+                style: TextStyle(fontSize: 12, color: secondaryTextColor),
               ),
             ),
           )
@@ -272,7 +291,6 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
     final isLight = theme.brightness == Brightness.light;
 
     return Container(
-      height: AppSizes.bottomNavHeight,
       decoration: BoxDecoration(
         color: isLight
             ? theme.colorScheme.surfaceContainerHighest
@@ -283,14 +301,22 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
           ),
         ),
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _navItem(0, Icons.home_rounded, AppStrings.navHome),
-          _navItem(1, Icons.history_rounded, AppStrings.navHistory),
-          _navItem(2, Icons.bar_chart_rounded, AppStrings.expense),
-          _navItem(3, Icons.person_outline_rounded, AppStrings.navProfile),
-        ],
+      child: SafeArea(
+        top: false,
+        left: false,
+        right: false,
+        child: SizedBox(
+          height: AppSizes.bottomNavHeight,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _navItem(0, Icons.home_rounded, AppStrings.navHome),
+              _navItem(1, Icons.history_rounded, AppStrings.navHistory),
+              _navItem(2, Icons.bar_chart_rounded, AppStrings.expenses),
+              _navItem(3, Icons.person_outline_rounded, AppStrings.profile),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -303,17 +329,22 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
 
     final color = isSelected
         ? scheme.primary
-        : (isLight ? AppColors.lightSecondaryOnSurface : AppColors.secondaryText);
+        : (isLight
+              ? AppColors.lightSecondaryOnSurface
+              : AppColors.secondaryText);
 
     return InkWell(
       onTap: () async {
         if (index == 2) {
           final userId = await UserHelper.getCurrentUserId();
           final monthYear = DateFormat('yyyy-MM').format(DateTime.now());
-          final budgets = await ExpenseDatabaseService.instance
-              .getAllBudgets(userId, monthYear);
-          final txs =
-              await ExpenseDatabaseService.instance.getTransactions(userId);
+          final budgets = await ExpenseDatabaseService.instance.getAllBudgets(
+            userId,
+            monthYear,
+          );
+          final txs = await ExpenseDatabaseService.instance.getTransactions(
+            userId,
+          );
           if (budgets.isEmpty && txs.isEmpty && mounted) {
             await context.push(RouteNames.incomeBudget);
             if (mounted) setState(() => _navIndex = 2);
@@ -338,7 +369,6 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
         ],
       ),
     );
-
   }
 }
 

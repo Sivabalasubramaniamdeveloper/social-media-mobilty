@@ -195,10 +195,7 @@ class _EditProfileFormView extends BaseFormScreen {
                     height: 96,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      border: Border.all(
-                        color: scheme.primary,
-                        width: 2.5,
-                      ),
+                      border: Border.all(color: scheme.primary, width: 2.5),
                       image: const DecorationImage(
                         image: NetworkImage(
                           'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200',
@@ -302,10 +299,7 @@ class _EditProfileFormView extends BaseFormScreen {
                     Icons.keyboard_arrow_down,
                     color: scheme.onSurface.withValues(alpha: 0.7),
                   ),
-                  style: TextStyle(
-                    color: scheme.onSurface,
-                    fontSize: 14,
-                  ),
+                  style: TextStyle(color: scheme.onSurface, fontSize: 14),
                   items: [
                     DropdownMenuItem(
                       value: 'male',
@@ -368,13 +362,16 @@ class _EditProfileFormView extends BaseFormScreen {
                     Icons.keyboard_arrow_down,
                     color: scheme.onSurface.withValues(alpha: 0.7),
                   ),
-                  style: TextStyle(
-                    color: scheme.onSurface,
-                    fontSize: 14,
-                  ),
-                  items: const [
-                    DropdownMenuItem(value: 'en', child: Text('English (en)')),
-                    DropdownMenuItem(value: 'ta', child: Text('தமிழ் (ta)')),
+                  style: TextStyle(color: scheme.onSurface, fontSize: 14),
+                  items: [
+                    DropdownMenuItem(
+                      value: 'en',
+                      child: Text(AppStrings.englishLanguageCode),
+                    ),
+                    DropdownMenuItem(
+                      value: 'ta',
+                      child: Text(AppStrings.tamilLanguageCode),
+                    ),
                   ],
                   onChanged: (val) {
                     if (val != null) onLanguageChanged(val);

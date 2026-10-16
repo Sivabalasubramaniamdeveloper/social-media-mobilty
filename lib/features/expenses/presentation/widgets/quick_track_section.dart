@@ -30,7 +30,9 @@ class QuickTrackSection extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final isLight = theme.brightness == Brightness.light;
-    final secondaryText = isLight ? AppColors.lightSecondaryOnSurface : AppColors.secondaryText;
+    final secondaryText = isLight
+        ? AppColors.lightSecondaryOnSurface
+        : AppColors.secondaryText;
 
     final isExpense = quickType == 'expense';
 
@@ -84,11 +86,11 @@ class QuickTrackSection extends StatelessWidget {
           height: AppSizes.buttonHeight + 2,
           padding: const EdgeInsets.symmetric(horizontal: AppSizes.lg + 2),
           decoration: BoxDecoration(
-            color: isLight ? scheme.surfaceContainerHighest : AppColors.surfaceDeep,
+            color: isLight
+                ? scheme.surfaceContainerHighest
+                : AppColors.surfaceDeep,
             borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-            border: Border.all(
-              color: scheme.onSurface.withValues(alpha: 0.06),
-            ),
+            border: Border.all(color: scheme.onSurface.withValues(alpha: 0.06)),
           ),
           child: Row(
             children: [
@@ -97,20 +99,24 @@ class QuickTrackSection extends StatelessWidget {
                 style: TextStyle(
                   fontSize: AppSizes.fontTitleSm,
                   fontWeight: FontWeight.w600,
-                  color: isExpense ? AppColors.expenseRed : AppColors.incomeGreen,
+                  color: isExpense
+                      ? AppColors.expenseRed
+                      : AppColors.incomeGreen,
                 ),
               ),
               Expanded(
                 child: TextField(
                   controller: amountController,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
                   style: TextStyle(
                     color: scheme.onSurface,
                     fontSize: AppSizes.fontSubheading,
                     fontWeight: FontWeight.w600,
                   ),
                   decoration: InputDecoration(
-                    hintText: '0.00',
+                    hintText: AppStrings.sampleAmount,
                     hintStyle: TextStyle(
                       color: secondaryText,
                       fontSize: AppSizes.fontSubheading,
@@ -130,9 +136,13 @@ class QuickTrackSection extends StatelessWidget {
               flex: 5,
               child: Container(
                 height: AppSizes.buttonHeight,
-                padding: const EdgeInsets.symmetric(horizontal: AppSizes.md + 2),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSizes.md + 2,
+                ),
                 decoration: BoxDecoration(
-                  color: isLight ? scheme.surfaceContainerHighest : AppColors.surfaceDeep,
+                  color: isLight
+                      ? scheme.surfaceContainerHighest
+                      : AppColors.surfaceDeep,
                   borderRadius: BorderRadius.circular(AppSizes.radiusMd),
                   border: Border.all(
                     color: scheme.onSurface.withValues(alpha: 0.06),

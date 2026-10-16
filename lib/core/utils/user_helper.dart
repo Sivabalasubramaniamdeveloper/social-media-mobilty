@@ -1,4 +1,6 @@
+
 import 'package:flutter/foundation.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../utils/secure_storage.dart';
 import '../../instance/locator.dart';
@@ -25,5 +27,15 @@ class UserHelper {
     } catch (_) {}
 
     return 'guest_user';
+  }
+
+  static String get baseUrl {
+    final envUrl = dotenv.env['BACKEND_BASE_URL'];
+    if (envUrl != null && envUrl.isNotEmpty) return envUrl;
+    return 'http://localhost:3000/api/v1';
+    // Auto-resolve localhost for Android emulator vs iOS simulator
+    // if (Platform.isMacOS)
+    //   return 'https://mineaibackend-production.up.railway.app/api/v1';
+    // return 'http://localhost:3000/api/v1';
   }
 }

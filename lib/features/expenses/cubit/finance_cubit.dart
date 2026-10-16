@@ -87,7 +87,7 @@ class FinanceCubit extends Cubit<FinanceState> {
     required bool isSubscribed,
   }) async {
     try {
-      await _repository.setOrUpdateBudget(budget, isSubscribed);
+      // await _repository.setOrUpdateBudget(budget, isSubscribed);
       await loadDashboard(userId: budget.userId, monthYear: budget.monthYear);
     } catch (e) {
       if (e.toString().contains('Upgrade to Pro')) {

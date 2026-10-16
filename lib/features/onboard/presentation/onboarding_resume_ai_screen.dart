@@ -17,11 +17,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   int _currentIndex = 0;
 
   final List<_OnboardingItem> _slides = [
-    const _OnboardingItem(
-      titlePrefix: 'Study & ',
-      titleHighlight: 'Learning AI',
-      description:
-          'Master any subject with personalized AI tutors. Summarize complex topics and generate practice quizzes in seconds.',
+    _OnboardingItem(
+      titlePrefix: AppStrings.studyAndPrefix,
+      titleHighlight: AppStrings.learningAiTitle,
+      description: AppStrings.studyTutorDescription,
       iconType: _OnboardIconType.study,
     ),
     _OnboardingItem(
@@ -30,11 +29,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       description: AppStrings.resumeOnboardingDesc,
       iconType: _OnboardIconType.resume,
     ),
-    const _OnboardingItem(
-      titlePrefix: 'Voice & ',
-      titleHighlight: 'Smart Productivity',
-      description:
-          'Take control with your voice. MindAI automates your workflow and handles tasks hands-free, so you can focus on what matters most.',
+    _OnboardingItem(
+      titlePrefix: AppStrings.voiceAndPrefix,
+      titleHighlight: AppStrings.smartProductivityTitle,
+      description: AppStrings.voiceWorkflowDescription,
       iconType: _OnboardIconType.voice,
     ),
   ];
@@ -87,7 +85,7 @@ class _OnboardingView extends BaseScreen {
   });
 
   @override
-  String get title => 'Onboarding';
+  String get title => AppStrings.onboarding;
 
   @override
   bool get showAppBar => false;
@@ -106,8 +104,9 @@ class _OnboardingView extends BaseScreen {
     final height = size.height;
     final isTablet = width > 600;
 
-    final secondaryTextColor =
-        isLight ? AppColors.lightSecondaryOnSurface : AppColors.secondaryText;
+    final secondaryTextColor = isLight
+        ? AppColors.lightSecondaryOnSurface
+        : AppColors.secondaryText;
 
     return SafeArea(
       child: Padding(
@@ -255,18 +254,13 @@ class _OnboardingView extends BaseScreen {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: isLight
-              ? [
-                  scheme.surfaceContainerHighest,
-                  scheme.surfaceContainerHighest,
-                ]
+              ? [scheme.surfaceContainerHighest, scheme.surfaceContainerHighest]
               : [
                   AppColors.darkBackgroundMid.withValues(alpha: 0.9),
                   AppColors.darkBackgroundBottom.withValues(alpha: 0.95),
                 ],
         ),
-        border: Border.all(
-          color: scheme.secondary.withValues(alpha: 0.3),
-        ),
+        border: Border.all(color: scheme.secondary.withValues(alpha: 0.3)),
         boxShadow: [
           BoxShadow(
             color: scheme.secondary.withValues(alpha: 0.2),
@@ -342,11 +336,7 @@ class _OnboardingView extends BaseScreen {
               ),
             ),
             const SizedBox(height: 16),
-            Icon(
-              Icons.auto_awesome,
-              size: 24,
-              color: scheme.primary,
-            ),
+            Icon(Icons.auto_awesome, size: 24, color: scheme.primary),
           ],
         );
       case _OnboardIconType.voice:

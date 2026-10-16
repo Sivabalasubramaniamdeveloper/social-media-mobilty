@@ -47,7 +47,9 @@ class _ExpenseSettingsScreenState extends State<ExpenseSettingsScreen> {
     final savedAutoRefresh = await storage.readSecureData(_autoRefreshKey);
     final autoRefresh = savedAutoRefresh == null || savedAutoRefresh == 'true';
 
-    final txList = await ExpenseDatabaseService.instance.getTransactions(userId);
+    final txList = await ExpenseDatabaseService.instance.getTransactions(
+      userId,
+    );
     final budgets = await ExpenseDatabaseService.instance.getAllBudgets(
       userId,
       monthYear,
@@ -73,8 +75,8 @@ class _ExpenseSettingsScreenState extends State<ExpenseSettingsScreen> {
         SnackBar(
           content: Text(
             value
-              ? 'Auto-refresh enabled: Budgets will renew automatically each month.'
-              : 'Manual budget mode enabled: You will create budgets manually each month.',
+                ? AppStrings.autoRefreshBudgetEnabled
+                : AppStrings.manualBudgetModeEnabled,
           ),
           backgroundColor: Theme.of(context).colorScheme.primary,
           duration: const Duration(seconds: 2),
@@ -94,15 +96,15 @@ class _ExpenseSettingsScreenState extends State<ExpenseSettingsScreen> {
     if (count > 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Successfully copied $count category budgets from previous month!'),
+          content: Text(AppStrings.copiedCategoryBudgets(count)),
           backgroundColor: AppColors.statusSuccess,
         ),
       );
       _loadSettingsAndStats();
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('No previous month budgets found to copy.'),
+        SnackBar(
+          content: Text(AppStrings.noPreviousBudgets),
           backgroundColor: Colors.orangeAccent,
         ),
       );
@@ -134,14 +136,22 @@ class _ExpenseSettingsScreenState extends State<ExpenseSettingsScreen> {
         ),
         content: Text(
           message,
-          style: TextStyle(color: isLight ? AppColors.lightSecondaryOnSurface : AppColors.secondaryText),
+          style: TextStyle(
+            color: isLight
+                ? AppColors.lightSecondaryOnSurface
+                : AppColors.secondaryText,
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
             child: Text(
               AppStrings.cancel,
-              style: TextStyle(color: isLight ? AppColors.lightSecondaryOnSurface : AppColors.secondaryText),
+              style: TextStyle(
+                color: isLight
+                    ? AppColors.lightSecondaryOnSurface
+                    : AppColors.secondaryText,
+              ),
             ),
           ),
           ElevatedButton(
@@ -192,7 +202,7 @@ class _ExpenseSettingsScreenState extends State<ExpenseSettingsScreen> {
   Future<void> _resetBudgets() async {
     await _confirmAction(
       title: AppStrings.resetBudgets,
-      message: 'Are you sure you want to reset all category budgets for this month?',
+      message: AppStrings.resetBudgetsConfirm,
       onConfirmed: () async {
         final userId = await UserHelper.getCurrentUserId();
         await ExpenseDatabaseService.instance.clearAllBudgets(userId);
@@ -236,9 +246,7 @@ class _ExpenseSettingsScreenState extends State<ExpenseSettingsScreen> {
             Expanded(
               child: _isLoading
                   ? Center(
-                      child: CircularProgressIndicator(
-                        color: scheme.primary,
-                      ),
+                      child: CircularProgressIndicator(color: scheme.primary),
                     )
                   : ListView(
                       padding: const EdgeInsets.symmetric(
@@ -251,28 +259,28 @@ class _ExpenseSettingsScreenState extends State<ExpenseSettingsScreen> {
 
                         // Section 1: Monthly Budget & Rollover
                         AppSectionHeader(
-                          title: 'MONTHLY BUDGET SETTINGS',
+                          title: AppStrings.monthlyBudgetSettings,
                           isEyebrow: true,
                         ),
                         AppListTileCard.toggle(
                           icon: Icons.autorenew_rounded,
-                          title: 'Auto-refresh Monthly Budget',
+                          title: AppStrings.autoRefreshMonthlyBudget,
                           subtitle: _autoRefreshMonthlyBudget
-                              ? 'Automatically renews your budgets on the 1st of every month'
-                              : 'Manual mode: You create new budgets manually each month',
+                              ? AppStrings.autoRefreshBudgetEnabled
+                              : AppStrings.manualBudgetModeEnabled,
                           value: _autoRefreshMonthlyBudget,
                           onChanged: _onAutoRefreshChanged,
                         ),
                         AppListTileCard(
                           icon: Icons.copy_all_rounded,
-                          title: 'Copy Last Month\'s Budget Now',
-                          subtitle: 'Apply previous month allocations to this month',
+                          title: AppStrings.copyPreviousBudget,
+                          subtitle: AppStrings.copyPreviousBudgetDescription,
                           onTap: _copyPreviousMonthBudgetNow,
                         ),
                         AppListTileCard(
                           icon: Icons.tune_rounded,
                           title: AppStrings.manageBudgets,
-                          subtitle: 'Configure limits for current month',
+                          subtitle: AppStrings.configureCurrentMonthLimits,
                           onTap: () async {
                             await context.push(RouteNames.incomeBudget);
                             _loadSettingsAndStats();
@@ -289,39 +297,40 @@ class _ExpenseSettingsScreenState extends State<ExpenseSettingsScreen> {
                         AppListTileCard.toggle(
                           icon: Icons.notifications_active_outlined,
                           title: AppStrings.budgetAlertToggle,
-                          subtitle: 'Receive alerts when spending exceeds limits',
+                          subtitle: AppStrings.budgetAlertsDescription,
                           value: _budgetAlerts,
-                          onChanged: (val) => setState(() => _budgetAlerts = val),
+                          onChanged: (val) =>
+                              setState(() => _budgetAlerts = val),
                         ),
 
                         const SizedBox(height: AppSizes.xxl),
 
                         // Section 3: Data Export
                         AppSectionHeader(
-                          title: 'DOWNLOAD & EXPORT',
+                          title: AppStrings.downloadAndExport,
                           isEyebrow: true,
                         ),
                         AppListTileCard(
                           icon: Icons.picture_as_pdf_outlined,
-                          title: 'Download Expense Report (PDF)',
-                          subtitle: 'Formatted PDF document saved to local device',
+                          title: AppStrings.downloadExpensePdf,
+                          subtitle: AppStrings.expensePdfDescription,
                           onTap: () {
                             ExpenseExportService.instance.exportToPdf(
                               context: context,
                               transactions: _allTransactions,
-                              periodTitle: 'All Logged Records',
+                              periodTitle: AppStrings.allLoggedRecords,
                             );
                           },
                         ),
                         AppListTileCard(
                           icon: Icons.table_chart_outlined,
-                          title: 'Download Expense Sheet (Excel)',
-                          subtitle: 'Excel workbook (.xlsx) saved to local device',
+                          title: AppStrings.downloadExpenseExcel,
+                          subtitle: AppStrings.expenseExcelDescription,
                           onTap: () {
                             ExpenseExportService.instance.exportToExcel(
                               context: context,
                               transactions: _allTransactions,
-                              periodTitle: 'All Logged Records',
+                              periodTitle: AppStrings.allLoggedRecords,
                             );
                           },
                         ),
@@ -330,25 +339,25 @@ class _ExpenseSettingsScreenState extends State<ExpenseSettingsScreen> {
 
                         // Section 4: Data Management
                         AppSectionHeader(
-                          title: 'DATA MANAGEMENT',
+                          title: AppStrings.dataManagement,
                           isEyebrow: true,
                         ),
                         AppListTileCard(
                           icon: Icons.delete_sweep_outlined,
                           title: AppStrings.clearTransactions,
-                          subtitle: 'Delete all logged transactions',
+                          subtitle: AppStrings.deleteLoggedTransactions,
                           onTap: _clearTransactions,
                         ),
                         AppListTileCard(
                           icon: Icons.restart_alt_rounded,
                           title: AppStrings.resetBudgets,
-                          subtitle: 'Reset category allocations to zero',
+                          subtitle: AppStrings.resetCategoryAllocations,
                           onTap: _resetBudgets,
                         ),
                         AppListTileCard(
                           icon: Icons.warning_amber_rounded,
                           title: AppStrings.clearAllData,
-                          subtitle: 'Clear all transactions, budgets & goals',
+                          subtitle: AppStrings.clearAllFinancialData,
                           trailing: const Icon(
                             Icons.chevron_right_rounded,
                             color: AppColors.statusCritical,
@@ -372,15 +381,13 @@ class _ExpenseSettingsScreenState extends State<ExpenseSettingsScreen> {
       decoration: BoxDecoration(
         color: isLight ? scheme.surfaceContainerHighest : AppColors.surfaceDeep,
         borderRadius: BorderRadius.circular(AppSizes.radiusLg),
-        border: Border.all(
-          color: scheme.onSurface.withValues(alpha: 0.06),
-        ),
+        border: Border.all(color: scheme.onSurface.withValues(alpha: 0.06)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           _statCol(
-            'Logged Transactions',
+            AppStrings.loggedTransactions,
             '$_totalTransactionsCount',
             Icons.receipt_long_rounded,
             scheme.primary,
@@ -393,7 +400,7 @@ class _ExpenseSettingsScreenState extends State<ExpenseSettingsScreen> {
             color: scheme.onSurface.withValues(alpha: 0.1),
           ),
           _statCol(
-            'Active Budgets',
+            AppStrings.activeBudgets,
             '$_activeBudgetsCount',
             Icons.account_balance_wallet_rounded,
             AppColors.incomeGreen,
@@ -405,7 +412,14 @@ class _ExpenseSettingsScreenState extends State<ExpenseSettingsScreen> {
     );
   }
 
-  Widget _statCol(String label, String value, IconData icon, Color color, ColorScheme scheme, bool isLight) {
+  Widget _statCol(
+    String label,
+    String value,
+    IconData icon,
+    Color color,
+    ColorScheme scheme,
+    bool isLight,
+  ) {
     return Row(
       children: [
         Container(
@@ -432,7 +446,9 @@ class _ExpenseSettingsScreenState extends State<ExpenseSettingsScreen> {
             Text(
               label,
               style: TextStyle(
-                color: isLight ? AppColors.lightSecondaryOnSurface : AppColors.secondaryText,
+                color: isLight
+                    ? AppColors.lightSecondaryOnSurface
+                    : AppColors.secondaryText,
                 fontSize: 11,
               ),
             ),

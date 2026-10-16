@@ -2,8 +2,10 @@ import 'package:flutter/rendering.dart';
 import 'package:mineai/features/expenses/models/budget_model.dart';
 import 'package:mineai/features/expenses/models/category_model.dart';
 import 'package:mineai/features/expenses/models/transaction_model.dart';
+import 'package:mineai/features/subscription/models/subscription_plan.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ExpenseDatabaseService {
   static final ExpenseDatabaseService instance = ExpenseDatabaseService._();
@@ -129,7 +131,10 @@ class ExpenseDatabaseService {
   // ==========================================
   Future<int> insertTransaction(TransactionModel item) async {
     final db = await database;
-    return await db.insert('transactions', item.toMap());
+    final values = item.toMap();
+    // Let SQLite allocate the primary key for new rows.
+    if (item.id == null) values.remove('id');
+    return db.insert('transactions', values);
   }
 
   Future<int> deleteTransaction(int id, String userId) async {
@@ -235,11 +240,7 @@ class ExpenseDatabaseService {
   // ==========================================
   Future<void> clearAllTransactions(String userId) async {
     final db = await database;
-    await db.delete(
-      'transactions',
-      where: 'user_id = ?',
-      whereArgs: [userId],
-    );
+    await db.delete('transactions', where: 'user_id = ?', whereArgs: [userId]);
   }
 
   Future<void> clearAllBudgets(String userId, [String? monthYear]) async {
@@ -251,11 +252,7 @@ class ExpenseDatabaseService {
         whereArgs: [userId, monthYear],
       );
     } else {
-      await db.delete(
-        'budgets',
-        where: 'user_id = ?',
-        whereArgs: [userId],
-      );
+      await db.delete('budgets', where: 'user_id = ?', whereArgs: [userId]);
     }
   }
 
@@ -338,6 +335,64 @@ class ExpenseDatabaseService {
     );
   }
 
+  // Add to ExpenseDatabaseService
+  Future<void> saveOrUpdateBudgetWithPlan({
+    required BudgetModel budget,
+    required SubscriptionPlan plan,
+  }) async {
+    final existing = await getBudget(
+      budget.userId,
+      budget.categoryId,
+      budget.monthYear,
+    );
+
+    if (existing == null) {
+      // 1. Check maximum budget slots allowed
+      final allCurrentBudgets = await getAllBudgets(
+        budget.userId,
+        budget.monthYear,
+      );
+      if (allCurrentBudgets.length >= plan.maxBudgets) {
+        throw Exception(
+          'Budget limit reached! The ${plan.tier.name.toUpperCase()} plan allows a maximum of ${plan.maxBudgets} budgets.',
+        );
+      }
+
+      await saveOrUpdateBudget(budget);
+    } else {
+      // 2. Check edit count limit
+      if (existing.editCount >= plan.monthlyBudgetEdits) {
+        throw Exception(
+          'Edit limit reached! You can only edit budgets ${plan.monthlyBudgetEdits} times per month on the ${plan.tier.name.toUpperCase()} plan.',
+        );
+      }
+
+      final updated = existing.copyWith(
+        allocatedAmount: budget.allocatedAmount,
+        editCount: existing.editCount + 1,
+        updatedAt: DateTime.now(),
+      );
+      await saveOrUpdateBudget(updated);
+    }
+
+    // 3. Auto-sync to Supabase for Pro and Premium
+    if (plan.cloudSyncEnabled) {
+      try {
+        await Supabase.instance.client.from('budgets').upsert({
+          'id': '${budget.userId}_${budget.categoryId}_${budget.monthYear}',
+          'user_id': budget.userId,
+          'category_id': budget.categoryId,
+          'allocated_amount': budget.allocatedAmount,
+          'month_year': budget.monthYear,
+          'edit_count': (existing?.editCount ?? 0) + (existing != null ? 1 : 0),
+          'updated_at': DateTime.now().toIso8601String(),
+        });
+      } catch (e) {
+        debugPrint('Cloud sync failed for budget: $e');
+      }
+    }
+  }
+
   /// Checks whether budgets exist for [monthYear].
   /// If none exist and [isAutoRefresh] is true, checks the previous month or most recent month
   /// with budgets, and clones those allocations for [monthYear].
@@ -383,7 +438,9 @@ class ExpenseDatabaseService {
       await saveOrUpdateBudget(newBudget);
     }
 
-    debugPrint('Auto-refreshed ${prevBudgets.length} budgets from $prevMonthYear to $monthYear for user: $userId');
+    debugPrint(
+      'Auto-refreshed ${prevBudgets.length} budgets from $prevMonthYear to $monthYear for user: $userId',
+    );
     return await getAllBudgets(userId, monthYear);
   }
 
@@ -424,10 +481,8 @@ class ExpenseDatabaseService {
       copiedCount++;
     }
 
-
     return copiedCount;
   }
-
 
   // ==========================================
   // Savings Goals (Optional)

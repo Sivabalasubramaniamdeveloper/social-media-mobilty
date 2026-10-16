@@ -1,22 +1,27 @@
 import 'package:mineai/config/firebase/notification_service.dart';
 import 'package:mineai/core/database/app_database.dart';
+import 'package:mineai/features/subscription/models/subscription_plan.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/budget_model.dart';
 import '../models/category_model.dart';
 import '../models/transaction_model.dart';
 
 abstract class ExpenseRepository {
-  Future<void> addTransaction(TransactionModel item, bool isSubscribed);
-  Future<void> deleteTransaction(int id, String userId);
+  Future<void> addTransaction(TransactionModel item, bool syncToCloud);
   Future<List<TransactionModel>> getTransactions(String userId);
+
+  // Added methods
   Future<List<TransactionModel>> getTransactionsFiltered(
     String userId, {
     String? monthYear,
     String? year,
     String? type,
   });
+  Future<int> deleteTransaction(int id, String userId);
+
   Future<List<CategoryModel>> getCategories(String userId, String type);
   Future<void> addCustomCategory(CategoryModel category, bool isSubscribed);
-  Future<void> setOrUpdateBudget(BudgetModel budget, bool isSubscribed);
+  Future<void> setOrUpdateBudget(BudgetModel budget, SubscriptionPlan plan);
   Future<List<BudgetProgress>> getBudgetProgressList(
     String userId,
     String monthYear,
@@ -44,11 +49,24 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
     : _dbService = dbService ?? ExpenseDatabaseService.instance;
 
   @override
-  Future<void> addTransaction(TransactionModel item, bool isSubscribed) async {
-    // 1. Insert transaction into local SQLite
+  Future<void> addTransaction(TransactionModel item, bool syncToCloud) async {
     await _dbService.insertTransaction(item);
 
-    // 2. If it is an expense, check limits against the category budget
+    if (syncToCloud) {
+      try {
+        await Supabase.instance.client.from('transactions').upsert({
+          'user_id': item.userId,
+          'title': item.title,
+          'amount': item.amount,
+          'type': item.type,
+          'category_id': item.categoryId,
+          'time': item.time.toIso8601String(),
+          'update_time': DateTime.now().toIso8601String(),
+          'note': item.note,
+        });
+      } catch (_) {}
+    }
+
     if (item.type == 'expense') {
       final monthYear =
           "${item.time.year}-${item.time.month.toString().padLeft(2, '0')}";
@@ -65,9 +83,19 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
           item.categoryId,
           monthYear,
         );
+        final previousSpent = (totalSpent - item.amount).clamp(
+          0.0,
+          double.infinity,
+        );
+        final previousPercentage =
+            (previousSpent / budget.allocatedAmount) * 100;
         final percentage = (totalSpent / budget.allocatedAmount) * 100;
+        final crossedThresholds = [50, 90, 100].where(
+          (threshold) =>
+              previousPercentage < threshold && percentage >= threshold,
+        );
 
-        if (percentage >= 80) {
+        if (crossedThresholds.isNotEmpty) {
           final categories = await _dbService.getCategories(
             item.userId,
             'expense',
@@ -80,20 +108,17 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
               )
               .name;
 
-          await NotificationService.instance.showBudgetWarning(
-            categoryName: categoryName,
-            percentage: percentage,
-            spent: totalSpent,
-            limit: budget.allocatedAmount,
-          );
+          for (final threshold in crossedThresholds) {
+            await NotificationService.instance.showBudgetWarning(
+              categoryName: categoryName,
+              threshold: threshold,
+              spent: totalSpent,
+              limit: budget.allocatedAmount,
+            );
+          }
         }
       }
     }
-  }
-
-  @override
-  Future<void> deleteTransaction(int id, String userId) async {
-    await _dbService.deleteTransaction(id, userId);
   }
 
   @override
@@ -101,6 +126,7 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
     return _dbService.getTransactions(userId);
   }
 
+  // Implementation for getTransactionsFiltered
   @override
   Future<List<TransactionModel>> getTransactionsFiltered(
     String userId, {
@@ -116,6 +142,22 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
     );
   }
 
+  // Implementation for deleteTransaction
+  @override
+  Future<int> deleteTransaction(int id, String userId) async {
+    final deletedCount = await _dbService.deleteTransaction(id, userId);
+
+    // Clean up cloud record if active
+    try {
+      await Supabase.instance.client.from('transactions').delete().match({
+        'id': id,
+        'user_id': userId,
+      });
+    } catch (_) {}
+
+    return deletedCount;
+  }
+
   @override
   Future<List<CategoryModel>> getCategories(String userId, String type) {
     return _dbService.getCategories(userId, type);
@@ -128,14 +170,17 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
   ) async {
     if (!isSubscribed) {
       throw Exception(
-        'Creating custom categories requires a Pro/Ultra Subscription.',
+        'Creating custom categories requires a Pro/Premium Subscription.',
       );
     }
     await _dbService.insertCustomCategory(category);
   }
 
   @override
-  Future<void> setOrUpdateBudget(BudgetModel budget, bool isSubscribed) async {
+  Future<void> setOrUpdateBudget(
+    BudgetModel budget,
+    SubscriptionPlan plan,
+  ) async {
     final existing = await _dbService.getBudget(
       budget.userId,
       budget.categoryId,
@@ -143,10 +188,9 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
     );
 
     if (existing != null) {
-      // Editing existing budget
-      if (existing.editCount >= 2 && !isSubscribed) {
+      if (existing.editCount >= plan.monthlyBudgetEdits) {
         throw Exception(
-          'Free limit reached! You can only edit budgets twice per month. Upgrade to Pro for unlimited edits.',
+          'Edit limit reached! Your ${plan.tier.name.toUpperCase()} plan allows ${plan.monthlyBudgetEdits} edits per month.',
         );
       }
 
@@ -157,8 +201,30 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
       );
       await _dbService.saveOrUpdateBudget(updated);
     } else {
-      // Initial creation
+      final allBudgets = await _dbService.getAllBudgets(
+        budget.userId,
+        budget.monthYear,
+      );
+      if (allBudgets.length >= plan.maxBudgets) {
+        throw Exception(
+          'Maximum budget limit reached (${plan.maxBudgets} budgets) for your plan.',
+        );
+      }
       await _dbService.saveOrUpdateBudget(budget);
+    }
+
+    if (plan.cloudSyncEnabled) {
+      try {
+        await Supabase.instance.client.from('budgets').upsert({
+          'id': '${budget.userId}_${budget.categoryId}_${budget.monthYear}',
+          'user_id': budget.userId,
+          'category_id': budget.categoryId,
+          'allocated_amount': budget.allocatedAmount,
+          'month_year': budget.monthYear,
+          'edit_count': (existing?.editCount ?? 0) + (existing != null ? 1 : 0),
+          'updated_at': DateTime.now().toIso8601String(),
+        });
+      } catch (_) {}
     }
   }
 

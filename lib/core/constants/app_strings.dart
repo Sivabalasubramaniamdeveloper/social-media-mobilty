@@ -25,6 +25,29 @@ class AppStrings {
   static String get continueWithGoogle => 'continue_with_google'.tr();
   static String get dontHaveAccount => 'dont_have_account'.tr();
   static String get signUp => 'sign_up'.tr();
+  static String get forgotPasswordTitle => 'forgot_password_title'.tr();
+  static String get forgotPasswordDescription =>
+      'forgot_password_description'.tr();
+  static String get sendResetLink => 'send_reset_link'.tr();
+  static String get newPassword => 'new_password'.tr();
+  static String get confirmNewPassword => 'confirm_new_password'.tr();
+  static String get resetPassword => 'reset_password'.tr();
+  static String get passwordResetSuccess => 'password_reset_success'.tr();
+  static String get passwordResetEmailSent => 'password_reset_email_sent'.tr();
+  static String get verificationEmailSent => 'verification_email_sent'.tr();
+  static String get registrationCheckEmail => 'registration_check_email'.tr();
+  static String get emailNotVerified => 'email_not_verified'.tr();
+  static String get emailAlreadyRegistered => 'email_already_registered'.tr();
+  static String get emailVerificationDisabled =>
+      'email_verification_disabled'.tr();
+  static String get emailConfirmedTitle => 'email_confirmed_title'.tr();
+  static String get emailConfirmedDescription =>
+      'email_confirmed_description'.tr();
+  static String get resendVerificationFailed =>
+      'resend_verification_failed'.tr();
+  static String get passwordResetRequestFailed =>
+      'password_reset_request_failed'.tr();
+  static String get passwordUpdateFailed => 'password_update_failed'.tr();
 
   // ======================
   //  Auth – Sign Up
@@ -85,12 +108,6 @@ class AppStrings {
   static String get checkSpamFolder => 'check_spam_folder'.tr();
   static String get orContactSupport => 'or_contact_support'.tr();
   static String get backToSignUp => 'back_to_sign_up'.tr();
-  static String get successTitle => 'success_title'.tr();
-  static String get successProcessedDesc => 'success_processed_desc'.tr();
-  static String get transactionId => 'transaction_id'.tr();
-  static String get timestamp => 'timestamp'.tr();
-  static String get backToHome => 'back_to_home'.tr();
-  static String get viewTransactionDetails => 'view_transaction_details'.tr();
 
   // ======================
   // Home Dashboard
@@ -165,8 +182,11 @@ class AppStrings {
   static String get account => 'account'.tr();
   static String get preferences => 'preferences'.tr();
   static String get supportAndAbout => 'support_and_about'.tr();
+  static String get contactSupport => 'contact_support'.tr();
+  static String get contactSupportSubtitle => 'contact_support_subtitle'.tr();
+  static String get contactEmailSubject => 'contact_email_subject'.tr();
   static String get subscriptionPlan => 'subscription_plan'.tr();
-  static String get manageProPlanCredits => 'manage_pro_plan_credits'.tr();
+  static String get managePlanCredits => 'manage_plan_credits'.tr();
   static String get pushNotifications => 'push_notifications'.tr();
   static String get aiAutoSummarize => 'ai_auto_summarize'.tr();
   static String get appLanguage => 'app_language'.tr();
@@ -210,6 +230,7 @@ class AppStrings {
   static String get spendingAnalysis => 'spending_analysis'.tr();
   static String get thisWeek => 'this_week'.tr();
   static String get thisMonth => 'this_month'.tr();
+  static String get allTime => 'all_time'.tr();
   static String get addNewExpense => 'add_new_expense'.tr();
   static String get trackIt => 'track_it'.tr();
   static String get recentExpenses => 'recent_expenses'.tr();
@@ -231,7 +252,6 @@ class AppStrings {
 
   static String get editProfileSubtitle => 'edit_profile_subtitle'.tr();
 
-  static String get proBadge => 'pro_badge'.tr();
   static String get selectLanguage => 'select_language'.tr();
   static String get englishLang => 'english_lang'.tr();
   static String get tamilLang => 'tamil_lang'.tr();
@@ -282,13 +302,202 @@ class AppStrings {
   static String get daysSat => 'days_sat'.tr();
   static String get daysSun => 'days_sun'.tr();
   static String get sampleExpenseTitle => 'sample_expense_title'.tr();
+  static String get sampleAmount => 'sample_amount'.tr();
   static String get sampleIncomeTitle => 'sample_income_title'.tr();
   static String get sampleBudgetAmount => 'sample_budget_amount'.tr();
   static String get sampleSavingsGoal => 'sample_savings_goal'.tr();
   static String get noBudgetsTapToCreate => 'no_budgets_tap_to_create'.tr();
-  static String get titleLabel => 'title'.tr();
   static String get expenseSettings => 'expense_settings'.tr();
   static String get expenseSettingsDesc => 'expense_settings_desc'.tr();
+  static String get firstIncomePromptTitle => 'first_income_prompt_title'.tr();
+  static String get firstIncomePromptBody => 'first_income_prompt_body'.tr();
+  static String get quickExpenseLogged => 'quick_expense_logged'.tr();
+  static String get quickIncomeAdded => 'quick_income_added'.tr();
+  static String get expenseSaved => 'expense_saved'.tr();
+  static String get incomeSaved => 'income_saved'.tr();
+  static String get validAmountRequired => 'valid_amount_required'.tr();
+  static String get budgets => 'budgets'.tr();
+  static String get budgetEditsMonthly => 'budget_edits_monthly'.tr();
+  static String get cloudSyncIncluded => 'cloud_sync_included'.tr();
+  static String get cloudSyncNotIncluded => 'cloud_sync_not_included'.tr();
+  static String get currentPlan => 'current_plan'.tr();
+  static String get basicPlan => 'basic_plan'.tr();
+  static String get premiumPlan => 'premium_plan'.tr();
+  static String get choosePlan => 'choose_plan'.tr();
+  static String get selectPlan => 'select_plan'.tr();
+  static String get planChangeUpdatesImmediately =>
+      'plan_change_updates_immediately'.tr();
+  static String get planChangedSuccessfully => 'plan_changed_successfully'.tr();
+  static String get planChangeFailed => 'plan_change_failed'.tr();
+  static String get subscriptionLoadFailed => 'subscription_load_failed'.tr();
+  static String get noPlansAvailable => 'no_plans_available'.tr();
+  static String get monthlyBudgetSettings => 'monthly_budget_settings'.tr();
+  static String get autoRefreshMonthlyBudget =>
+      'auto_refresh_monthly_budget'.tr();
+  static String get autoRefreshBudgetEnabled =>
+      'auto_refresh_budget_enabled'.tr();
+  static String get manualBudgetModeEnabled =>
+      'manual_budget_mode_enabled'.tr();
+  static String get copyPreviousBudget => 'copy_previous_budget'.tr();
+  static String get copyPreviousBudgetDescription =>
+      'copy_previous_budget_description'.tr();
+  static String get configureCurrentMonthLimits =>
+      'configure_current_month_limits'.tr();
+  static String get budgetAlertsDescription => 'budget_alerts_description'.tr();
+  static String get downloadAndExport => 'download_and_export'.tr();
+  static String get downloadExpensePdf => 'download_expense_pdf'.tr();
+  static String get expensePdfDescription => 'expense_pdf_description'.tr();
+  static String get downloadExpenseExcel => 'download_expense_excel'.tr();
+  static String get expenseExcelDescription => 'expense_excel_description'.tr();
+  static String get dataManagement => 'data_management'.tr();
+  static String get deleteLoggedTransactions =>
+      'delete_logged_transactions'.tr();
+  static String get resetCategoryAllocations =>
+      'reset_category_allocations'.tr();
+  static String get clearAllFinancialData => 'clear_all_financial_data'.tr();
+  static String get resetBudgetsConfirm => 'reset_budgets_confirm'.tr();
+  static String get noPreviousBudgets => 'no_previous_budgets'.tr();
+  static String get noBudgetsThisMonth => 'no_budgets_this_month'.tr();
+  static String get budgetSetupDescription => 'budget_setup_description'.tr();
+  static String get setMonthlyBudgetNow => 'set_monthly_budget_now'.tr();
+  static String get firstBudgetTitle => 'first_budget_title'.tr();
+  static String get firstBudgetDescription => 'first_budget_description'.tr();
+  static String get setNow => 'set_now'.tr();
+  static String get loggedTransactions => 'logged_transactions'.tr();
+  static String get activeBudgets => 'active_budgets'.tr();
+  static String get allLoggedRecords => 'all_logged_records'.tr();
+  static String get planLimitReached => 'plan_limit_reached'.tr();
+  static String get dismiss => 'dismiss'.tr();
+  static String get viewPlans => 'view_plans'.tr();
+  static String remainingImageQuota(int count) =>
+      'remaining_image_quota'.tr(namedArgs: {'count': '$count'});
+  static String imageQuotaReached(int limit, String period) =>
+      'image_quota_reached'.tr(
+        namedArgs: {'limit': '$limit', 'period': period},
+      );
+  static String get emotions => 'emotions'.tr();
+  static String get coreEmotionsDescription => 'core_emotions_description'.tr();
+  static String get updatedJustNow => 'updated_just_now'.tr();
+  static String get retry => 'retry'.tr();
+  static String get tryAgain => 'try_again'.tr();
+  static String get mindAiSuggests => 'mind_ai_suggests'.tr();
+  static String homeGreeting(String name) =>
+      'home_greeting'.tr(namedArgs: {'name': name});
+  static String get appTheme => 'app_theme'.tr();
+  static String get chooseAppTheme => 'choose_app_theme'.tr();
+  static String get themeSavedDescription => 'theme_saved_description'.tr();
+  static String get englishLanguageCode => 'english_language_code'.tr();
+  static String get tamilLanguageCode => 'tamil_language_code'.tr();
+  static String get financialOverview => 'financial_overview'.tr();
+  static String spentLabel(String amount) =>
+      'spent_label'.tr(namedArgs: {'amount': amount});
+  static String limitLabel(String amount) =>
+      'limit_label'.tr(namedArgs: {'amount': amount});
+  static String get export => 'export'.tr();
+  static String get noTransactionsFound => 'no_transactions_found'.tr();
+  static String noTransactionsFor(String period) =>
+      'no_transactions_for'.tr(namedArgs: {'period': period});
+  static String get addTransaction => 'add_transaction'.tr();
+  static String get amountLabel => 'amount_label'.tr();
+  static String failedToSave(String reason) =>
+      'failed_to_save'.tr(namedArgs: {'reason': reason});
+  static String get downloadExpenseReport => 'download_expense_report'.tr();
+  static String exportFormatDescription(int count) =>
+      'export_format_description'.tr(namedArgs: {'count': '$count'});
+  static String get downloadPdfReport => 'download_pdf_report'.tr();
+  static String get pdfReportDescription => 'pdf_report_description'.tr();
+  static String get downloadExcelSheet => 'download_excel_sheet'.tr();
+  static String get excelSheetDescription => 'excel_sheet_description'.tr();
+  static String exportFailed(String format, String reason) =>
+      'export_failed'.tr(namedArgs: {'format': format, 'reason': reason});
+  static String exportPeriod(String period) =>
+      'export_period'.tr(namedArgs: {'period': period});
+  static String exportDate(String date) =>
+      'export_date'.tr(namedArgs: {'date': date});
+  static String exportPage(int page, int pages) =>
+      'export_page'.tr(namedArgs: {'page': '$page', 'pages': '$pages'});
+  static String get totalIncomeLabel => 'total_income_label'.tr();
+  static String get totalExpensesLabel => 'total_expenses_label'.tr();
+  static String get netBalanceLabel => 'net_balance_label'.tr();
+  static String get totalLogsLabel => 'total_logs_label'.tr();
+  static String get dateLabel => 'date_label'.tr();
+  static String get titleLabel => 'title'.tr();
+  static String get categoryLabel => 'category'.tr();
+  static String get typeLabel => 'type_label'.tr();
+  static String get amountColumn => 'amount_column'.tr();
+  static String get notesLabel => 'notes_label'.tr();
+  static String pdfSavedLocally(String file) =>
+      'pdf_saved_locally'.tr(namedArgs: {'file': file});
+  static String excelSavedLocally(String file) =>
+      'excel_saved_locally'.tr(namedArgs: {'file': file});
+  static String get exportNoTransactions => 'export_no_transactions'.tr();
+  static String get excelSheetName => 'excel_sheet_name'.tr();
+  static String get exportPdfFormat => 'export_pdf_format'.tr();
+  static String get exportPdfFormatDescription =>
+      'export_pdf_format_description'.tr();
+  static String get exportExcelFormat => 'export_excel_format'.tr();
+  static String get exportExcelFormatDescription =>
+      'export_excel_format_description'.tr();
+  static String get shareLabel => 'share'.tr();
+  static String get mindAiExpenseExport => 'mind_ai_expense_export'.tr();
+  static String expenseExportFileName(String date, String extension) =>
+      'expense_export_file_name'.tr(
+        namedArgs: {'date': date, 'extension': extension},
+      );
+  static String get sessionExpired => 'session_expired'.tr();
+  static String get sessionExpiredDescription =>
+      'session_expired_description'.tr();
+  static String get continueLabel => 'continue'.tr();
+  static String routeNotFound(String route) =>
+      'route_not_found'.tr(namedArgs: {'route': route});
+  static String get systemInitializing => 'system_initializing'.tr();
+  static String get genericUnexpectedError => 'generic_unexpected_error'.tr();
+  static String get studyTutorDescription => 'study_tutor_description'.tr();
+  static String get voiceWorkflowDescription =>
+      'voice_workflow_description'.tr();
+  static String get budgetAlertsChannel => 'budget_alerts_channel'.tr();
+  static String get budgetAlertsChannelDescription =>
+      'budget_alerts_channel_description'.tr();
+  static String get generalNotificationsChannel =>
+      'general_notifications_channel'.tr();
+  static String get generalNotificationsChannelDescription =>
+      'general_notifications_channel_description'.tr();
+  static String get highImportanceNotificationsChannel =>
+      'high_importance_notifications_channel'.tr();
+  static String get highImportanceNotificationsDescription =>
+      'high_importance_notifications_description'.tr();
+  static String get recurringNotificationsChannel =>
+      'recurring_notifications_channel'.tr();
+  static String get recurringNotificationsDescription =>
+      'recurring_notifications_description'.tr();
+  static String get backOnline => 'back_online'.tr();
+  static String get loginFailed => 'login_failed'.tr();
+  static String get registrationFailed => 'registration_failed'.tr();
+  static String get priceDataAcrossStores => 'price_data_across_stores'.tr();
+  static String get onboarding => 'onboarding'.tr();
+  static String get studyAndPrefix => 'study_and_prefix'.tr();
+  static String get learningAiTitle => 'learning_ai_title'.tr();
+  static String get voiceAndPrefix => 'voice_and_prefix'.tr();
+  static String get smartProductivityTitle => 'smart_productivity_title'.tr();
+  static List<String> get weekDaysShort => [
+    'days_mon'.tr(),
+    'days_tue'.tr(),
+    'days_wed'.tr(),
+    'days_thu'.tr(),
+    'days_fri'.tr(),
+    'days_sat'.tr(),
+    'days_sun'.tr(),
+  ];
+  static String copiedCategoryBudgets(int count) =>
+      'copied_category_budgets'.tr(namedArgs: {'count': '$count'});
+  static String budgetAlertTitle(String category) =>
+      'budget_alert_title'.tr(namedArgs: {'category': category});
+  static String budgetAlertUsed(int threshold, String category) =>
+      'budget_alert_used'.tr(
+        namedArgs: {'threshold': '$threshold', 'category': category},
+      );
+  static String budgetAlertExceeded(String spent, String limit) =>
+      'budget_alert_exceeded'.tr(namedArgs: {'spent': spent, 'limit': limit});
   static String get allTransactions => 'all_transactions'.tr();
   static String get allBudgets => 'all_budgets'.tr();
   static String get filterByMonth => 'filter_by_month'.tr();
@@ -304,12 +513,150 @@ class AppStrings {
   static String get clearTransactions => 'clear_transactions'.tr();
   static String get resetBudgets => 'reset_budgets'.tr();
   static String get clearDataConfirm => 'clear_data_confirm'.tr();
-  static String get clearTransactionsConfirm => 'clear_transactions_confirm'.tr();
+  static String get clearTransactionsConfirm =>
+      'clear_transactions_confirm'.tr();
   static String get dataClearedSuccess => 'data_cleared_success'.tr();
   static String get budgetAlertToggle => 'budget_alert_toggle'.tr();
   static String get budgetAlertDesc => 'budget_alert_desc'.tr();
   static String get manageBudgets => 'manage_budgets'.tr();
-  static String get noTransactionsForPeriod => 'no_transactions_for_period'.tr();
+  static String get noTransactionsForPeriod =>
+      'no_transactions_for_period'.tr();
+
+  // ======================
+  // Product Scraper & Deals
+  // ======================
+  static String get productScraperTitle => 'product_scraper_title'.tr();
+  static String get productScraperSubtitle => 'product_scraper_subtitle'.tr();
+  static String get searchProductsHint => 'search_products_hint'.tr();
+  static String get findDeals => 'find_deals'.tr();
+  static String get comparePrices => 'compare_prices'.tr();
+  static String get mindAiSuggestion => 'mind_ai_suggestion'.tr();
+  static String get showAiDeal => 'show_ai_deal'.tr();
+  static String get hideAiDeal => 'hide_ai_deal'.tr();
+  static String get lowestPrice => 'lowest_price'.tr();
+  static String get priceDifference => 'price_difference'.tr();
+  static String get savings => 'savings'.tr();
+  static String get allProducts => 'all_products'.tr();
+  static String get viewProduct => 'view_product'.tr();
+  static String get noProductsFound => 'no_products_found'.tr();
+  static String get searchPrompt => 'search_prompt'.tr();
+
+  // ======================
+  // Price Comparison & Deals
+  // ======================
+  static String get comparePricesTitle => 'compare_prices_title'.tr();
+  static String get comparePricesSubtitle => 'compare_prices_subtitle'.tr();
+  static String get compareSearchHint => 'compare_search_hint'.tr();
+  static String get compareButton => 'compare_button'.tr();
+  static String get enterQueryPrompt => 'enter_query_prompt'.tr();
+  static String get mindAiDealAnalysis => 'mindai_deal_analysis'.tr();
+  static String get bestDealVerdict => 'best_deal_verdict'.tr();
+  static String get savingsOpportunity => 'savings_opportunity'.tr();
+  // static String get priceDifference => 'price_difference'.tr();
+  static String get storesComparison => 'stores_comparison'.tr();
+  static String get viewDeal => 'view_deal'.tr();
+  static String get viewStore => 'view_store'.tr();
+  static String get inStock => 'in_stock'.tr();
+  static String get outOfStock => 'out_of_stock'.tr();
+  static String get analyzingDeals => 'analyzing_deals'.tr();
+  static String get aiRecommendationLabel => 'ai_recommendation_label'.tr();
+
+  // ======================
+  // Diary & Mood Tracker
+  // ======================
+  static String get personalDiary => 'personal_diary'.tr();
+  static String get diarySubtitle => 'diary_subtitle'.tr();
+  static String get dailyMotivation => 'daily_motivation'.tr();
+  static String get noMemoryRecorded => 'no_memory_recorded'.tr();
+  static String get viewEdit => 'view_edit'.tr();
+  static String get write => 'write'.tr();
+  static String get moodAndVibeAnalytics => 'mood_and_vibe_analytics'.tr();
+
+  static String get syncToCloud => 'sync_to_cloud'.tr();
+  static String syncSuccess(int count) =>
+      'sync_success'.tr(namedArgs: {'count': count.toString()});
+  static String get save => 'save'.tr();
+  static String get aestheticTemplates => 'aesthetic_templates'.tr();
+  static String get howAreYouFeeling => 'how_are_you_feeling'.tr();
+  static String get headlineHint => 'headline_hint'.tr();
+  static String get contentHint => 'content_hint'.tr();
+  static String get addImages => 'add_images'.tr();
+  static String get voiceNote => 'voice_note'.tr();
+  static String get voiceRecordedMsg => 'voice_recorded_msg'.tr();
+  static String defaultHeadline(String date) =>
+      'default_headline'.tr(namedArgs: {'date': date});
+
+  static String get moodHappy => 'mood_happy'.tr();
+  static String get moodCalm => 'mood_calm'.tr();
+  static String get moodNeutral => 'mood_neutral'.tr();
+  static String get moodSad => 'mood_sad'.tr();
+  static String get moodStressed => 'mood_stressed'.tr();
+
+  // ======================
+  // Diary & Reflections
+  // ======================
+
+  static String get myJournal => 'my_journal'.tr();
+  static String get celebrateSmile => 'celebrate_smile'.tr();
+  static String get startDayTitle => 'start_day_title'.tr();
+  static String get startDaySub => 'start_day_sub'.tr();
+  static String get quickJournal => 'quick_journal'.tr();
+
+  static String get pauseReflect => 'pause_reflect'.tr();
+  static String get pauseReflectSub => 'pause_reflect_sub'.tr();
+  static String get setIntentions => 'set_intentions'.tr();
+  static String get setIntentionsSub => 'set_intentions_sub'.tr();
+  static String get emotionsTitle => 'emotions_title'.tr();
+  static String get emotionsSubtitle => 'emotions_subtitle'.tr();
+  static String get createNewJournal => 'create_new_journal'.tr();
+  static String get chooseIcon => 'choose_icon'.tr();
+  static String get addIcon => 'add_icon'.tr();
+  static String get addPhotos => 'add_photos'.tr();
+  static String get voiceMemos => 'voice_memos'.tr();
+  static String get stickies => 'stickies'.tr();
+  static String get growthAreas => 'growth_areas'.tr();
+  static String get workFocus => 'work_focus'.tr();
+  static String get workFocusSub => 'work_focus_sub'.tr();
+  static String get showerThoughts => 'shower_thoughts'.tr();
+  static String get tapCaptureThought => 'tap_capture_thought'.tr();
+  static String get thisMonthsMood => 'this_months_mood'.tr();
+  static String get todaysPrompt => 'todays_prompt'.tr();
+  static String get defaultPromptText => 'default_prompt_text'.tr();
+  static String get weeklyReflectionTitle => 'weekly_reflection_title'.tr();
+  static String get monthlyReflectionTitle => 'monthly_reflection_title'.tr();
+  static String get aiReflection => 'ai_reflection'.tr();
+  static String get localInsights => 'local_insights'.tr();
+  static String get askAiReflection => 'ask_ai_reflection'.tr();
+  static String get reflectionDisclaimer => 'reflection_disclaimer'.tr();
+  static String get bestMoments => 'best_moments'.tr();
+  static String get difficultDays => 'difficult_days'.tr();
+
+  static String get done => 'done'.tr();
+
+  static String get journalContentHint => 'journal_content_hint'.tr();
+  static String get moodGreat => 'mood_great'.tr();
+  static String get moodGood => 'mood_good'.tr();
+  static String get moodOkay => 'mood_okay'.tr();
+  static String get moodLow => 'mood_low'.tr();
+  static String get moodRough => 'mood_rough'.tr();
+  static String get moodAnxious => 'mood_anxious'.tr();
+  static String get moodMad => 'mood_mad'.tr();
+  static String streakCount(int count) =>
+      'streak_count'.tr(namedArgs: {'count': count.toString()});
+  static String entriesCount(int count) =>
+      'entries_count'.tr(namedArgs: {'count': count.toString()});
+  static String photosCount(int count) =>
+      'photos_count'.tr(namedArgs: {'count': count.toString()});
+  static String audioCount(int count) =>
+      'audio_count'.tr(namedArgs: {'count': count.toString()});
+
+  static List<String> get dailyQuotes => [
+    'quote_1'.tr(),
+    'quote_2'.tr(),
+    'quote_3'.tr(),
+    'quote_4'.tr(),
+    'quote_5'.tr(),
+  ];
 
   // Helper method to translate any category code or fallback to raw string
   static String getCategoryName(String key) {

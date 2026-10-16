@@ -1,6 +1,7 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:mineai/core/constants/app_strings.dart';
 
 /// ============================================================
 /// FIREBASE BACKGROUND MESSAGE HANDLER
@@ -130,10 +131,10 @@ class PushNotificationService {
     // Android notification channel
     // ----------------------------------------------------------
 
-    const AndroidNotificationChannel channel = AndroidNotificationChannel(
+    final AndroidNotificationChannel channel = AndroidNotificationChannel(
       'high_importance_channel',
-      'High Importance Notifications',
-      description: 'This channel is used for important notifications.',
+      AppStrings.highImportanceNotificationsChannel,
+      description: AppStrings.highImportanceNotificationsDescription,
       importance: Importance.high,
     );
 
@@ -229,12 +230,12 @@ class PushNotificationService {
         id: notification.hashCode,
         title: notification.title,
         body: notification.body,
-        notificationDetails: const NotificationDetails(
+        notificationDetails: NotificationDetails(
           android: AndroidNotificationDetails(
             'high_importance_channel',
-            'High Importance Notifications',
+            AppStrings.highImportanceNotificationsChannel,
             channelDescription:
-                'This channel is used for important notifications.',
+                AppStrings.highImportanceNotificationsDescription,
             importance: Importance.high,
             priority: Priority.high,
             icon: 'launch_background',

@@ -30,6 +30,7 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
+  /// Validates credentials before starting the backend login request.
   void _onSubmit(BuildContext context) {
     if (_formKey.currentState?.validate() ?? false) {
       context.read<AuthCubit>().login(
@@ -39,6 +40,7 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  /// Routes successful logins to the dashboard and displays authentication errors.
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<AuthCubit, AuthState>(
@@ -99,6 +101,7 @@ class _LoginFormView extends BaseFormScreen {
   @override
   void onSubmit(BuildContext context) => onSubmitCallback();
 
+  /// Builds the login form and the forgot-password navigation link.
   @override
   List<Widget> buildFormFields(BuildContext context) {
     final theme = Theme.of(context);
@@ -110,8 +113,9 @@ class _LoginFormView extends BaseFormScreen {
     final width = size.width;
     final isTablet = width > 600;
 
-    final secondaryTextColor =
-        isLight ? AppColors.lightSecondaryOnSurface : AppColors.secondaryText;
+    final secondaryTextColor = isLight
+        ? AppColors.lightSecondaryOnSurface
+        : AppColors.secondaryText;
 
     return [
       Padding(
@@ -162,10 +166,7 @@ class _LoginFormView extends BaseFormScreen {
             const SizedBox(height: 8),
             Text(
               AppStrings.loginToContinue,
-              style: TextStyle(
-                fontSize: 15,
-                color: secondaryTextColor,
-              ),
+              style: TextStyle(fontSize: 15, color: secondaryTextColor),
             ),
             SizedBox(height: height * 0.04),
             AppTextField.email(
@@ -181,7 +182,7 @@ class _LoginFormView extends BaseFormScreen {
             Align(
               alignment: Alignment.centerRight,
               child: TextButton(
-                onPressed: () {},
+                onPressed: () => context.push(RouteNames.forgotPassword),
                 style: TextButton.styleFrom(
                   padding: EdgeInsets.zero,
                   minimumSize: Size.zero,
@@ -308,10 +309,7 @@ class _LoginFormView extends BaseFormScreen {
                 children: [
                   Text(
                     AppStrings.dontHaveAccount,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: secondaryTextColor,
-                    ),
+                    style: TextStyle(fontSize: 14, color: secondaryTextColor),
                   ),
                   GestureDetector(
                     onTap: () => context.push(RouteNames.signup),

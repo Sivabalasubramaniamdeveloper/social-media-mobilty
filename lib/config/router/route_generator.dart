@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mineai/config/router/route_names.dart';
+import 'package:mineai/core/constants/app_strings.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mineai/core/network/alice.dart';
 import 'package:mineai/features/expenses/presentation/add_expense_screen.dart';
@@ -9,12 +10,16 @@ import 'package:mineai/features/expenses/presentation/income_budget_screen.dart'
 import 'package:mineai/features/profile/presentation/edit_profile_screen.dart';
 import 'package:mineai/features/profile/presentation/profile_screen.dart';
 import 'package:mineai/features/profile/presentation/settings_screen.dart';
+import 'package:mineai/features/scraper/presentation/price_comparison_screen.dart';
 import 'package:mineai/features/splashscreen/presentation/splash_screen.dart';
+import 'package:mineai/features/subscription/presentation/subscription_screen.dart';
 import 'package:mineai/features/auth/presentation/pages/login_screen.dart';
 import 'package:mineai/features/auth/presentation/pages/signup_screen.dart';
 import 'package:mineai/features/onboard/presentation/onboarding_resume_ai_screen.dart';
 import 'package:mineai/features/auth/presentation/pages/verify_email_screen.dart';
-import 'package:mineai/features/auth/presentation/pages/auth_success_screen.dart';
+import 'package:mineai/features/auth/presentation/pages/forgot_password_screen.dart';
+import 'package:mineai/features/auth/presentation/pages/reset_password_screen.dart';
+import 'package:mineai/features/auth/presentation/pages/email_confirmed_screen.dart';
 import 'package:mineai/features/home/presentation/home_dashboard_screen.dart';
 import 'package:mineai/features/weather/presentation/weather_screen.dart';
 
@@ -52,14 +57,21 @@ class AppRouter {
         name: RouteNames.verifyEmail,
         path: RouteNames.verifyEmail,
         builder: (context, state) {
-          final email = state.extra as String? ?? 'user@email.com';
+          final email = state.extra as String? ?? '';
           return VerifyEmailScreen(email: email);
         },
       ),
       GoRoute(
-        name: RouteNames.authSuccess,
-        path: RouteNames.authSuccess,
-        builder: (context, state) => const AuthSuccessScreen(),
+        path: RouteNames.emailConfirmed,
+        builder: (context, state) => const EmailConfirmedScreen(),
+      ),
+      GoRoute(
+        path: RouteNames.forgotPassword,
+        builder: (context, state) => const ForgotPasswordScreen(),
+      ),
+      GoRoute(
+        path: RouteNames.resetPassword,
+        builder: (context, state) => const ResetPasswordScreen(),
       ),
       GoRoute(
         name: RouteNames.dashboard,
@@ -88,11 +100,16 @@ class AppRouter {
       ),
       GoRoute(
         path: RouteNames.addExpense,
-        builder: (context, state) => const AddExpenseScreen(),
+        builder: (context, state) =>
+            AddExpenseScreen(initialType: state.extra as String? ?? 'expense'),
       ),
       GoRoute(
         path: RouteNames.incomeBudget,
         builder: (context, state) => const IncomeBudgetScreen(),
+      ),
+      GoRoute(
+        path: RouteNames.subscription,
+        builder: (context, state) => const SubscriptionScreen(),
       ),
       GoRoute(
         path: RouteNames.allTransactions,
@@ -101,6 +118,11 @@ class AppRouter {
       GoRoute(
         path: RouteNames.expenseSettings,
         builder: (context, state) => const ExpenseSettingsScreen(),
+      ),
+      GoRoute(
+        name: RouteNames.comparePrices,
+        path: RouteNames.comparePrices,
+        builder: (context, state) => const PriceComparisonScreen(),
       ),
     ],
   );
@@ -113,7 +135,9 @@ class AppRouter {
       default:
         return MaterialPageRoute(
           builder: (_) => Scaffold(
-            body: Center(child: Text('No route defined for ${settings.name}')),
+            body: Center(
+              child: Text(AppStrings.routeNotFound(settings.name ?? '')),
+            ),
           ),
         );
     }
@@ -122,7 +146,7 @@ class AppRouter {
   static PageRouteBuilder _buildPageRoute(Widget page, RouteSettings settings) {
     return PageRouteBuilder(
       settings: settings,
-      pageBuilder: (_, __, ___) => page,
+      pageBuilder: (_, _, _) => page,
       transitionsBuilder: (context, animation, secondaryAnimation, child) {
         const begin = Offset(-1.0, 0.0); // From left
         const end = Offset.zero;

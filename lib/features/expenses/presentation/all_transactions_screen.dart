@@ -5,7 +5,6 @@ import 'package:mineai/config/router/route_names.dart';
 import 'package:mineai/core/constants/app_colors.dart';
 import 'package:mineai/core/constants/app_sizes.dart';
 import 'package:mineai/core/constants/app_strings.dart';
-import 'package:mineai/core/constants/app_text_styles.dart';
 import 'package:mineai/core/database/app_database.dart';
 import 'package:mineai/core/utils/user_helper.dart';
 import 'package:mineai/core/widgets/headers/app_screen_header.dart';
@@ -26,7 +25,9 @@ class _AllTransactionsScreenState extends State<AllTransactionsScreen> {
 
   bool _isLoading = true;
   String _selectedYear = DateTime.now().year.toString();
-  String _selectedMonth = DateFormat('MM').format(DateTime.now()); // "01" - "12" or "all"
+  String _selectedMonth = DateFormat(
+    'MM',
+  ).format(DateTime.now()); // "01" - "12" or "all"
   String _selectedType = 'all'; // 'all', 'expense', 'income'
 
   List<String> _availableYears = [DateTime.now().year.toString()];
@@ -56,10 +57,14 @@ class _AllTransactionsScreenState extends State<AllTransactionsScreen> {
 
   Future<void> _initData() async {
     final userId = await UserHelper.getCurrentUserId();
-    final years = await ExpenseDatabaseService.instance.getDistinctYears(userId);
+    final years = await ExpenseDatabaseService.instance.getDistinctYears(
+      userId,
+    );
     if (mounted) {
       setState(() {
-        _availableYears = years.isNotEmpty ? years : [DateTime.now().year.toString()];
+        _availableYears = years.isNotEmpty
+            ? years
+            : [DateTime.now().year.toString()];
         if (!_availableYears.contains(_selectedYear)) {
           _selectedYear = _availableYears.first;
         }
@@ -121,14 +126,22 @@ class _AllTransactionsScreenState extends State<AllTransactionsScreen> {
         ),
         content: Text(
           '${AppStrings.deleteConfirmMsg}\n\n${tx.title} • \$${tx.amount.toStringAsFixed(2)}',
-          style: TextStyle(color: isLight ? AppColors.lightSecondaryOnSurface : AppColors.secondaryText),
+          style: TextStyle(
+            color: isLight
+                ? AppColors.lightSecondaryOnSurface
+                : AppColors.secondaryText,
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
             child: Text(
               AppStrings.cancel,
-              style: TextStyle(color: isLight ? AppColors.lightSecondaryOnSurface : AppColors.secondaryText),
+              style: TextStyle(
+                color: isLight
+                    ? AppColors.lightSecondaryOnSurface
+                    : AppColors.secondaryText,
+              ),
             ),
           ),
           ElevatedButton(
@@ -239,7 +252,7 @@ class _AllTransactionsScreenState extends State<AllTransactionsScreen> {
                             ),
                             const SizedBox(width: 6),
                             Text(
-                              'Export',
+                              AppStrings.export,
                               style: TextStyle(
                                 color: scheme.secondary,
                                 fontWeight: FontWeight.bold,
@@ -259,7 +272,13 @@ class _AllTransactionsScreenState extends State<AllTransactionsScreen> {
             _buildFilterHeader(scheme, isLight),
 
             // Summary Stats Card
-            _buildSummaryRow(totalIncome, totalExpense, currencyFormat, scheme, isLight),
+            _buildSummaryRow(
+              totalIncome,
+              totalExpense,
+              currencyFormat,
+              scheme,
+              isLight,
+            ),
 
             const SizedBox(height: AppSizes.sm),
 
@@ -267,29 +286,27 @@ class _AllTransactionsScreenState extends State<AllTransactionsScreen> {
             Expanded(
               child: _isLoading
                   ? Center(
-                      child: CircularProgressIndicator(
-                        color: scheme.primary,
-                      ),
+                      child: CircularProgressIndicator(color: scheme.primary),
                     )
                   : _transactions.isEmpty
-                      ? _buildEmptyState(scheme, isLight)
-                      : ListView.separated(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: AppSizes.pagePadding,
-                            vertical: AppSizes.md,
-                          ),
-                          itemCount: _transactions.length,
-                          separatorBuilder: (context, index) =>
-                              const SizedBox(height: AppSizes.sm + 2),
-                          itemBuilder: (context, index) {
-                            final tx = _transactions[index];
-                            return TransactionTile(
-                              transaction: tx,
-                              currencyFormat: currencyFormat,
-                              onDelete: () => _confirmDelete(tx),
-                            );
-                          },
-                        ),
+                  ? _buildEmptyState(scheme, isLight)
+                  : ListView.separated(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSizes.pagePadding,
+                        vertical: AppSizes.md,
+                      ),
+                      itemCount: _transactions.length,
+                      separatorBuilder: (context, index) =>
+                          const SizedBox(height: AppSizes.sm + 2),
+                      itemBuilder: (context, index) {
+                        final tx = _transactions[index];
+                        return TransactionTile(
+                          transaction: tx,
+                          currencyFormat: currencyFormat,
+                          onDelete: () => _confirmDelete(tx),
+                        );
+                      },
+                    ),
             ),
           ],
         ),
@@ -304,9 +321,7 @@ class _AllTransactionsScreenState extends State<AllTransactionsScreen> {
       decoration: BoxDecoration(
         color: isLight ? scheme.surfaceContainerHighest : AppColors.surfaceDeep,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: scheme.onSurface.withValues(alpha: 0.06),
-        ),
+        border: Border.all(color: scheme.onSurface.withValues(alpha: 0.06)),
       ),
       child: Column(
         children: [
@@ -330,7 +345,9 @@ class _AllTransactionsScreenState extends State<AllTransactionsScreen> {
                     child: DropdownButton<String>(
                       value: _selectedYear,
                       isExpanded: true,
-                      dropdownColor: isLight ? scheme.surface : const Color(0xFF1B192E),
+                      dropdownColor: isLight
+                          ? scheme.surface
+                          : const Color(0xFF1B192E),
                       style: TextStyle(
                         color: scheme.onSurface,
                         fontSize: 13,
@@ -389,7 +406,9 @@ class _AllTransactionsScreenState extends State<AllTransactionsScreen> {
                     child: DropdownButton<String>(
                       value: _selectedMonth,
                       isExpanded: true,
-                      dropdownColor: isLight ? scheme.surface : const Color(0xFF1B192E),
+                      dropdownColor: isLight
+                          ? scheme.surface
+                          : const Color(0xFF1B192E),
                       style: TextStyle(
                         color: scheme.onSurface,
                         fontSize: 13,
@@ -489,8 +508,8 @@ class _AllTransactionsScreenState extends State<AllTransactionsScreen> {
                 color: isSelected
                     ? scheme.onSurface
                     : (Theme.of(context).brightness == Brightness.light
-                        ? AppColors.lightSecondaryOnSurface
-                        : AppColors.secondaryText),
+                          ? AppColors.lightSecondaryOnSurface
+                          : AppColors.secondaryText),
               ),
             ),
           ),
@@ -518,11 +537,11 @@ class _AllTransactionsScreenState extends State<AllTransactionsScreen> {
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: isLight ? scheme.surfaceContainerHighest : AppColors.surfaceDeep,
+          color: isLight
+              ? scheme.surfaceContainerHighest
+              : AppColors.surfaceDeep,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: scheme.onSurface.withValues(alpha: 0.05),
-          ),
+          border: Border.all(color: scheme.onSurface.withValues(alpha: 0.05)),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -585,7 +604,9 @@ class _AllTransactionsScreenState extends State<AllTransactionsScreen> {
             Text(
               label,
               style: TextStyle(
-                color: isLight ? AppColors.lightSecondaryOnSurface : AppColors.secondaryText,
+                color: isLight
+                    ? AppColors.lightSecondaryOnSurface
+                    : AppColors.secondaryText,
                 fontSize: 11,
               ),
             ),
@@ -625,7 +646,7 @@ class _AllTransactionsScreenState extends State<AllTransactionsScreen> {
             ),
             const SizedBox(height: 16),
             Text(
-              'No Transactions Found',
+              AppStrings.noTransactionsFound,
               style: TextStyle(
                 color: scheme.onSurface,
                 fontWeight: FontWeight.bold,
@@ -634,10 +655,12 @@ class _AllTransactionsScreenState extends State<AllTransactionsScreen> {
             ),
             const SizedBox(height: 6),
             Text(
-              'There are no transactions logged for ${_getSelectedPeriodLabel()}.',
+              AppStrings.noTransactionsFor(_getSelectedPeriodLabel()),
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: isLight ? AppColors.lightSecondaryOnSurface : AppColors.secondaryText,
+                color: isLight
+                    ? AppColors.lightSecondaryOnSurface
+                    : AppColors.secondaryText,
                 fontSize: 13,
               ),
             ),
@@ -645,15 +668,21 @@ class _AllTransactionsScreenState extends State<AllTransactionsScreen> {
             ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
                 backgroundColor: scheme.primary,
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 12,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14),
                 ),
               ),
               icon: Icon(Icons.add_rounded, color: scheme.onPrimary),
               label: Text(
-                'Add Transaction',
-                style: TextStyle(color: scheme.onPrimary, fontWeight: FontWeight.bold),
+                AppStrings.addTransaction,
+                style: TextStyle(
+                  color: scheme.onPrimary,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               onPressed: () async {
                 final res = await context.push(RouteNames.addExpense);

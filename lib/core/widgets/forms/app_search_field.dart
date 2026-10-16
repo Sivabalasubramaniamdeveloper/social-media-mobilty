@@ -52,6 +52,7 @@ class AppSearchField extends StatelessWidget {
                 hintStyle: TextStyle(color: secondaryText, fontSize: 14),
                 border: InputBorder.none,
                 focusedBorder: InputBorder.none,
+                enabledBorder: InputBorder.none,
                 isDense: true,
                 contentPadding: EdgeInsets.zero,
               ),

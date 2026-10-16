@@ -16,7 +16,6 @@ import 'package:mineai/features/expenses/models/category_model.dart';
 import 'package:mineai/features/expenses/models/transaction_model.dart';
 import 'package:mineai/features/expenses/presentation/widgets/widgets.dart';
 import 'package:mineai/features/expenses/repositories/expense_repository.dart';
-import 'package:mineai/features/expenses/services/expense_export_service.dart';
 import 'package:mineai/instance/locator.dart';
 
 class ExpenseTrackerScreen extends StatefulWidget {
@@ -124,12 +123,20 @@ class _ExpenseTrackerScreenState extends State<ExpenseTrackerScreen> {
         });
 
         // First time user: If no budget and no expense, navigate to budget page first!
-        if (!_hasCheckedFirstTimeBudget && progress.isEmpty && items.isEmpty) {
+        if (!_hasCheckedFirstTimeBudget && progress.isEmpty) {
           _hasCheckedFirstTimeBudget = true;
           WidgetsBinding.instance.addPostFrameCallback((_) async {
             if (!mounted) return;
-            final res = await context.push(RouteNames.incomeBudget);
-            if (res == true) _loadAllData();
+            final hasIncome = items.any((item) => item.type == 'income');
+            if (!hasIncome) {
+              final incomeSaved = await context.push(
+                RouteNames.addExpense,
+                extra: 'income',
+              );
+              if (incomeSaved != true || !mounted) return;
+            }
+            final budgetSaved = await context.push(RouteNames.incomeBudget);
+            if (budgetSaved == true || mounted) _loadAllData();
           });
         }
       }
@@ -184,8 +191,8 @@ class _ExpenseTrackerScreenState extends State<ExpenseTrackerScreen> {
         SnackBar(
           content: Text(
             _quickType == 'expense'
-                ? 'Quick expense logged!'
-                : 'Quick income added!',
+                ? AppStrings.quickExpenseLogged
+                : AppStrings.quickIncomeAdded,
           ),
           backgroundColor: AppColors.statusSuccess,
           duration: const Duration(seconds: 2),
@@ -245,7 +252,13 @@ class _ExpenseTrackerScreenState extends State<ExpenseTrackerScreen> {
         : _incomeCategories;
 
     return Scaffold(
-      floatingActionButton: _buildFab(scheme),
+      floatingActionButton: Padding(
+        padding: EdgeInsets.only(
+          bottom:
+              AppSizes.bottomNavHeight + MediaQuery.paddingOf(context).bottom,
+        ),
+        child: _buildFab(scheme),
+      ),
       body: GradientBackground(
         child: _isLoading
             ? Center(child: CircularProgressIndicator(color: scheme.primary))
@@ -378,7 +391,7 @@ class _ExpenseTrackerScreenState extends State<ExpenseTrackerScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Set Your Monthly Budget First',
+                  AppStrings.firstIncomePromptTitle,
                   style: TextStyle(
                     color: scheme.onPrimary,
                     fontWeight: FontWeight.bold,
@@ -387,7 +400,7 @@ class _ExpenseTrackerScreenState extends State<ExpenseTrackerScreen> {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  'First step: Define category budgets for this month so you can track limits.',
+                  AppStrings.firstIncomePromptBody,
                   style: TextStyle(
                     color: scheme.onPrimary.withValues(alpha: 0.7),
                     fontSize: 11,
@@ -407,8 +420,8 @@ class _ExpenseTrackerScreenState extends State<ExpenseTrackerScreen> {
               ),
             ),
             onPressed: _openBudgetScreen,
-            child: const Text(
-              'Set Budget',
+            child: Text(
+              AppStrings.setBudget,
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
             ),
           ),
@@ -469,38 +482,6 @@ class _ExpenseTrackerScreenState extends State<ExpenseTrackerScreen> {
         ),
         Row(
           children: [
-            // Export / Download Icon Button
-            // IconButton(
-            //   icon: Icon(
-            //     Icons.download_rounded,
-            //     color: scheme.secondary,
-            //     size: AppSizes.iconLg,
-            //   ),
-            //   tooltip: 'Export Report',
-            //   onPressed: () {
-            //     ExpenseExportService.showExportBottomSheet(
-            //       context: context,
-            //       transactions: _allTransactions,
-            //       periodTitle: DateFormat('MMMM yyyy').format(DateTime.now()),
-            //     );
-            //   },
-            // ),
-            // IconButton(
-            //   icon: Icon(
-            //     Icons.notifications_outlined,
-            //     color: scheme.secondary,
-            //     size: AppSizes.iconLg,
-            //   ),
-            //   tooltip: 'Notification',
-            //   onPressed: () async {
-            //     await NotificationService.instance.showNotification(
-            //       id: 1,
-            //       title: 'MindAI Expense Digest',
-            //       body: 'Daily financial activity updated successfully.',
-            //       payload: 'custom_data_payload',
-            //     );
-            //   },
-            // ),
             IconButton(
               icon: Icon(
                 Icons.tune_rounded,

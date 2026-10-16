@@ -22,6 +22,21 @@ class AuthRegisterSuccess extends AuthState {
   const AuthRegisterSuccess(this.email);
 }
 
+/// Confirms Supabase accepted a signup confirmation email resend request.
+class AuthEmailConfirmationSent extends AuthState {
+  const AuthEmailConfirmationSent();
+}
+
+/// Confirms Supabase accepted a password recovery email request.
+class AuthPasswordResetEmailSent extends AuthState {
+  const AuthPasswordResetEmailSent();
+}
+
+/// Confirms that the recovery session password update succeeded.
+class AuthPasswordUpdated extends AuthState {
+  const AuthPasswordUpdated();
+}
+
 class AuthFailure extends AuthState {
   final String errorMessage;
   const AuthFailure(this.errorMessage);

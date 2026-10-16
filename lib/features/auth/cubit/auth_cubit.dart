@@ -9,7 +9,8 @@ class AuthCubit extends Cubit<AuthState> {
     : _repository = repository,
       super(const AuthInitial());
 
-Future<void> login({required String email, required String password}) async {
+  /// Authenticates through the backend and publishes the signed-in user state.
+  Future<void> login({required String email, required String password}) async {
     emit(const AuthLoading());
     try {
       final authModel = await _repository.login(
@@ -23,6 +24,7 @@ Future<void> login({required String email, required String password}) async {
     }
   }
 
+  /// Creates an account and waits for Supabase email confirmation before login.
   Future<void> register({
     required String email,
     required String password,
@@ -41,8 +43,46 @@ Future<void> login({required String email, required String password}) async {
     }
   }
 
+  /// Clears Supabase and app tokens, then returns auth state to its initial value.
   Future<void> logout() async {
     await _repository.logout();
     emit(const AuthInitial());
   }
+
+  /// Requests a replacement Supabase signup confirmation email.
+  Future<void> resendSignupConfirmation(String email) async {
+    emit(const AuthLoading());
+    try {
+      await _repository.resendSignupConfirmation(email);
+      emit(const AuthEmailConfirmationSent());
+    } catch (error) {
+      emit(AuthFailure(_messageFrom(error)));
+    }
+  }
+
+  /// Requests a password recovery email without disclosing account existence.
+  Future<void> requestPasswordReset(String email) async {
+    emit(const AuthLoading());
+    try {
+      await _repository.requestPasswordReset(email);
+      emit(const AuthPasswordResetEmailSent());
+    } catch (error) {
+      emit(AuthFailure(_messageFrom(error)));
+    }
+  }
+
+  /// Updates the password using the session Supabase creates from a recovery link.
+  Future<void> updatePassword(String password) async {
+    emit(const AuthLoading());
+    try {
+      await _repository.updatePassword(password);
+      emit(const AuthPasswordUpdated());
+    } catch (error) {
+      emit(AuthFailure(_messageFrom(error)));
+    }
+  }
+
+  /// Removes Dart's exception wrapper before a failure is shown to the user.
+  String _messageFrom(Object error) =>
+      error.toString().replaceFirst('Exception: ', '');
 }

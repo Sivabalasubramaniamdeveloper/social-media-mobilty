@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mineai/config/router/route_names.dart';
 import 'package:mineai/core/base/abstract/base_screen.dart';
 import 'package:mineai/core/constants/app_colors.dart';
 import 'package:mineai/core/constants/app_strings.dart';
 import 'package:mineai/core/widgets/logo/app_logo.dart';
+import 'package:mineai/core/utils/snackbar_helper.dart';
+import 'package:mineai/features/auth/cubit/auth_cubit.dart';
+import 'package:mineai/features/auth/cubit/auth_state.dart';
 
 class VerifyEmailScreen extends StatelessWidget {
   final String email;
@@ -13,14 +17,34 @@ class VerifyEmailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _VerifyEmailView(email: email);
+    return BlocConsumer<AuthCubit, AuthState>(
+      listener: (context, state) {
+        if (state is AuthEmailConfirmationSent) {
+          SnackBarHelper.showSuccess(context, AppStrings.verificationEmailSent);
+        } else if (state is AuthFailure) {
+          SnackBarHelper.showError(context, state.errorMessage);
+        }
+      },
+      builder: (context, state) => _VerifyEmailView(
+        email: email,
+        isLoading: state is AuthLoading,
+        onResend: () =>
+            context.read<AuthCubit>().resendSignupConfirmation(email),
+      ),
+    );
   }
 }
 
 class _VerifyEmailView extends BaseScreen {
   final String email;
+  final bool isLoading;
+  final VoidCallback onResend;
 
-  const _VerifyEmailView({required this.email});
+  const _VerifyEmailView({
+    required this.email,
+    required this.isLoading,
+    required this.onResend,
+  });
 
   @override
   String get title => AppStrings.verifyEmail;
@@ -31,6 +55,7 @@ class _VerifyEmailView extends BaseScreen {
   @override
   bool get useGradientBackground => true;
 
+  /// Shows the confirmation instructions, login action, and resend control.
   @override
   Widget buildBody(BuildContext context) {
     final theme = Theme.of(context);
@@ -42,8 +67,9 @@ class _VerifyEmailView extends BaseScreen {
     final height = size.height;
     final isTablet = width > 600;
 
-    final secondaryTextColor =
-        isLight ? AppColors.lightSecondaryOnSurface : AppColors.secondaryText;
+    final secondaryTextColor = isLight
+        ? AppColors.lightSecondaryOnSurface
+        : AppColors.secondaryText;
 
     return SafeArea(
       child: Padding(
@@ -182,7 +208,7 @@ class _VerifyEmailView extends BaseScreen {
                   ),
                 ),
                 child: ElevatedButton(
-                  onPressed: () => context.push(RouteNames.authSuccess),
+                  onPressed: () => context.go(RouteNames.login),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.transparent,
                     shadowColor: Colors.transparent,
@@ -220,7 +246,7 @@ class _VerifyEmailView extends BaseScreen {
               width: double.infinity,
               height: 50,
               child: OutlinedButton(
-                onPressed: () {},
+                onPressed: isLoading ? null : onResend,
                 style: OutlinedButton.styleFrom(
                   side: BorderSide(
                     color: scheme.onSurface.withValues(alpha: 0.2),
@@ -232,14 +258,22 @@ class _VerifyEmailView extends BaseScreen {
                       ? Colors.white
                       : AppColors.whiteColor.withValues(alpha: 0.04),
                 ),
-                child: Text(
-                  AppStrings.resendEmail,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: Theme.of(context).secondaryHeaderColor,
-                  ),
-                ),
+                child: isLoading
+                    ? SizedBox.square(
+                        dimension: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: scheme.primary,
+                        ),
+                      )
+                    : Text(
+                        AppStrings.resendEmail,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: Theme.of(context).secondaryHeaderColor,
+                        ),
+                      ),
               ),
             ),
 
@@ -249,10 +283,7 @@ class _VerifyEmailView extends BaseScreen {
             Center(
               child: Text(
                 AppStrings.checkSpamFolder,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: secondaryTextColor,
-                ),
+                style: TextStyle(fontSize: 12, color: secondaryTextColor),
               ),
             ),
 

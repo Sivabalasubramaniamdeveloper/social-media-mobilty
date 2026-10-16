@@ -10,9 +10,7 @@ import 'package:mineai/core/utils/user_helper.dart';
 import 'package:mineai/core/widgets/headers/app_screen_header.dart';
 import 'package:mineai/core/widgets/headers/app_section_header.dart';
 import 'package:mineai/features/expenses/models/budget_model.dart';
-import 'package:mineai/features/expenses/models/transaction_model.dart';
 import 'package:mineai/features/expenses/presentation/widgets/widgets.dart';
-import 'package:mineai/features/expenses/repositories/expense_repository.dart';
 import 'package:mineai/instance/locator.dart';
 
 class IncomeBudgetScreen extends StatefulWidget {
@@ -23,25 +21,11 @@ class IncomeBudgetScreen extends StatefulWidget {
 }
 
 class _IncomeBudgetScreenState extends State<IncomeBudgetScreen> {
-  final TextEditingController _amountController = TextEditingController();
-  final TextEditingController _noteController = TextEditingController();
-
-  String _selectedIncomeSource = 'Monthly Salary';
-  DateTime _selectedDate = DateTime.now();
   bool _isLoading = true;
 
   double _totalIncome = 0.0;
   List<BudgetModel> _budgets = [];
   Map<String, double> _spentByCategory = {};
-  List<TransactionModel> _recentIncome = [];
-
-  final List<String> _incomeSources = [
-    'Monthly Salary',
-    'Freelance',
-    'Investments',
-    'Bonus',
-    'Other Income',
-  ];
 
   String get _currentMonthYear => DateFormat('yyyy-MM').format(DateTime.now());
 
@@ -52,12 +36,7 @@ class _IncomeBudgetScreenState extends State<IncomeBudgetScreen> {
   }
 
   @override
-  void dispose() {
-    _amountController.dispose();
-    _noteController.dispose();
-    super.dispose();
-  }
-
+  /// Loads local transactions and current monthly budget progress.
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
     final userId = await UserHelper.getCurrentUserId();
@@ -65,26 +44,25 @@ class _IncomeBudgetScreenState extends State<IncomeBudgetScreen> {
 
     // Check auto-refresh setting and auto-refresh if applicable
     final storage = getIt<CustomSecureStorage>();
-    final savedAutoRefresh =
-        await storage.readSecureData('expense_auto_refresh_budget');
+    final savedAutoRefresh = await storage.readSecureData(
+      'expense_auto_refresh_budget',
+    );
     final isAutoRefresh =
         savedAutoRefresh == null || savedAutoRefresh == 'true';
 
     final userBudgets = await ExpenseDatabaseService.instance
         .checkAndAutoRefreshBudgets(
-      userId,
-      monthYear,
-      isAutoRefresh: isAutoRefresh,
-    );
+          userId,
+          monthYear,
+          isAutoRefresh: isAutoRefresh,
+        );
 
     final allTx = await ExpenseDatabaseService.instance.getTransactions(userId);
 
     double incomeSum = 0.0;
-    List<TransactionModel> incomeList = [];
-    for (var tx in allTx) {
+    for (final tx in allTx) {
       if (tx.type == 'income') {
         incomeSum += tx.amount;
-        incomeList.add(tx);
       }
     }
 
@@ -100,55 +78,8 @@ class _IncomeBudgetScreenState extends State<IncomeBudgetScreen> {
         _totalIncome = incomeSum;
         _budgets = userBudgets;
         _spentByCategory = spentMap;
-        _recentIncome = incomeList;
         _isLoading = false;
       });
-    }
-  }
-
-  Future<void> _addIncome() async {
-    final rawAmount = _amountController.text.trim().replaceAll(',', '.');
-    final amount = double.tryParse(rawAmount);
-    if (amount == null || amount <= 0) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppStrings.enterValidAmount),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
-      return;
-    }
-
-    final userId = await UserHelper.getCurrentUserId();
-
-    final tx = TransactionModel(
-      userId: userId,
-      title: _selectedIncomeSource,
-      amount: amount,
-      type: 'income',
-      categoryId: _selectedIncomeSource.toLowerCase().replaceAll(' ', '_'),
-      time: _selectedDate,
-      updateTime: DateTime.now(),
-      note: _noteController.text.trim().isEmpty
-          ? null
-          : _noteController.text.trim(),
-    );
-
-    await ExpenseRepositoryImpl().addTransaction(tx, false);
-    _amountController.clear();
-    _noteController.clear();
-    await _loadData();
-
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Income logged successfully!'),
-          backgroundColor: AppColors.statusSuccess,
-          duration: Duration(seconds: 2),
-        ),
-      );
     }
   }
 
@@ -199,11 +130,7 @@ class _IncomeBudgetScreenState extends State<IncomeBudgetScreen> {
       backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child: _isLoading
-            ? Center(
-                child: CircularProgressIndicator(
-                  color: scheme.primary,
-                ),
-              )
+            ? Center(child: CircularProgressIndicator(color: scheme.primary))
             : SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(
                   horizontal: AppSizes.pagePadding,
@@ -241,22 +168,14 @@ class _IncomeBudgetScreenState extends State<IncomeBudgetScreen> {
                     ],
 
                     // Top Financial Summary Card
-                    _buildOverviewCard(currencyFormat, totalAllocated, totalSpent, scheme, isLight),
-                    const SizedBox(height: AppSizes.xl),
-
-                    // Income Logger Card
-                    IncomeEntryCard(
-                      amountController: _amountController,
-                      noteController: _noteController,
-                      selectedSource: _selectedIncomeSource,
-                      sourceOptions: _incomeSources,
-                      selectedDate: _selectedDate,
-                      onSourceChanged: (val) {
-                        setState(() => _selectedIncomeSource = val);
-                      },
-                      onDateChanged: (val) => setState(() => _selectedDate = val),
-                      onSubmit: _addIncome,
+                    _buildOverviewCard(
+                      currencyFormat,
+                      totalAllocated,
+                      totalSpent,
+                      scheme,
+                      isLight,
                     ),
+                    const SizedBox(height: AppSizes.xl),
 
                     const SizedBox(height: AppSizes.xl),
 
@@ -285,7 +204,9 @@ class _IncomeBudgetScreenState extends State<IncomeBudgetScreen> {
                         width: double.infinity,
                         padding: const EdgeInsets.all(24),
                         decoration: BoxDecoration(
-                          color: isLight ? scheme.surfaceContainerHighest : AppColors.surfaceDeep,
+                          color: isLight
+                              ? scheme.surfaceContainerHighest
+                              : AppColors.surfaceDeep,
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
                             color: scheme.onSurface.withValues(alpha: 0.05),
@@ -300,7 +221,7 @@ class _IncomeBudgetScreenState extends State<IncomeBudgetScreen> {
                             ),
                             const SizedBox(height: 12),
                             Text(
-                              'No Budgets Set For This Month',
+                              AppStrings.noBudgetsThisMonth,
                               style: TextStyle(
                                 color: scheme.onSurface,
                                 fontWeight: FontWeight.bold,
@@ -309,10 +230,12 @@ class _IncomeBudgetScreenState extends State<IncomeBudgetScreen> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              'Establish spending boundaries for categories to monitor progress.',
+                              AppStrings.budgetSetupDescription,
                               textAlign: TextAlign.center,
                               style: TextStyle(
-                                color: isLight ? AppColors.lightSecondaryOnSurface : AppColors.secondaryText,
+                                color: isLight
+                                    ? AppColors.lightSecondaryOnSurface
+                                    : AppColors.secondaryText,
                                 fontSize: 12,
                               ),
                             ),
@@ -325,7 +248,7 @@ class _IncomeBudgetScreenState extends State<IncomeBudgetScreen> {
                                 ),
                               ),
                               onPressed: _showSetBudgetDialog,
-                              child: const Text('Set Monthly Budget Now'),
+                              child: Text(AppStrings.setMonthlyBudgetNow),
                             ),
                           ],
                         ),
@@ -339,7 +262,12 @@ class _IncomeBudgetScreenState extends State<IncomeBudgetScreen> {
                             const SizedBox(height: AppSizes.sm),
                         itemBuilder: (context, index) {
                           final item = budgetItems[index];
-                          return _buildBudgetProgressCard(item, currencyFormat, scheme, isLight);
+                          return _buildBudgetProgressCard(
+                            item,
+                            currencyFormat,
+                            scheme,
+                            isLight,
+                          );
                         },
                       ),
 
@@ -384,12 +312,12 @@ class _IncomeBudgetScreenState extends State<IncomeBudgetScreen> {
             ),
           ),
           const SizedBox(width: 14),
-          const Expanded(
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'First Step: Set Your Monthly Budget',
+                  AppStrings.firstBudgetTitle,
                   style: TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
@@ -398,11 +326,8 @@ class _IncomeBudgetScreenState extends State<IncomeBudgetScreen> {
                 ),
                 SizedBox(height: 3),
                 Text(
-                  'Before logging expenses, specify monthly budget limits for your categories.',
-                  style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: 11,
-                  ),
+                  AppStrings.firstBudgetDescription,
+                  style: TextStyle(color: Colors.white70, fontSize: 11),
                 ),
               ],
             ),
@@ -418,8 +343,8 @@ class _IncomeBudgetScreenState extends State<IncomeBudgetScreen> {
               ),
             ),
             onPressed: _showSetBudgetDialog,
-            child: const Text(
-              'Set Now',
+            child: Text(
+              AppStrings.setNow,
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
             ),
           ),
@@ -440,9 +365,7 @@ class _IncomeBudgetScreenState extends State<IncomeBudgetScreen> {
       decoration: BoxDecoration(
         color: isLight ? scheme.surfaceContainerHighest : AppColors.surfaceDeep,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: scheme.onSurface.withValues(alpha: 0.08),
-        ),
+        border: Border.all(color: scheme.onSurface.withValues(alpha: 0.08)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.2),
@@ -458,9 +381,11 @@ class _IncomeBudgetScreenState extends State<IncomeBudgetScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'FINANCIAL OVERVIEW',
+                AppStrings.financialOverview,
                 style: TextStyle(
-                  color: isLight ? AppColors.lightSecondaryOnSurface : AppColors.secondaryText,
+                  color: isLight
+                      ? AppColors.lightSecondaryOnSurface
+                      : AppColors.secondaryText,
                   fontSize: 11,
                   fontWeight: FontWeight.bold,
                   letterSpacing: 1.2,
@@ -526,7 +451,9 @@ class _IncomeBudgetScreenState extends State<IncomeBudgetScreen> {
             Text(
               label,
               style: TextStyle(
-                color: isLight ? AppColors.lightSecondaryOnSurface : AppColors.secondaryText,
+                color: isLight
+                    ? AppColors.lightSecondaryOnSurface
+                    : AppColors.secondaryText,
                 fontSize: 11,
               ),
             ),
@@ -606,16 +533,20 @@ class _IncomeBudgetScreenState extends State<IncomeBudgetScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Spent: ${currencyFormat.format(item.spent)}',
+                AppStrings.spentLabel(currencyFormat.format(item.spent)),
                 style: TextStyle(
-                  color: isLight ? AppColors.lightSecondaryOnSurface : AppColors.secondaryText,
+                  color: isLight
+                      ? AppColors.lightSecondaryOnSurface
+                      : AppColors.secondaryText,
                   fontSize: 12,
                 ),
               ),
               Text(
-                'Limit: ${currencyFormat.format(item.allocated)}',
+                AppStrings.limitLabel(currencyFormat.format(item.allocated)),
                 style: TextStyle(
-                  color: isLight ? AppColors.lightSecondaryOnSurface : AppColors.secondaryText,
+                  color: isLight
+                      ? AppColors.lightSecondaryOnSurface
+                      : AppColors.secondaryText,
                   fontSize: 12,
                 ),
               ),

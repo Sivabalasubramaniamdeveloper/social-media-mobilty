@@ -1,4 +1,5 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:mineai/core/constants/app_strings.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:timezone/data/latest.dart' as tz_data;
 import 'package:timezone/timezone.dart' as tz;
@@ -182,17 +183,17 @@ class LocalNotification {
     required String body,
     String? payload,
   }) async {
-    const AndroidNotificationDetails androidNotificationDetails =
+    final AndroidNotificationDetails androidNotificationDetails =
         AndroidNotificationDetails(
           'your channel id',
-          'your channel name',
-          channelDescription: 'your channel description',
+          AppStrings.generalNotificationsChannel,
+          channelDescription: AppStrings.generalNotificationsChannelDescription,
           importance: Importance.max,
           priority: Priority.high,
           ticker: 'ticker',
         );
 
-    const NotificationDetails notificationDetails = NotificationDetails(
+    final NotificationDetails notificationDetails = NotificationDetails(
       android: androidNotificationDetails,
       iOS: DarwinNotificationDetails(),
     );
@@ -217,18 +218,18 @@ class LocalNotification {
     DateTimeComponents dateTimeComponent,
     int id,
   ) async {
-    const AndroidNotificationDetails androidNotificationDetails =
+    final AndroidNotificationDetails androidNotificationDetails =
         AndroidNotificationDetails(
           'channel',
-          'Recurring Notifications',
-          channelDescription: 'Channel for recurring notifications',
+          AppStrings.recurringNotificationsChannel,
+          channelDescription: AppStrings.recurringNotificationsDescription,
           importance: Importance.max,
           priority: Priority.high,
           ticker: 'ticker',
           styleInformation: BigTextStyleInformation(''),
         );
 
-    const NotificationDetails notificationDetails = NotificationDetails(
+    final NotificationDetails notificationDetails = NotificationDetails(
       android: androidNotificationDetails,
       iOS: DarwinNotificationDetails(),
     );
@@ -255,17 +256,17 @@ class LocalNotification {
     DateTime scheduledDate,
     int id,
   ) async {
-    const AndroidNotificationDetails androidNotificationDetails =
+    final AndroidNotificationDetails androidNotificationDetails =
         AndroidNotificationDetails(
           'your channel id',
-          'your channel name',
-          channelDescription: 'your channel description',
+          AppStrings.generalNotificationsChannel,
+          channelDescription: AppStrings.generalNotificationsChannelDescription,
           importance: Importance.max,
           priority: Priority.high,
           ticker: 'ticker',
         );
 
-    const NotificationDetails notificationDetails = NotificationDetails(
+    final NotificationDetails notificationDetails = NotificationDetails(
       android: androidNotificationDetails,
       iOS: DarwinNotificationDetails(),
     );
@@ -290,17 +291,17 @@ class LocalNotification {
     required String body,
     required String payload,
   }) async {
-    const AndroidNotificationDetails androidNotificationDetails =
+    final AndroidNotificationDetails androidNotificationDetails =
         AndroidNotificationDetails(
           'channel 2',
-          'your channel name',
-          channelDescription: 'your channel description',
+          AppStrings.generalNotificationsChannel,
+          channelDescription: AppStrings.generalNotificationsChannelDescription,
           importance: Importance.max,
           priority: Priority.high,
           ticker: 'ticker',
         );
 
-    const NotificationDetails notificationDetails = NotificationDetails(
+    final NotificationDetails notificationDetails = NotificationDetails(
       android: androidNotificationDetails,
     );
 

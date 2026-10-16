@@ -32,16 +32,16 @@ class IncomeEntryCard extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final isLight = theme.brightness == Brightness.light;
-    final secondaryText = isLight ? AppColors.lightSecondaryOnSurface : AppColors.secondaryText;
+    final secondaryText = isLight
+        ? AppColors.lightSecondaryOnSurface
+        : AppColors.secondaryText;
 
     return Container(
       padding: const EdgeInsets.all(AppSizes.lg + 2),
       decoration: BoxDecoration(
         color: isLight ? scheme.surfaceContainerHighest : AppColors.surfaceDeep,
         borderRadius: BorderRadius.circular(AppSizes.radiusLg),
-        border: Border.all(
-          color: scheme.onSurface.withValues(alpha: 0.06),
-        ),
+        border: Border.all(color: scheme.onSurface.withValues(alpha: 0.06)),
       ),
       child: Column(
         children: [
@@ -60,7 +60,7 @@ class IncomeEntryCard extends StatelessWidget {
                 fontSize: AppSizes.fontHeaderLg,
                 fontWeight: FontWeight.bold,
               ),
-              hintText: '0.00',
+              hintText: AppStrings.sampleAmount,
               hintStyle: TextStyle(color: secondaryText),
               border: InputBorder.none,
             ),
@@ -74,7 +74,9 @@ class IncomeEntryCard extends StatelessWidget {
                   child: DropdownButton<String>(
                     value: sourceOptions.contains(selectedSource)
                         ? selectedSource
-                        : (sourceOptions.isNotEmpty ? sourceOptions.first : null),
+                        : (sourceOptions.isNotEmpty
+                              ? sourceOptions.first
+                              : null),
                     dropdownColor: isLight ? scheme.surface : AppColors.surface,
                     style: TextStyle(
                       color: scheme.onSurface,

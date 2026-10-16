@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:excel/excel.dart' as xl;
 import 'package:flutter/material.dart';
+import 'package:mineai/core/constants/app_strings.dart';
 import 'package:intl/intl.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:path_provider/path_provider.dart';
@@ -58,7 +59,7 @@ class ExpenseExportService {
                     crossAxisAlignment: pw.CrossAxisAlignment.start,
                     children: [
                       pw.Text(
-                        'MindAI Expense Report',
+                        AppStrings.downloadExpenseReport,
                         style: pw.TextStyle(
                           fontSize: 20,
                           fontWeight: pw.FontWeight.bold,
@@ -67,7 +68,7 @@ class ExpenseExportService {
                       ),
                       if (periodTitle != null)
                         pw.Text(
-                          'Period: $periodTitle',
+                          AppStrings.exportPeriod(periodTitle),
                           style: const pw.TextStyle(
                             fontSize: 10,
                             color: PdfColors.grey700,
@@ -76,7 +77,7 @@ class ExpenseExportService {
                     ],
                   ),
                   pw.Text(
-                    'Exported: $exportDate',
+                    AppStrings.exportDate(exportDate),
                     style: const pw.TextStyle(
                       fontSize: 9,
                       color: PdfColors.grey600,
@@ -91,8 +92,11 @@ class ExpenseExportService {
               margin: const pw.EdgeInsets.only(top: 16),
               alignment: pw.Alignment.centerRight,
               child: pw.Text(
-                'Page ${context.pageNumber} of ${context.pagesCount}',
-                style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey500),
+                AppStrings.exportPage(context.pageNumber, context.pagesCount),
+                style: const pw.TextStyle(
+                  fontSize: 9,
+                  color: PdfColors.grey500,
+                ),
               ),
             );
           },
@@ -111,24 +115,24 @@ class ExpenseExportService {
                   mainAxisAlignment: pw.MainAxisAlignment.spaceAround,
                   children: [
                     _buildPdfSummaryItem(
-                      'Total Income',
+                      AppStrings.totalIncomeLabel,
                       currencyFmt.format(totalIncome),
                       PdfColor.fromInt(0xFF2ECC71),
                     ),
                     _buildPdfSummaryItem(
-                      'Total Expenses',
+                      AppStrings.totalExpensesLabel,
                       currencyFmt.format(totalExpense),
                       PdfColor.fromInt(0xFFE74C3C),
                     ),
                     _buildPdfSummaryItem(
-                      'Net Balance',
+                      AppStrings.netBalanceLabel,
                       currencyFmt.format(netBalance),
                       netBalance >= 0
                           ? PdfColor.fromInt(0xFF2ECC71)
                           : PdfColor.fromInt(0xFFE74C3C),
                     ),
                     _buildPdfSummaryItem(
-                      'Total Logs',
+                      AppStrings.totalLogsLabel,
                       '${transactions.length}',
                       PdfColor.fromInt(0xFF6C5CE7),
                     ),
@@ -156,14 +160,20 @@ class ExpenseExportService {
                   fontSize: 9,
                   color: PdfColors.grey800,
                 ),
-                headers: ['Date', 'Title', 'Category', 'Type', 'Amount'],
+                headers: [
+                  AppStrings.dateLabel,
+                  AppStrings.titleLabel,
+                  AppStrings.categoryLabel,
+                  AppStrings.typeLabel,
+                  AppStrings.amountColumn,
+                ],
                 data: transactions.map((tx) {
                   final isIncome = tx.type == 'income';
                   return [
                     dateFmt.format(tx.time),
                     tx.title,
                     tx.categoryId.replaceAll('_', ' '),
-                    isIncome ? 'Income' : 'Expense',
+                    isIncome ? AppStrings.income : AppStrings.expenses,
                     '${isIncome ? '+' : '-'}${currencyFmt.format(tx.amount)}',
                   ];
                 }).toList(),
@@ -174,15 +184,17 @@ class ExpenseExportService {
       );
 
       final dir = await _getStorageDirectory();
-      final fileName =
-          'MindAI_Expenses_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.pdf';
+      final fileName = AppStrings.expenseExportFileName(
+        DateFormat('yyyyMMdd_HHmmss').format(DateTime.now()),
+        'pdf',
+      );
       final file = File('${dir.path}/$fileName');
       await file.writeAsBytes(await pdf.save());
 
       if (context.mounted) {
         _showSuccessSnackbar(
           context,
-          'PDF saved locally: $fileName',
+          AppStrings.pdfSavedLocally(fileName),
           file.path,
         );
       }
@@ -197,7 +209,7 @@ class ExpenseExportService {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to export PDF: $e'),
+            content: Text(AppStrings.exportFailed('PDF', e.toString())),
             backgroundColor: Colors.redAccent,
           ),
         );
@@ -215,25 +227,40 @@ class ExpenseExportService {
   }) async {
     try {
       final excel = xl.Excel.createExcel();
-      final sheetName = 'Expenses';
+      final sheetName = AppStrings.excelSheetName;
       excel.rename('Sheet1', sheetName);
       final sheet = excel[sheetName];
 
       final dateFmt = DateFormat('yyyy-MM-dd HH:mm');
 
       // Title & Period Row
-      final titleCell = sheet.cell(xl.CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: 0));
-      titleCell.value = xl.TextCellValue('MindAI Expense Report');
+      final titleCell = sheet.cell(
+        xl.CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: 0),
+      );
+      titleCell.value = xl.TextCellValue(AppStrings.downloadExpenseReport);
 
       if (periodTitle != null) {
-        final periodCell = sheet.cell(xl.CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: 1));
-        periodCell.value = xl.TextCellValue('Period: $periodTitle');
+        final periodCell = sheet.cell(
+          xl.CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: 1),
+        );
+        periodCell.value = xl.TextCellValue(
+          AppStrings.exportPeriod(periodTitle),
+        );
       }
 
       // Header Row
-      final headers = ['Date', 'Title', 'Category', 'Type', 'Amount (\$)', 'Notes'];
+      final headers = [
+        AppStrings.dateLabel,
+        AppStrings.titleLabel,
+        AppStrings.categoryLabel,
+        AppStrings.typeLabel,
+        '${AppStrings.amountColumn} (\$)',
+        AppStrings.notesLabel,
+      ];
       for (int i = 0; i < headers.length; i++) {
-        final cell = sheet.cell(xl.CellIndex.indexByColumnRow(columnIndex: i, rowIndex: 3));
+        final cell = sheet.cell(
+          xl.CellIndex.indexByColumnRow(columnIndex: i, rowIndex: 3),
+        );
         cell.value = xl.TextCellValue(headers[i]);
       }
 
@@ -243,18 +270,48 @@ class ExpenseExportService {
       // Data Rows
       int rowIndex = 4;
       for (var tx in transactions) {
-        sheet.cell(xl.CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: rowIndex))
-            .value = xl.TextCellValue(dateFmt.format(tx.time));
-        sheet.cell(xl.CellIndex.indexByColumnRow(columnIndex: 1, rowIndex: rowIndex))
-            .value = xl.TextCellValue(tx.title);
-        sheet.cell(xl.CellIndex.indexByColumnRow(columnIndex: 2, rowIndex: rowIndex))
-            .value = xl.TextCellValue(tx.categoryId.replaceAll('_', ' '));
-        sheet.cell(xl.CellIndex.indexByColumnRow(columnIndex: 3, rowIndex: rowIndex))
-            .value = xl.TextCellValue(tx.type.toUpperCase());
-        sheet.cell(xl.CellIndex.indexByColumnRow(columnIndex: 4, rowIndex: rowIndex))
-            .value = xl.DoubleCellValue(tx.amount);
-        sheet.cell(xl.CellIndex.indexByColumnRow(columnIndex: 5, rowIndex: rowIndex))
-            .value = xl.TextCellValue(tx.note ?? '');
+        sheet
+            .cell(
+              xl.CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: rowIndex),
+            )
+            .value = xl.TextCellValue(
+          dateFmt.format(tx.time),
+        );
+        sheet
+            .cell(
+              xl.CellIndex.indexByColumnRow(columnIndex: 1, rowIndex: rowIndex),
+            )
+            .value = xl.TextCellValue(
+          tx.title,
+        );
+        sheet
+            .cell(
+              xl.CellIndex.indexByColumnRow(columnIndex: 2, rowIndex: rowIndex),
+            )
+            .value = xl.TextCellValue(
+          tx.categoryId.replaceAll('_', ' '),
+        );
+        sheet
+            .cell(
+              xl.CellIndex.indexByColumnRow(columnIndex: 3, rowIndex: rowIndex),
+            )
+            .value = xl.TextCellValue(
+          tx.type.toUpperCase(),
+        );
+        sheet
+            .cell(
+              xl.CellIndex.indexByColumnRow(columnIndex: 4, rowIndex: rowIndex),
+            )
+            .value = xl.DoubleCellValue(
+          tx.amount,
+        );
+        sheet
+            .cell(
+              xl.CellIndex.indexByColumnRow(columnIndex: 5, rowIndex: rowIndex),
+            )
+            .value = xl.TextCellValue(
+          tx.note ?? '',
+        );
 
         if (tx.type == 'income') {
           totalIncome += tx.amount;
@@ -266,36 +323,68 @@ class ExpenseExportService {
 
       // Summary Rows
       rowIndex += 1;
-      sheet.cell(xl.CellIndex.indexByColumnRow(columnIndex: 3, rowIndex: rowIndex))
-          .value = xl.TextCellValue('TOTAL INCOME:');
-      sheet.cell(xl.CellIndex.indexByColumnRow(columnIndex: 4, rowIndex: rowIndex))
-          .value = xl.DoubleCellValue(totalIncome);
+      sheet
+          .cell(
+            xl.CellIndex.indexByColumnRow(columnIndex: 3, rowIndex: rowIndex),
+          )
+          .value = xl.TextCellValue(
+        AppStrings.totalIncomeLabel.toUpperCase(),
+      );
+      sheet
+          .cell(
+            xl.CellIndex.indexByColumnRow(columnIndex: 4, rowIndex: rowIndex),
+          )
+          .value = xl.DoubleCellValue(
+        totalIncome,
+      );
 
       rowIndex++;
-      sheet.cell(xl.CellIndex.indexByColumnRow(columnIndex: 3, rowIndex: rowIndex))
-          .value = xl.TextCellValue('TOTAL EXPENSES:');
-      sheet.cell(xl.CellIndex.indexByColumnRow(columnIndex: 4, rowIndex: rowIndex))
-          .value = xl.DoubleCellValue(totalExpense);
+      sheet
+          .cell(
+            xl.CellIndex.indexByColumnRow(columnIndex: 3, rowIndex: rowIndex),
+          )
+          .value = xl.TextCellValue(
+        AppStrings.totalExpensesLabel.toUpperCase(),
+      );
+      sheet
+          .cell(
+            xl.CellIndex.indexByColumnRow(columnIndex: 4, rowIndex: rowIndex),
+          )
+          .value = xl.DoubleCellValue(
+        totalExpense,
+      );
 
       rowIndex++;
-      sheet.cell(xl.CellIndex.indexByColumnRow(columnIndex: 3, rowIndex: rowIndex))
-          .value = xl.TextCellValue('NET BALANCE:');
-      sheet.cell(xl.CellIndex.indexByColumnRow(columnIndex: 4, rowIndex: rowIndex))
-          .value = xl.DoubleCellValue(totalIncome - totalExpense);
+      sheet
+          .cell(
+            xl.CellIndex.indexByColumnRow(columnIndex: 3, rowIndex: rowIndex),
+          )
+          .value = xl.TextCellValue(
+        AppStrings.netBalanceLabel.toUpperCase(),
+      );
+      sheet
+          .cell(
+            xl.CellIndex.indexByColumnRow(columnIndex: 4, rowIndex: rowIndex),
+          )
+          .value = xl.DoubleCellValue(
+        totalIncome - totalExpense,
+      );
 
       final fileBytes = excel.encode();
       if (fileBytes == null) throw Exception('Failed to generate Excel bytes');
 
       final dir = await _getStorageDirectory();
-      final fileName =
-          'MindAI_Expenses_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.xlsx';
+      final fileName = AppStrings.expenseExportFileName(
+        DateFormat('yyyyMMdd_HHmmss').format(DateTime.now()),
+        'xlsx',
+      );
       final file = File('${dir.path}/$fileName');
       await file.writeAsBytes(fileBytes);
 
       if (context.mounted) {
         _showSuccessSnackbar(
           context,
-          'Excel sheet saved locally: $fileName',
+          AppStrings.excelSavedLocally(fileName),
           file.path,
         );
       }
@@ -310,7 +399,7 @@ class ExpenseExportService {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to export Excel: $e'),
+            content: Text(AppStrings.exportFailed('Excel', e.toString())),
             backgroundColor: Colors.redAccent,
           ),
         );
@@ -327,8 +416,8 @@ class ExpenseExportService {
   }) {
     if (transactions.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('No transactions available to export.'),
+        SnackBar(
+          content: Text(AppStrings.exportNoTransactions),
           backgroundColor: Colors.orangeAccent,
         ),
       );
@@ -352,8 +441,8 @@ class ExpenseExportService {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
-                      'Download Expense Report',
+                    Text(
+                      AppStrings.downloadExpenseReport,
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -361,17 +450,17 @@ class ExpenseExportService {
                       ),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.close_rounded, color: Colors.white54),
+                      icon: const Icon(
+                        Icons.close_rounded,
+                        color: Colors.white54,
+                      ),
                       onPressed: () => Navigator.pop(sheetCtx),
                     ),
                   ],
                 ),
                 Text(
-                  'Choose format to download locally on your device (${transactions.length} records)',
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: Colors.white70,
-                  ),
+                  AppStrings.exportFormatDescription(transactions.length),
+                  style: const TextStyle(fontSize: 13, color: Colors.white70),
                 ),
                 const SizedBox(height: 20),
 
@@ -410,12 +499,12 @@ class ExpenseExportService {
                           ),
                         ),
                         const SizedBox(width: 16),
-                        const Expanded(
+                        Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Download as PDF Report',
+                                AppStrings.downloadPdfReport,
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.w600,
@@ -424,7 +513,7 @@ class ExpenseExportService {
                               ),
                               SizedBox(height: 2),
                               Text(
-                                'Formatted summary document ready to view or print',
+                                AppStrings.pdfReportDescription,
                                 style: TextStyle(
                                   color: Colors.white54,
                                   fontSize: 12,
@@ -480,12 +569,12 @@ class ExpenseExportService {
                           ),
                         ),
                         const SizedBox(width: 16),
-                        const Expanded(
+                        Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Download as Excel Sheet (.xlsx)',
+                                AppStrings.downloadExcelSheet,
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.w600,
@@ -494,7 +583,7 @@ class ExpenseExportService {
                               ),
                               SizedBox(height: 2),
                               Text(
-                                'Spreadsheet with editable rows and summary totals',
+                                AppStrings.excelSheetDescription,
                                 style: TextStyle(
                                   color: Colors.white54,
                                   fontSize: 12,
@@ -521,7 +610,11 @@ class ExpenseExportService {
     );
   }
 
-  static pw.Widget _buildPdfSummaryItem(String label, String value, PdfColor color) {
+  static pw.Widget _buildPdfSummaryItem(
+    String label,
+    String value,
+    PdfColor color,
+  ) {
     return pw.Column(
       children: [
         pw.Text(
@@ -535,10 +628,7 @@ class ExpenseExportService {
         pw.SizedBox(height: 2),
         pw.Text(
           label,
-          style: const pw.TextStyle(
-            fontSize: 8,
-            color: PdfColors.grey700,
-          ),
+          style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey700),
         ),
       ],
     );
@@ -564,10 +654,12 @@ class ExpenseExportService {
         backgroundColor: const Color(0xFF2ECC71),
         duration: const Duration(seconds: 5),
         action: SnackBarAction(
-          label: 'Share',
+          label: AppStrings.shareLabel,
           textColor: Colors.white,
           onPressed: () {
-            Share.shareXFiles([XFile(filePath)], text: 'MindAI Expense Export');
+            Share.shareXFiles([
+              XFile(filePath),
+            ], text: AppStrings.mindAiExpenseExport);
           },
         ),
       ),

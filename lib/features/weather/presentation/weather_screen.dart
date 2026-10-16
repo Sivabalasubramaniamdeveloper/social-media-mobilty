@@ -1,10 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shimmer/shimmer.dart';
+
 import 'package:mineai/config/router/route_names.dart';
 import 'package:mineai/core/base/abstract/base_screen.dart';
 import 'package:mineai/core/constants/app_colors.dart';
 import 'package:mineai/core/constants/app_strings.dart';
 import 'package:mineai/core/services/location_service.dart';
+
+import '../cubit/weather_cubit.dart';
+import '../cubit/weather_state.dart';
+import '../models/weather_model.dart';
 
 class WeatherScreen extends StatefulWidget {
   const WeatherScreen({super.key});
@@ -14,34 +21,47 @@ class WeatherScreen extends StatefulWidget {
 }
 
 class _WeatherScreenState extends State<WeatherScreen> {
-  String _currentLocation = 'Fetching location...';
+  String _currentLocationName = 'Fetching location...';
   bool _isLoadingLocation = true;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _requestAndFetchLocation();
+      _loadWeatherForCurrentLocation();
     });
   }
 
-  Future<void> _requestAndFetchLocation() async {
+  Future<void> _loadWeatherForCurrentLocation() async {
     setState(() => _isLoadingLocation = true);
-    final locationName = await LocationService.getCurrentCityLocation();
+
+    final locDetails = await LocationService.getCurrentStateAndCity();
+
     if (mounted) {
       setState(() {
-        _currentLocation = locationName;
+        _currentLocationName = locDetails.displayName;
         _isLoadingLocation = false;
       });
+
+      context.read<WeatherCubit>().fetchWeather(
+        state: locDetails.state == "ca" ? "tamil-nadu" : locDetails.state,
+        city: locDetails.city == 'san-francisco' ? "tenkasi" : locDetails.city,
+        day: 'today',
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return _WeatherView(
-      currentLocation: _currentLocation,
-      isLoadingLocation: _isLoadingLocation,
-      onRefreshLocation: _requestAndFetchLocation,
+    return BlocBuilder<WeatherCubit, WeatherState>(
+      builder: (context, state) {
+        return _WeatherView(
+          currentLocation: _currentLocationName,
+          isLoadingLocation: _isLoadingLocation,
+          weatherState: state,
+          onRefreshLocation: _loadWeatherForCurrentLocation,
+        );
+      },
     );
   }
 }
@@ -49,11 +69,13 @@ class _WeatherScreenState extends State<WeatherScreen> {
 class _WeatherView extends BaseScreen {
   final String currentLocation;
   final bool isLoadingLocation;
+  final WeatherState weatherState;
   final VoidCallback onRefreshLocation;
 
   const _WeatherView({
     required this.currentLocation,
     required this.isLoadingLocation,
+    required this.weatherState,
     required this.onRefreshLocation,
   });
 
@@ -64,14 +86,10 @@ class _WeatherView extends BaseScreen {
   bool get showAppBar => false;
 
   @override
-  bool get useGradientBackground => true;
+  bool get useGradientBackground => false;
 
   @override
-  Color? get backgroundColor {
-    // Resolved in buildBody; returning null here lets BaseScreen use default.
-    // The actual override is applied inside buildBody via theme awareness.
-    return null;
-  }
+  Color? get backgroundColor => const Color(0xFF0F0E17);
 
   @override
   Widget buildBody(BuildContext context) {
@@ -79,13 +97,10 @@ class _WeatherView extends BaseScreen {
     final scheme = theme.colorScheme;
     final isLight = theme.brightness == Brightness.light;
 
-    final size = MediaQuery.of(context).size;
-    final isTablet = size.width > 600;
-
     return SafeArea(
       child: Column(
         children: [
-          // App Header
+          // Header Bar
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             child: Row(
@@ -121,12 +136,17 @@ class _WeatherView extends BaseScreen {
                       children: [
                         Row(
                           children: [
-                            Text(
-                              currentLocation,
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: scheme.onSurface,
+                            ConstrainedBox(
+                              constraints: const BoxConstraints(maxWidth: 220),
+                              child: Text(
+                                currentLocation,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: scheme.onSurface,
+                                ),
                               ),
                             ),
                             if (isLoadingLocation) ...[
@@ -144,7 +164,7 @@ class _WeatherView extends BaseScreen {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          'Updated just now',
+                          AppStrings.updatedJustNow,
                           style: TextStyle(
                             fontSize: 11,
                             color: isLight
@@ -183,63 +203,209 @@ class _WeatherView extends BaseScreen {
             ),
           ),
 
-          // Scrollable Content
+          // Scrollable Content / Shimmer Loader
           Expanded(
-            child: SingleChildScrollView(
-              padding: EdgeInsets.symmetric(
-                horizontal: isTablet ? size.width * 0.15 : 20,
-                vertical: 10,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Hero Weather Card
-                  _buildHeroCard(context),
-                  const SizedBox(height: 18),
-
-                  // AI Daily Recommendation Card
-                  _buildAiRecommendationCard(context),
-                  const SizedBox(height: 18),
-
-                  // 2x2 Metric Cards Grid
-                  _buildMetricsGrid(context),
-                  const SizedBox(height: 24),
-
-                  // Hourly Forecast
-                  Text(
-                    AppStrings.hourlyForecast,
-                    style: TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.bold,
-                      color: scheme.onSurface,
+            child:
+                weatherState is WeatherLoading || weatherState is WeatherInitial
+                ? _buildShimmerLoading(context)
+                : weatherState is WeatherError
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.error_outline_rounded,
+                          color: AppColors.redColor,
+                          size: 48,
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          (weatherState as WeatherError).message,
+                          style: TextStyle(color: scheme.onSurface),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 16),
+                        ElevatedButton(
+                          onPressed: onRefreshLocation,
+                          child: Text(AppStrings.retry),
+                        ),
+                      ],
+                    ),
+                  )
+                : RefreshIndicator(
+                    onRefresh: () async => onRefreshLocation(),
+                    color: scheme.primary,
+                    child: SingleChildScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 10,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildHeroCard(
+                            context,
+                            (weatherState as WeatherLoaded).weather.current,
+                          ),
+                          const SizedBox(height: 18),
+                          _buildAiRecommendationCard(
+                            context,
+                            (weatherState as WeatherLoaded)
+                                .weather
+                                .mindAiSuggests,
+                          ),
+                          const SizedBox(height: 18),
+                          _buildMetricsGrid(
+                            context,
+                            (weatherState as WeatherLoaded).weather.metrics,
+                            (weatherState as WeatherLoaded).weather.current,
+                          ),
+                          const SizedBox(height: 24),
+                          Text(
+                            AppStrings.weeklyForecast,
+                            style: TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.bold,
+                              color: scheme.onSurface,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          _buildWeeklyForecast(
+                            context,
+                            (weatherState as WeatherLoaded).weather.forecast,
+                          ),
+                          const SizedBox(height: 30),
+                        ],
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 12),
-                  _buildHourlyList(context),
-                  const SizedBox(height: 24),
-
-                  // Weekly Forecast
-                  Text(
-                    AppStrings.weeklyForecast,
-                    style: TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.bold,
-                      color: scheme.onSurface,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  _buildWeeklyForecast(context),
-                  const SizedBox(height: 30),
-                ],
-              ),
-            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildHeroCard(BuildContext context) {
+  // ---------------------------------------------------------------------------
+  // SHIMMER SKELETON LOADER
+  // ---------------------------------------------------------------------------
+  Widget _buildShimmerLoading(BuildContext context) {
+    final isLight = Theme.of(context).brightness == Brightness.light;
+    final baseColor = isLight ? Colors.grey[300]! : const Color(0xFF1E1B38);
+    final highlightColor = isLight
+        ? Colors.grey[100]!
+        : const Color(0xFF2E2752);
+
+    return Shimmer.fromColors(
+      baseColor: baseColor,
+      highlightColor: highlightColor,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Hero Card Skeleton
+            Container(
+              height: 190,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(24),
+              ),
+            ),
+            const SizedBox(height: 18),
+
+            // AI Suggestion Skeleton
+            Container(
+              height: 100,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+              ),
+            ),
+            const SizedBox(height: 18),
+
+            // Metrics 2x2 Grid Skeleton
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    children: [
+                      Container(
+                        height: 90,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(18),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Container(
+                        height: 90,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(18),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    children: [
+                      Container(
+                        height: 90,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(18),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Container(
+                        height: 90,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(18),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+
+            // Forecast Skeleton Title
+            Container(
+              height: 20,
+              width: 140,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(6),
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            // Forecast List Skeleton
+            Container(
+              height: 160,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // CONTENT WIDGETS
+  // ---------------------------------------------------------------------------
+  Widget _buildHeroCard(BuildContext context, CurrentWeather current) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final isLight = theme.brightness == Brightness.light;
@@ -253,18 +419,13 @@ class _WeatherView extends BaseScreen {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: isLight
-              ? [
-                  scheme.primary.withValues(alpha: 0.1),
-                  scheme.surface,
-                ]
+              ? [scheme.primary.withValues(alpha: 0.1), scheme.surface]
               : [
                   const Color(0xFF7C3AED).withValues(alpha: 0.35),
                   const Color(0xFF1E1B38).withValues(alpha: 0.85),
                 ],
         ),
-        border: Border.all(
-          color: scheme.primary.withValues(alpha: 0.35),
-        ),
+        border: Border.all(color: scheme.primary.withValues(alpha: 0.35)),
         boxShadow: [
           BoxShadow(
             color: scheme.primary.withValues(alpha: 0.18),
@@ -283,7 +444,7 @@ class _WeatherView extends BaseScreen {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '72°',
+                    current.temp,
                     style: TextStyle(
                       fontSize: 64,
                       fontWeight: FontWeight.w800,
@@ -293,7 +454,7 @@ class _WeatherView extends BaseScreen {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    AppStrings.partlyCloudy,
+                    current.condition,
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w500,
@@ -314,10 +475,10 @@ class _WeatherView extends BaseScreen {
                     color: scheme.secondary.withValues(alpha: 0.4),
                   ),
                 ),
-                child: const Icon(
-                  Icons.wb_cloudy_rounded,
+                child: Icon(
+                  _getWeatherIcon(current.condition),
                   size: 42,
-                  color: Color(0xFFFBBF24), // Semantic amber — weather sun/cloud icon
+                  color: const Color(0xFFFBBF24),
                 ),
               ),
             ],
@@ -325,9 +486,9 @@ class _WeatherView extends BaseScreen {
           const SizedBox(height: 16),
           Row(
             children: [
-              _pillTag(context, 'H: 76°  L: 58°'),
+              _pillTag(context, 'H: ${current.high}  L: ${current.low}'),
               const SizedBox(width: 10),
-              _pillTag(context, 'Air Quality: 32 (Good)'),
+              _pillTag(context, 'Feels Like: ${current.feelsLike}'),
             ],
           ),
         ],
@@ -335,36 +496,29 @@ class _WeatherView extends BaseScreen {
     );
   }
 
-  Widget _pillTag(BuildContext context, String label) {
+  Widget _pillTag(BuildContext context, String text) {
     final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
     final isLight = theme.brightness == Brightness.light;
-
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
         color: isLight
-            ? scheme.primary.withValues(alpha: 0.08)
+            ? theme.colorScheme.surfaceContainerHighest
             : Colors.white.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: isLight
-              ? scheme.primary.withValues(alpha: 0.1)
-              : Colors.white.withValues(alpha: 0.1),
-        ),
       ),
       child: Text(
-        label,
+        text,
         style: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w500,
-          color: scheme.onSurface,
+          color: theme.colorScheme.onSurface,
         ),
       ),
     );
   }
 
-  Widget _buildAiRecommendationCard(BuildContext context) {
+  Widget _buildAiRecommendationCard(BuildContext context, String suggestion) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final isLight = theme.brightness == Brightness.light;
@@ -381,9 +535,7 @@ class _WeatherView extends BaseScreen {
               ? [scheme.surfaceContainerHighest, scheme.surface]
               : [const Color(0xFF2E1A47), const Color(0xFF1B1832)],
         ),
-        border: Border.all(
-          color: scheme.primary.withValues(alpha: 0.35),
-        ),
+        border: Border.all(color: scheme.primary.withValues(alpha: 0.35)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -404,7 +556,7 @@ class _WeatherView extends BaseScreen {
               ),
               const SizedBox(width: 8),
               Text(
-                AppStrings.aiDailyRecommendation,
+                AppStrings.mindAiSuggests,
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.bold,
@@ -416,7 +568,7 @@ class _WeatherView extends BaseScreen {
           ),
           const SizedBox(height: 10),
           Text(
-            AppStrings.weatherRecommendationBody,
+            '"$suggestion"',
             style: TextStyle(
               fontSize: 13,
               height: 1.5,
@@ -428,7 +580,11 @@ class _WeatherView extends BaseScreen {
     );
   }
 
-  Widget _buildMetricsGrid(BuildContext context) {
+  Widget _buildMetricsGrid(
+    BuildContext context,
+    WeatherMetrics metrics,
+    CurrentWeather current,
+  ) {
     return Row(
       children: [
         Expanded(
@@ -438,14 +594,14 @@ class _WeatherView extends BaseScreen {
                 context: context,
                 icon: Icons.water_drop_outlined,
                 title: AppStrings.precipitation,
-                value: '0%',
+                value: current.chanceOfRain,
               ),
               const SizedBox(height: 12),
               _metricTile(
                 context: context,
                 icon: Icons.air_rounded,
                 title: AppStrings.windSpeed,
-                value: '8 mph',
+                value: '${metrics.wind.value} ${metrics.wind.unit}',
               ),
             ],
           ),
@@ -458,14 +614,14 @@ class _WeatherView extends BaseScreen {
                 context: context,
                 icon: Icons.waves_rounded,
                 title: AppStrings.humidity,
-                value: '48%',
+                value: '${metrics.humidity.value}%',
               ),
               const SizedBox(height: 12),
               _metricTile(
                 context: context,
                 icon: Icons.wb_sunny_outlined,
                 title: AppStrings.uvIndex,
-                value: '6 High',
+                value: metrics.uvIndex.display,
               ),
             ],
           ),
@@ -532,115 +688,13 @@ class _WeatherView extends BaseScreen {
     );
   }
 
-  Widget _buildHourlyList(BuildContext context) {
+  Widget _buildWeeklyForecast(
+    BuildContext context,
+    List<DailyForecast> forecast,
+  ) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final isLight = theme.brightness == Brightness.light;
-
-    final hours = [
-      {'time': AppStrings.now, 'temp': '72°', 'icon': Icons.wb_cloudy_rounded},
-      {'time': '2 PM', 'temp': '74°', 'icon': Icons.wb_sunny_rounded},
-      {'time': '3 PM', 'temp': '73°', 'icon': Icons.wb_sunny_rounded},
-      {'time': '4 PM', 'temp': '70°', 'icon': Icons.wb_cloudy_rounded},
-      {'time': '5 PM', 'temp': '68°', 'icon': Icons.cloud_queue_rounded},
-      {'time': '6 PM', 'temp': '64°', 'icon': Icons.nights_stay_rounded},
-    ];
-
-    return SizedBox(
-      height: 110,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: hours.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 10),
-        itemBuilder: (context, index) {
-          final item = hours[index];
-          final isFirst = index == 0;
-
-          return Container(
-            width: 70,
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            decoration: BoxDecoration(
-              color: isFirst
-                  ? isLight
-                      ? scheme.primary.withValues(alpha: 0.1)
-                      : const Color(0xFF7C3AED).withValues(alpha: 0.35)
-                  : isLight
-                      ? scheme.surfaceContainerHighest
-                      : const Color(0xFF1E1B38).withValues(alpha: 0.65),
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(
-                color: isFirst
-                    ? scheme.primary.withValues(alpha: 0.5)
-                    : isLight
-                        ? scheme.primary.withValues(alpha: 0.06)
-                        : Colors.white.withValues(alpha: 0.06),
-              ),
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  item['time'] as String,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: isLight
-                        ? AppColors.lightSecondaryOnSurface
-                        : AppColors.secondaryText,
-                  ),
-                ),
-                Icon(
-                  item['icon'] as IconData,
-                  size: 24,
-                  color: const Color(0xFFFBBF24), // Semantic amber — weather icon
-                ),
-                Text(
-                  item['temp'] as String,
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
-                    color: scheme.onSurface,
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildWeeklyForecast(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    final isLight = theme.brightness == Brightness.light;
-
-    final days = [
-      {
-        'day': 'Today',
-        'status': AppStrings.partlyCloudy,
-        'min': '58°',
-        'max': '76°',
-      },
-      {
-        'day': 'Saturday',
-        'status': AppStrings.sunny,
-        'min': '60°',
-        'max': '78°',
-      },
-      {'day': 'Sunday', 'status': AppStrings.sunny, 'min': '62°', 'max': '80°'},
-      {
-        'day': 'Monday',
-        'status': AppStrings.partlyCloudy,
-        'min': '57°',
-        'max': '71°',
-      },
-      {
-        'day': 'Tuesday',
-        'status': AppStrings.rainy,
-        'min': '53°',
-        'max': '65°',
-      },
-    ];
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -656,16 +710,16 @@ class _WeatherView extends BaseScreen {
         ),
       ),
       child: Column(
-        children: days.map((item) {
+        children: forecast.map((item) {
           return Padding(
             padding: const EdgeInsets.symmetric(vertical: 8),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 SizedBox(
-                  width: 90,
+                  width: 70,
                   child: Text(
-                    item['day']!,
+                    item.day,
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
@@ -673,17 +727,20 @@ class _WeatherView extends BaseScreen {
                     ),
                   ),
                 ),
+                Icon(
+                  _getWeatherIcon(item.condition),
+                  size: 20,
+                  color: const Color(0xFFFBBF24),
+                ),
+                const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    item['status']!,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: scheme.secondary,
-                    ),
+                    item.condition,
+                    style: TextStyle(fontSize: 13, color: scheme.secondary),
                   ),
                 ),
                 Text(
-                  '${item['min']} / ${item['max']}',
+                  '${item.high} / ${item.low}',
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
@@ -696,5 +753,24 @@ class _WeatherView extends BaseScreen {
         }).toList(),
       ),
     );
+  }
+
+  // ---------------------------------------------------------------------------
+  // DART CONTAINS HELPER (FIXES THE COMPILER ERROR)
+  // ---------------------------------------------------------------------------
+  IconData _getWeatherIcon(String condition) {
+    final lower = condition.toLowerCase();
+    if (lower.contains('rain') || lower.contains('shower')) {
+      return Icons.water_drop_rounded;
+    } else if (lower.contains('t-storm') || lower.contains('thunder')) {
+      return Icons.thunderstorm_rounded;
+    } else if (lower.contains('mist') ||
+        lower.contains('fog') ||
+        lower.contains('haze')) {
+      return Icons.cloud_queue_rounded;
+    } else if (lower.contains('cloud')) {
+      return Icons.wb_cloudy_rounded;
+    }
+    return Icons.wb_sunny_rounded;
   }
 }

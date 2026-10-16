@@ -1,7 +1,7 @@
 import 'package:equatable/equatable.dart';
-import 'package:mineai/features/expenses/repositories/expense_repository.dart';
 import '../models/transaction_model.dart';
 import '../models/category_model.dart';
+import '../repositories/expense_repository.dart';
 
 abstract class FinanceState extends Equatable {
   const FinanceState();

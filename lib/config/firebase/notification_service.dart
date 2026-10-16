@@ -1,5 +1,6 @@
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:mineai/core/constants/app_strings.dart';
 
 class NotificationService {
   static final NotificationService instance = NotificationService._();
@@ -28,6 +29,15 @@ class NotificationService {
         debugPrint("Notification clicked: ${response.payload}");
       },
     );
+    // Android 13+ requires an explicit runtime permission request. iOS requests
+    // permissions through the Darwin implementation below.
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+      await _notifications
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >()
+          ?.requestNotificationsPermission();
+    }
   }
 
   Future<bool?> requestIOSPermissions() async {
@@ -45,9 +55,10 @@ class NotificationService {
     required String body,
     String? payload,
   }) async {
-    const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
+    final androidDetails = AndroidNotificationDetails(
       'default_channel',
-      'General Notifications',
+      AppStrings.generalNotificationsChannel,
+      channelDescription: AppStrings.generalNotificationsChannelDescription,
       importance: Importance.max,
       priority: Priority.high,
     );
@@ -57,7 +68,7 @@ class NotificationService {
       presentSound: true, // Play default sound
     );
 
-    const NotificationDetails platformDetails = NotificationDetails(
+    final platformDetails = NotificationDetails(
       android: androidDetails,
       iOS: iosDetails,
     );
@@ -73,14 +84,14 @@ class NotificationService {
 
   Future<void> showBudgetWarning({
     required String categoryName,
-    required double percentage,
+    required int threshold,
     required double spent,
     required double limit,
   }) async {
-    const androidDetails = AndroidNotificationDetails(
+    final androidDetails = AndroidNotificationDetails(
       'budget_alerts_channel',
-      'Budget Alerts',
-      channelDescription: 'Notifications for exceeding budget limits',
+      AppStrings.budgetAlertsChannel,
+      channelDescription: AppStrings.budgetAlertsChannelDescription,
       importance: Importance.max,
       priority: Priority.high,
     );
@@ -90,26 +101,21 @@ class NotificationService {
       presentSound: true, // Play default sound
     );
 
-    const details = NotificationDetails(
+    final details = NotificationDetails(
       android: androidDetails,
       iOS: darwinDetails,
     );
 
-    String alertTitle = 'Budget Alert: $categoryName';
-    String alertBody = '';
-
-    if (percentage >= 100) {
-      alertBody =
-          'Budget Exceeded! Spent \$${spent.toStringAsFixed(2)} of \$${limit.toStringAsFixed(2)} limit.';
-    } else if (percentage >= 90) {
-      alertBody =
-          'Critical: Used ${percentage.toStringAsFixed(0)}% of your $categoryName budget.';
-    } else if (percentage >= 50) {
-      alertBody = 'Notice: Reached 50% of your $categoryName budget limit.';
-    }
+    final alertTitle = AppStrings.budgetAlertTitle(categoryName);
+    final alertBody = threshold >= 100
+        ? AppStrings.budgetAlertExceeded(
+            spent.toStringAsFixed(2),
+            limit.toStringAsFixed(2),
+          )
+        : AppStrings.budgetAlertUsed(threshold, categoryName);
 
     await _notifications.show(
-      id: categoryName.hashCode,
+      id: '${categoryName}_$threshold'.hashCode,
       title: alertTitle,
       body: alertBody,
       notificationDetails: details,
