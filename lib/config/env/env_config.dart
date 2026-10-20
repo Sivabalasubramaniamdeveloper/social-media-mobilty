@@ -18,14 +18,14 @@ class EnvConfig {
   }
 
   static String get backendBaseUrl =>
-      dotenv.env['BACKEND_BASE_URL'] ?? 'http://10.0.2.2:3000/api/v1';
+      dotenv.env['BACKEND_BASE_URL'] ?? 'http://localhost:3000/api/v1/';
 
   /// Deep link for Supabase signup confirmation emails.
   static String get emailConfirmationRedirectUri =>
       dotenv.env['SUPABASE_EMAIL_REDIRECT_URL'] ??
-      Uri.parse(backendBaseUrl)
-          .replace(path: '/auth/verified', query: null, fragment: null)
-          .toString();
+      Uri.parse(
+        backendBaseUrl,
+      ).replace(path: '/auth/verified', query: null, fragment: null).toString();
 
   /// Deep link for Supabase password recovery emails.
   static String get passwordRecoveryRedirectUri =>

@@ -184,7 +184,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
         title: AppStrings.developerAi,
         description: AppStrings.developerAiDesc,
         icon: Icons.code_rounded,
-        onTap: () {},
+        onTap: () => context.go(RouteNames.ott),
       ),
       _ToolItem(
         title: AppStrings.weatherInsights,

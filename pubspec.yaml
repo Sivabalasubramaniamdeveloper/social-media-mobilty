@@ -76,6 +76,8 @@ dependencies:
   shimmer: ^4.0.0
   table_calendar: ^3.2.1
   image_picker: ^1.2.3
+  video_player: ^2.14.1
+  http: ^1.6.0
 
 dev_dependencies:
   flutter_test:

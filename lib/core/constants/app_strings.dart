@@ -669,6 +669,44 @@ class AppStrings {
   }
 
   // ======================
+  //  OTT Video Player
+  // ======================
+  static String get videoQuality => 'video_quality'.tr();
+  static String get qualityAuto => 'quality_auto'.tr();
+  static String get qualityManual => 'quality_manual'.tr();
+  static String get videoPlaybackFailed => 'video_playback_failed'.tr();
+  static String get videoPlaybackFailedDesc => 'video_playback_failed_desc'.tr();
+  static String get playbackSpeed => 'playback_speed'.tr();
+  static String get normalSpeed => 'normal_speed'.tr();
+  static String get secondsRewind => 'seconds_rewind'.tr();
+  static String get secondsForward => 'seconds_forward'.tr();
+  static String get fitToScreen => 'fit_to_screen'.tr();
+  static String get originalAspectRatio => 'original_aspect_ratio'.tr();
+  static String get watchNow => 'watch_now'.tr();
+  static String get myList => 'my_list'.tr();
+
+  // ======================
+  //  Enhanced Subscription Strings
+  // ======================
+  static String get upgradeToUnlock => 'upgrade_to_unlock'.tr();
+  static String get unlockUnlimitedPower => 'unlock_unlimited_power'.tr();
+  static String get mostPopular => 'most_popular'.tr();
+  static String get bestValue => 'best_value'.tr();
+  static String get currentPlanBadge => 'current_plan_badge'.tr();
+  static String get freeForever => 'free_forever'.tr();
+  static String get perMonth => 'per_month'.tr();
+  static String get upgradeNow => 'upgrade_now'.tr();
+  static String get switchPlan => 'switch_plan'.tr();
+  static String get activePlan => 'active_plan'.tr();
+  static String get featuresIncluded => 'features_included'.tr();
+  static String get dailyAiCreditsFeature => 'daily_ai_credits_feature'.tr();
+  static String get smartScrapesFeature => 'smart_scrapes_feature'.tr();
+  static String get budgetTrackingFeature => 'budget_tracking_feature'.tr();
+  static String get monthlyBudgetEditsFeature => 'monthly_budget_edits_feature'.tr();
+  static String get cloudBackupFeature => 'cloud_backup_feature'.tr();
+  static String get diaryImagesFeature => 'diary_images_feature'.tr();
+
+  // ======================
   //  API Call Methods
   // ======================
   static const String getAPI = "GET";

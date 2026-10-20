@@ -22,6 +22,7 @@ import 'package:mineai/features/auth/presentation/pages/reset_password_screen.da
 import 'package:mineai/features/auth/presentation/pages/email_confirmed_screen.dart';
 import 'package:mineai/features/home/presentation/home_dashboard_screen.dart';
 import 'package:mineai/features/weather/presentation/weather_screen.dart';
+import 'package:mineai/features/ott/screens/ott_home_screen.dart';
 
 class AppRouter {
   static GoRouter router = GoRouter(
@@ -123,6 +124,11 @@ class AppRouter {
         name: RouteNames.comparePrices,
         path: RouteNames.comparePrices,
         builder: (context, state) => const PriceComparisonScreen(),
+      ),
+      GoRoute(
+        name: RouteNames.ott,
+        path: RouteNames.ott,
+        builder: (context, state) => const OttHomeScreen(),
       ),
     ],
   );

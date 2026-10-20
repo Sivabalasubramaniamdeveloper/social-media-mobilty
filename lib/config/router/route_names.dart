@@ -18,4 +18,5 @@ class RouteNames {
   static const String expenseSettings = '/expense-settings';
   static const String comparePrices = '/compare-prices';
   static const String subscription = '/subscription';
+  static const String ott = '/ott';
 }
