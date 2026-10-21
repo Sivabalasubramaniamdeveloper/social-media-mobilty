@@ -10,7 +10,7 @@ class NotificationService {
       FlutterLocalNotificationsPlugin();
 
   Future<void> init() async {
-    const android = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const android = AndroidInitializationSettings('@mipmap/ic_launcher',);
     const darwin = DarwinInitializationSettings(
       requestAlertPermission: true,
       requestBadgePermission: true,
@@ -25,27 +25,35 @@ class NotificationService {
     await _notifications.initialize(
       settings: initializationSettings,
       onDidReceiveNotificationResponse: (NotificationResponse response) {
-        // Handle notification payload click action here
         debugPrint("Notification clicked: ${response.payload}");
       },
     );
-    // Android 13+ requires an explicit runtime permission request. iOS requests
-    // permissions through the Darwin implementation below.
+
+    // Request permission on Android 13+
     if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
-      await _notifications
+      final androidImplementation = _notifications
           .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin
-          >()
+          AndroidFlutterLocalNotificationsPlugin>();
+
+      final bool? granted = await androidImplementation
           ?.requestNotificationsPermission();
+
+      debugPrint('Android notification permission granted: $granted');
     }
   }
-
   Future<bool?> requestIOSPermissions() async {
     return await _notifications
         .resolvePlatformSpecificImplementation<
           IOSFlutterLocalNotificationsPlugin
         >()
         ?.requestPermissions(alert: true, badge: true, sound: true);
+  }
+  Future<bool?> requestAndroidPermissions() async {
+    return await _notifications
+        .resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin
+    >()
+        ?.requestNotificationsPermission();
   }
 
   // Show instant notification

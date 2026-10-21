@@ -50,6 +50,7 @@ class _ExpenseTrackerScreenState extends State<ExpenseTrackerScreen> {
     super.initState();
     _loadAllData();
     NotificationService.instance.requestIOSPermissions();
+    NotificationService.instance.requestAndroidPermissions();
   }
 
   @override

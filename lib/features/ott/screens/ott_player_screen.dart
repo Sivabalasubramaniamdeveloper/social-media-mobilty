@@ -48,6 +48,16 @@ class _OttPlayerScreenState extends State<OttPlayerScreen>
     _preparePlayer();
   }
 
+  // Future<void> _preparePlayer() async {
+  //   try {
+  //     _renditions = await _readRenditions();
+  //   } catch (e) {
+  //     debugPrint('OTT QUALITY LIST UNAVAILABLE: $e');
+  //     _renditions = const [];
+  //   }
+  //   if (!mounted) return;
+  //   await _initializePlayer(Uri.parse(widget.video.hlsUrl));
+  // }
   Future<void> _preparePlayer() async {
     try {
       _renditions = await _readRenditions();
@@ -56,7 +66,15 @@ class _OttPlayerScreenState extends State<OttPlayerScreen>
       _renditions = const [];
     }
     if (!mounted) return;
-    await _initializePlayer(Uri.parse(widget.video.hlsUrl));
+
+    // Prefer a mid-quality variant instead of master playlist
+    final preferred = _renditions.where((r) {
+      final h = int.tryParse(r.label.replaceAll('p', '')) ?? 9999;
+      return h >= 480 && h <= 720;
+    }).firstOrNull ?? _renditions.firstOrNull;
+
+    final startUri = preferred?.uri ?? Uri.parse(widget.video.hlsUrl);
+    await _initializePlayer(startUri);
   }
 
   Future<List<_HlsRendition>> _readRenditions() async {

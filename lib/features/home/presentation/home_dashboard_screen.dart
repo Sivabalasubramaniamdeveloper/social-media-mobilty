@@ -183,14 +183,14 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
       _ToolItem(
         title: AppStrings.developerAi,
         description: AppStrings.developerAiDesc,
-        icon: Icons.code_rounded,
-        onTap: () => context.go(RouteNames.ott),
+        icon: Icons.video_library_sharp,
+        onTap: () => context.push(RouteNames.ott),
       ),
       _ToolItem(
         title: AppStrings.weatherInsights,
         description: AppStrings.weatherAiDesc,
         icon: Icons.wb_sunny_outlined,
-        onTap: () => context.go(RouteNames.weather),
+        onTap: () => context.push(RouteNames.weather),
       ),
       _ToolItem(
         title: AppStrings.personalDiary,

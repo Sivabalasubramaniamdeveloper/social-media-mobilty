@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:mineai/config/router/route_names.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
 import '../models/ott_video.dart';
@@ -192,7 +194,7 @@ class _OttHomeScreenState extends State<OttHomeScreen> {
                 CircleAvatar(
                   backgroundColor: AppColors.surface,
                   child: IconButton(
-                    onPressed: () => Navigator.of(context).maybePop(),
+                    onPressed: () => context.pop(),
                     icon: const Icon(Icons.close_rounded, color: AppColors.whiteColor),
                   ),
                 ),
