@@ -340,6 +340,12 @@ class _SettingsView extends BaseScreen {
                   ),
                   onTap: () => context.push(RouteNames.subscription),
                 ),
+                AppListTileCard(
+                  icon: Icons.key_rounded,
+                  title: 'API Keys & Passwords',
+                  subtitle: 'Manage Gemini API Key & Gmail App Password',
+                  onTap: () => context.push(RouteNames.apiKeys),
+                ),
 
                 const SizedBox(height: 20),
 

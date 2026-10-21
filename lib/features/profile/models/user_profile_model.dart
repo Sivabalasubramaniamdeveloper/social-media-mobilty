@@ -10,6 +10,10 @@ class UserProfileModel {
   final String? language;
   final String? avatarUrl;
   final int credits;
+  final int dailyCreditLimit;
+  final int creditsUsedToday;
+  final String? creditsRechargeCountdown;
+  final String? nextResetAt;
 
   const UserProfileModel({
     required this.id,
@@ -22,7 +26,11 @@ class UserProfileModel {
     this.timezone,
     this.language,
     this.avatarUrl,
-    this.credits = 1250,
+    this.credits = 100,
+    this.dailyCreditLimit = 100,
+    this.creditsUsedToday = 0,
+    this.creditsRechargeCountdown,
+    this.nextResetAt,
   });
 
   factory UserProfileModel.fromJson(Map<String, dynamic> json) {
@@ -37,7 +45,11 @@ class UserProfileModel {
       timezone: json['timezone'] as String?,
       language: json['language'] as String?,
       avatarUrl: json['avatar_url'] as String?,
-      credits: (json['credits'] as num?)?.toInt() ?? 1250,
+      credits: (json['credits'] as num?)?.toInt() ?? 100,
+      dailyCreditLimit: (json['daily_credit_limit'] as num?)?.toInt() ?? 100,
+      creditsUsedToday: (json['credits_used_today'] as num?)?.toInt() ?? 0,
+      creditsRechargeCountdown: json['credits_recharge_countdown'] as String?,
+      nextResetAt: json['next_reset_at'] as String?,
     );
   }
 }

@@ -19,4 +19,8 @@ class RouteNames {
   static const String comparePrices = '/compare-prices';
   static const String subscription = '/subscription';
   static const String ott = '/ott';
+  static const String apiKeys = '/api-keys';
+  static const String emailHelper = '/email-helper';
+  static const String voiceTasks = '/voice-tasks';
+  static const String tasksList = '/tasks-list';
 }

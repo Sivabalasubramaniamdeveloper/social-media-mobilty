@@ -172,7 +172,13 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
         title: AppStrings.voiceTasks,
         description: AppStrings.voiceTasksDesc,
         icon: Icons.mic_none_rounded,
-        onTap: () {},
+        onTap: () => context.push(RouteNames.voiceTasks),
+      ),
+      _ToolItem(
+        title: 'Email Helper',
+        description: 'AI drafts & direct sending',
+        icon: Icons.mark_email_read_outlined,
+        onTap: () => context.push(RouteNames.emailHelper),
       ),
       _ToolItem(
         title: AppStrings.imageCaptions,
