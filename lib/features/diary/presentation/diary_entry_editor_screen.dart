@@ -127,6 +127,7 @@ class _DiaryEntryEditorScreenState extends State<DiaryEntryEditorScreen> {
         );
 
     final remainingQuota = plan.diaryImageLimit - usedCount;
+    if (!mounted) return;
 
     if (remainingQuota <= 0) {
       _showUpgradeDialog(
@@ -141,7 +142,7 @@ class _DiaryEntryEditorScreenState extends State<DiaryEntryEditorScreen> {
 
     // 2. Select images, capping at remainingQuota
     final List<XFile> picked = await ImagePicker().pickMultiImage();
-    if (picked.isEmpty) return;
+    if (picked.isEmpty || !mounted) return;
 
     if (picked.length > remainingQuota) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -322,7 +323,7 @@ class _DiaryEntryEditorScreenState extends State<DiaryEntryEditorScreen> {
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
                   itemCount: _imagePaths.length,
-                  separatorBuilder: (_, __) => const SizedBox(width: 8),
+                  separatorBuilder: (ctx, idx) => const SizedBox(width: 8),
                   itemBuilder: (context, i) {
                     return ClipRRect(
                       borderRadius: BorderRadius.circular(12),

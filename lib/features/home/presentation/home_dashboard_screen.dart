@@ -20,6 +20,9 @@ import 'package:mineai/features/profile/cubit/user_profile_state.dart';
 import 'package:mineai/core/utils/user_helper.dart';
 import 'package:mineai/features/profile/presentation/settings_screen.dart';
 import 'package:mineai/features/scraper/presentation/product_scraper_screen.dart';
+import 'package:mineai/features/tasks/models/task_model.dart';
+import 'package:mineai/features/tasks/presentation/task_detail_screen.dart';
+import 'package:mineai/features/tasks/services/task_database_service.dart';
 
 class HomeDashboardScreen extends StatefulWidget {
   const HomeDashboardScreen({super.key});
@@ -31,12 +34,26 @@ class HomeDashboardScreen extends StatefulWidget {
 class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
   int _navIndex = 0;
   final TextEditingController _searchController = TextEditingController();
+  List<TaskModel> _recentTasks = [];
 
   @override
   void initState() {
     super.initState();
     // Load dynamic profile details from GET /api/v1/user/me
     context.read<UserProfileCubit>().loadProfile();
+    _loadRecentTasks();
+  }
+
+  Future<void> _loadRecentTasks() async {
+    try {
+      final userId = await UserHelper.getCurrentUserId();
+      final tasks = await TaskDatabaseService.instance.getTasks(userId);
+      if (mounted) {
+        setState(() {
+          _recentTasks = tasks.take(3).toList();
+        });
+      }
+    } catch (_) {}
   }
 
   @override
@@ -181,6 +198,18 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
         onTap: () => context.push(RouteNames.emailHelper),
       ),
       _ToolItem(
+        title: 'City News',
+        description: 'Location web-scraped news',
+        icon: Icons.newspaper_rounded,
+        onTap: () => context.push(RouteNames.news),
+      ),
+      _ToolItem(
+        title: 'Private Vault',
+        description: 'Passwords, photos & docs',
+        icon: Icons.shield_rounded,
+        onTap: () => context.push(RouteNames.vault),
+      ),
+      _ToolItem(
         title: AppStrings.imageCaptions,
         description: AppStrings.imageCaptionsDesc,
         icon: Icons.image_outlined,
@@ -242,7 +271,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
     return AppSectionHeader(
       title: AppStrings.recentActivity,
       actionLabel: AppStrings.viewAll,
-      onAction: () {},
+      onAction: () => context.push(RouteNames.tasksList),
     );
   }
 
@@ -253,24 +282,61 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
         ? AppColors.lightSecondaryOnSurface
         : AppColors.secondaryText;
 
+    if (_recentTasks.isNotEmpty) {
+      return Column(
+        children: _recentTasks.map((task) {
+          return AppListTileCard(
+            icon: Icons.task_alt_rounded,
+            title: task.title,
+            subtitle: '${task.category} • ${task.dateDisplay} at ${task.timeDisplay}',
+            showChevron: true,
+            trailing: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: task.isCompleted
+                    ? (isLight ? Colors.green.withValues(alpha: 0.12) : Colors.green.withValues(alpha: 0.2))
+                    : (isLight ? theme.colorScheme.primary.withValues(alpha: 0.12) : theme.colorScheme.primary.withValues(alpha: 0.2)),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                task.isCompleted ? 'Done' : 'Pending',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: task.isCompleted ? Colors.green : theme.colorScheme.primary,
+                ),
+              ),
+            ),
+            onTap: () async {
+              await Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => TaskDetailScreen(task: task)),
+              );
+              _loadRecentTasks();
+            },
+          );
+        }).toList(),
+      );
+    }
+
     final List<_ActivityItem> activities = [
       _ActivityItem(
-        title: AppStrings.resumeUpdated,
-        subtitle: AppStrings.resumeUpdatedDesc,
-        time: AppStrings.time2mAgo,
-        icon: Icons.edit_document,
+        title: 'Voice Assistant Ready',
+        subtitle: 'Tap microphone in Voice Tasks to plan meetings',
+        time: 'Ready',
+        icon: Icons.mic_none_rounded,
       ),
       _ActivityItem(
-        title: AppStrings.apiIntegration,
-        subtitle: AppStrings.apiIntegrationDesc,
-        time: AppStrings.time45mAgo,
-        icon: Icons.integration_instructions_outlined,
+        title: 'Email Helper Active',
+        subtitle: 'Draft professional emails & send directly',
+        time: 'Active',
+        icon: Icons.mark_email_read_outlined,
       ),
       _ActivityItem(
-        title: AppStrings.meetingTranscript,
-        subtitle: AppStrings.meetingTranscriptDesc,
-        time: AppStrings.time3hAgo,
-        icon: Icons.record_voice_over_outlined,
+        title: 'Expenses & Budget',
+        subtitle: 'Track spending and auto-categorize transactions',
+        time: 'Active',
+        icon: Icons.account_balance_wallet_outlined,
       ),
     ];
 
@@ -317,7 +383,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               _navItem(0, Icons.home_rounded, AppStrings.navHome),
-              _navItem(1, Icons.history_rounded, AppStrings.navHistory),
+              _navItem(1, Icons.compare_arrows_rounded, AppStrings.comparePrices),
               _navItem(2, Icons.bar_chart_rounded, AppStrings.expenses),
               _navItem(3, Icons.person_outline_rounded, AppStrings.profile),
             ],

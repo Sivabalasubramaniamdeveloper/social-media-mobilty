@@ -92,6 +92,24 @@
     <true/>
     <key>LSSupportsOpeningDocumentsInPlace</key>
     <true/>
-
+    <key>NSMicrophoneUsageDescription</key>
+    <string>MindAI needs microphone access to listen to your voice tasks.</string>
+    <key>NSSpeechRecognitionUsageDescription</key>
+    <string>MindAI needs speech recognition to transcribe your voice tasks.</string>
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>MindAI needs photo library access to upload your profile avatar.</string>
+    <key>NSCameraUsageDescription</key>
+    <string>MindAI needs camera access to capture your profile photo.</string>
+    <key>LSApplicationQueriesSchemes</key>
+    <array>
+        <string>mailto</string>
+        <string>googlegmail</string>
+        <string>readdle-spark</string>
+        <string>airmail</string>
+        <string>ms-outlook</string>
+        <string>ymail</string>
+        <string>https</string>
+        <string>http</string>
+    </array>
 </dict>
-</plist>
+</plist>

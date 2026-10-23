@@ -13,6 +13,8 @@ import 'package:mineai/core/widgets/app_widgets.dart';
 import 'package:mineai/features/subscription/cubit/subscription_cubit.dart';
 import 'package:mineai/features/subscription/cubit/subscription_state.dart';
 import 'package:mineai/features/subscription/models/subscription_plan.dart';
+import 'package:mineai/core/utils/secure_storage.dart';
+import 'package:mineai/instance/locator.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../auth/cubit/auth_cubit.dart';
@@ -29,13 +31,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _autoSummarize = true;
   bool _hapticFeedback = true;
 
-  /// Refreshes plan status whenever settings is opened to reflect server-side changes.
+  /// Refreshes plan status and loads device push notification settings whenever settings is opened.
   @override
   void initState() {
     super.initState();
+    _loadDevicePreferences();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) context.read<SubscriptionCubit>().fetchUserPlan();
     });
+  }
+
+  Future<void> _loadDevicePreferences() async {
+    final pref = await getIt<CustomSecureStorage>().readSecureData('push_notifications_enabled');
+    if (pref != null && mounted) {
+      setState(() => _notifications = pref != 'false');
+    }
+  }
+
+  Future<void> _handleNotificationChange(bool val) async {
+    setState(() => _notifications = val);
+    await getIt<CustomSecureStorage>().writeSecureData('push_notifications_enabled', val ? 'true' : 'false');
   }
 
   /// Passes local preference values and callbacks to the settings view.
@@ -45,7 +60,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       notifications: _notifications,
       autoSummarize: _autoSummarize,
       hapticFeedback: _hapticFeedback,
-      onNotificationChanged: (v) => setState(() => _notifications = v),
+      onNotificationChanged: _handleNotificationChange,
       onAutoSummarizeChanged: (v) => setState(() => _autoSummarize = v),
       onHapticChanged: (v) => setState(() => _hapticFeedback = v),
     );

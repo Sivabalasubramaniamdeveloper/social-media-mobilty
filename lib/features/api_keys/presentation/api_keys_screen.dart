@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mineai/core/constants/app_colors.dart';
-import 'package:mineai/core/utils/toast_helper.dart';
+import 'package:mineai/core/utils/snackbar_helper.dart';
 import 'package:mineai/core/widgets/gradiant_background.dart';
 import 'package:mineai/core/widgets/headers/app_screen_header.dart';
 import 'package:mineai/features/api_keys/models/api_key_model.dart';
@@ -38,7 +38,7 @@ class _ApiKeysScreenState extends State<ApiKeysScreen> {
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
-        showToast('Failed to load API keys: $e');
+        SnackBarHelper.showError(context, 'Failed to load API keys: $e');
       }
     }
   }
@@ -47,29 +47,42 @@ class _ApiKeysScreenState extends State<ApiKeysScreen> {
     try {
       await _service.updateApiKeyStatus(key.id, newStatus);
       await _loadData();
-      showToast(newStatus ? 'API Key activated' : 'API Key paused');
+      if (mounted) {
+        SnackBarHelper.showSuccess(
+          context,
+          newStatus ? 'API Key activated' : 'API Key paused',
+        );
+      }
     } catch (e) {
-      showToast('Could not update key: $e');
+      if (mounted) {
+        SnackBarHelper.showError(context, 'Could not update key: $e');
+      }
     }
   }
 
   Future<void> _deleteKey(ApiKeyModel key) async {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final isLight = theme.brightness == Brightness.light;
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1E1B38),
-        title: const Text('Delete Key', style: TextStyle(color: Colors.white)),
+        backgroundColor: isLight ? scheme.surface : const Color(0xFF1E1B38),
+        title: Text('Delete Key', style: TextStyle(color: scheme.onSurface)),
         content: Text(
           'Are you sure you want to delete "${key.keyName}"? Future AI requests will fall back to MineAI default key.',
-          style: const TextStyle(color: AppColors.secondaryText),
+          style: TextStyle(
+            color: isLight ? AppColors.lightSecondaryOnSurface : AppColors.secondaryText,
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+            child: Text('Cancel', style: TextStyle(color: scheme.onSurface.withValues(alpha: 0.6))),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
+            style: ElevatedButton.styleFrom(backgroundColor: scheme.error),
             onPressed: () => Navigator.pop(ctx, true),
             child: const Text('Delete', style: TextStyle(color: Colors.white)),
           ),
@@ -81,23 +94,28 @@ class _ApiKeysScreenState extends State<ApiKeysScreen> {
       try {
         await _service.deleteApiKey(key.id);
         await _loadData();
-        showToast('API Key deleted');
+        if (mounted) SnackBarHelper.showSuccess(context, 'API Key deleted');
       } catch (e) {
-        showToast('Failed to delete key: $e');
+        if (mounted) SnackBarHelper.showError(context, 'Failed to delete key: $e');
       }
     }
   }
 
   void _showAddKeyModal() {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final isLight = theme.brightness == Brightness.light;
+
     final keyNameController = TextEditingController();
     final keyValController = TextEditingController();
     String selectedProviderName = 'gemini';
     bool obscure = true;
+    bool isSubmitting = false;
 
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: const Color(0xFF1B192E),
+      backgroundColor: isLight ? scheme.surface : const Color(0xFF1B192E),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -122,63 +140,69 @@ class _ApiKeysScreenState extends State<ApiKeysScreen> {
                       children: [
                         Text(
                           isSmtp ? 'Add Email App Password' : 'Add API Key',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                            color: scheme.onSurface,
                           ),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.close, color: Colors.white70),
+                          icon: Icon(Icons.close, color: scheme.onSurface.withValues(alpha: 0.7)),
                           onPressed: () => Navigator.pop(modalCtx),
                         ),
                       ],
                     ),
                     const SizedBox(height: 16),
-                    const Text(
+                    Text(
                       'Select Provider / Type',
-                      style: TextStyle(color: AppColors.secondaryText, fontSize: 13),
+                      style: TextStyle(
+                        color: isLight ? AppColors.lightSecondaryOnSurface : AppColors.secondaryText,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 14),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF262344),
+                        color: isLight ? scheme.surfaceContainerHighest : const Color(0xFF262344),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.white12),
+                        border: Border.all(
+                          color: isLight ? scheme.outlineVariant.withValues(alpha: 0.5) : Colors.white12,
+                        ),
                       ),
                       child: DropdownButtonHideUnderline(
                         child: DropdownButton<String>(
                           value: selectedProviderName,
-                          dropdownColor: const Color(0xFF262344),
+                          dropdownColor: isLight ? scheme.surface : const Color(0xFF262344),
                           isExpanded: true,
-                          items: const [
+                          items: [
                             DropdownMenuItem(
                               value: 'gemini',
                               child: Text(
                                 'Google Gemini (AI Tasks)',
-                                style: TextStyle(color: Colors.white),
+                                style: TextStyle(color: scheme.onSurface),
                               ),
                             ),
                             DropdownMenuItem(
                               value: 'email_smtp',
                               child: Text(
-                                'Gmail App Password (In-App Email Sending)',
-                                style: TextStyle(color: Colors.white),
+                                'Gmail App Password (In-App Sending)',
+                                style: TextStyle(color: scheme.onSurface),
                               ),
                             ),
                             DropdownMenuItem(
                               value: 'openai',
                               child: Text(
                                 'OpenAI (Optional)',
-                                style: TextStyle(color: Colors.white),
+                                style: TextStyle(color: scheme.onSurface),
                               ),
                             ),
                             DropdownMenuItem(
                               value: 'anthropic',
                               child: Text(
                                 'Anthropic Claude (Optional)',
-                                style: TextStyle(color: Colors.white),
+                                style: TextStyle(color: scheme.onSurface),
                               ),
                             ),
                           ],
@@ -200,14 +224,18 @@ class _ApiKeysScreenState extends State<ApiKeysScreen> {
                     const SizedBox(height: 16),
                     TextField(
                       controller: keyNameController,
-                      style: const TextStyle(color: Colors.white),
+                      style: TextStyle(color: scheme.onSurface),
                       decoration: InputDecoration(
                         labelText: 'Key Label / Name',
-                        labelStyle: const TextStyle(color: AppColors.secondaryText),
-                        hintText: isSmtp ? 'e.g. Work Gmail App Password' : 'e.g. My Gemini Pro Key',
-                        hintStyle: const TextStyle(color: Colors.white30),
+                        labelStyle: TextStyle(
+                          color: isLight ? AppColors.lightSecondaryOnSurface : AppColors.secondaryText,
+                        ),
+                        hintText: isSmtp ? 'e.g. Work Gmail App Password' : 'e.g. Personal Gemini Key',
+                        hintStyle: TextStyle(
+                          color: isLight ? Colors.black38 : Colors.white30,
+                        ),
                         filled: true,
-                        fillColor: const Color(0xFF262344),
+                        fillColor: isLight ? scheme.surfaceContainerHighest : const Color(0xFF262344),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide.none,
@@ -218,18 +246,22 @@ class _ApiKeysScreenState extends State<ApiKeysScreen> {
                     TextField(
                       controller: keyValController,
                       obscureText: obscure,
-                      style: const TextStyle(color: Colors.white),
+                      style: TextStyle(color: scheme.onSurface),
                       decoration: InputDecoration(
                         labelText: isSmtp ? 'Google App Password (16 chars)' : 'API Key Secret',
-                        labelStyle: const TextStyle(color: AppColors.secondaryText),
+                        labelStyle: TextStyle(
+                          color: isLight ? AppColors.lightSecondaryOnSurface : AppColors.secondaryText,
+                        ),
                         hintText: isSmtp ? 'xxxx xxxx xxxx xxxx' : 'AIzaSy...',
-                        hintStyle: const TextStyle(color: Colors.white30),
+                        hintStyle: TextStyle(
+                          color: isLight ? Colors.black38 : Colors.white30,
+                        ),
                         filled: true,
-                        fillColor: const Color(0xFF262344),
+                        fillColor: isLight ? scheme.surfaceContainerHighest : const Color(0xFF262344),
                         suffixIcon: IconButton(
                           icon: Icon(
                             obscure ? Icons.visibility_off : Icons.visibility,
-                            color: Colors.white60,
+                            color: isLight ? Colors.black54 : Colors.white60,
                           ),
                           onPressed: () => setModalState(() => obscure = !obscure),
                         ),
@@ -243,8 +275,12 @@ class _ApiKeysScreenState extends State<ApiKeysScreen> {
                     Text(
                       isSmtp
                           ? 'Generate a 16-character App Password at myaccount.google.com/apppasswords to allow direct in-app email sending.'
-                          : 'When provided, MineAI uses your personal Gemini API key for all AI operations. If left empty, MineAI default key is used.',
-                      style: const TextStyle(color: Colors.white54, fontSize: 12),
+                          : 'When provided, MineAI uses your personal Gemini key for AI actions. You can store multiple keys and select the active one.',
+                      style: TextStyle(
+                        color: isLight ? AppColors.lightSecondaryOnSurface : Colors.white54,
+                        fontSize: 12,
+                        height: 1.4,
+                      ),
                     ),
                     const SizedBox(height: 24),
                     SizedBox(
@@ -252,39 +288,55 @@ class _ApiKeysScreenState extends State<ApiKeysScreen> {
                       height: 50,
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primaryPurple,
+                          backgroundColor: scheme.primary,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(14),
                           ),
                         ),
-                        onPressed: () async {
-                          final name = keyNameController.text.trim();
-                          final val = keyValController.text.trim();
-                          if (val.isEmpty) {
-                            showToast('Please enter key value');
-                            return;
-                          }
-                          try {
-                            await _service.addApiKey(
-                              keyName: name.isNotEmpty ? name : (isSmtp ? 'Gmail App Password' : 'Gemini Key'),
-                              apiKey: val,
-                              providerName: selectedProviderName,
-                            );
-                            if (modalCtx.mounted) Navigator.pop(modalCtx);
-                            await _loadData();
-                            showToast('Key saved securely');
-                          } catch (e) {
-                            showToast('Failed to add key: $e');
-                          }
-                        },
-                        child: const Text(
-                          'Save Key',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                        onPressed: isSubmitting
+                            ? null
+                            : () async {
+                                final name = keyNameController.text.trim();
+                                final val = keyValController.text.trim();
+                                if (val.isEmpty) {
+                                  SnackBarHelper.showWarning(context, 'Please enter key value');
+                                  return;
+                                }
+
+                                setModalState(() => isSubmitting = true);
+                                try {
+                                  await _service.addApiKey(
+                                    keyName: name.isNotEmpty
+                                        ? name
+                                        : (isSmtp ? 'Gmail App Password' : 'Gemini Key'),
+                                    apiKey: val,
+                                    providerName: selectedProviderName,
+                                  );
+                                  if (modalCtx.mounted) Navigator.pop(modalCtx);
+                                  await _loadData();
+                                  SnackBarHelper.showSuccess(null, 'Key saved securely');
+                                } catch (e) {
+                                  setModalState(() => isSubmitting = false);
+                                  SnackBarHelper.showError(null, 'Failed to add key: $e');
+                                }
+                              },
+                        child: isSubmitting
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Text(
+                                'Save Key',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                       ),
                     ),
                   ],
@@ -299,6 +351,10 @@ class _ApiKeysScreenState extends State<ApiKeysScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final isLight = theme.brightness == Brightness.light;
+
     return Scaffold(
       body: GradientBackground(
         child: SafeArea(
@@ -314,40 +370,50 @@ class _ApiKeysScreenState extends State<ApiKeysScreen> {
               ),
               Expanded(
                 child: _isLoading
-                    ? const Center(child: CircularProgressIndicator(color: AppColors.primaryPurple))
+                    ? Center(child: CircularProgressIndicator(color: scheme.primary))
                     : RefreshIndicator(
+                        color: scheme.primary,
                         onRefresh: _loadData,
                         child: ListView(
                           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                           children: [
-                            _buildInfoBanner(),
+                            _buildInfoBanner(context),
                             const SizedBox(height: 20),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                const Text(
-                                  'SAVED KEYS',
+                                Text(
+                                  'SAVED KEYS (${_apiKeys.length})',
                                   style: TextStyle(
-                                    color: AppColors.secondaryText,
+                                    color: isLight
+                                        ? AppColors.lightSecondaryOnSurface
+                                        : AppColors.secondaryText,
                                     fontSize: 12,
                                     fontWeight: FontWeight.bold,
                                     letterSpacing: 1.1,
                                   ),
                                 ),
                                 Text(
-                                  '${_apiKeys.length} configured',
-                                  style: const TextStyle(color: Colors.white54, fontSize: 12),
+                                  'Select active key to use',
+                                  style: TextStyle(
+                                    color: scheme.primary,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
                               ],
                             ),
                             const SizedBox(height: 12),
-                            if (_apiKeys.isEmpty) _buildEmptyState() else ..._apiKeys.map(_buildKeyCard),
+                            if (_apiKeys.isEmpty)
+                              _buildEmptyState(context)
+                            else
+                              ..._apiKeys.map((key) => _buildKeyCard(context, key)),
                             const SizedBox(height: 24),
                             SizedBox(
                               height: 52,
                               child: ElevatedButton.icon(
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppColors.primaryPurple,
+                                  backgroundColor: scheme.primary,
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(16),
                                   ),
@@ -355,7 +421,10 @@ class _ApiKeysScreenState extends State<ApiKeysScreen> {
                                 icon: const Icon(Icons.add_rounded, color: Colors.white),
                                 label: const Text(
                                   'Add New Key or Password',
-                                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                                 onPressed: _showAddKeyModal,
                               ),
@@ -372,13 +441,17 @@ class _ApiKeysScreenState extends State<ApiKeysScreen> {
     );
   }
 
-  Widget _buildInfoBanner() {
+  Widget _buildInfoBanner(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final isLight = theme.brightness == Brightness.light;
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E1B38),
+        color: isLight ? scheme.surfaceContainerHighest : const Color(0xFF1E1B38),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.primaryPurple.withValues(alpha: 0.3)),
+        border: Border.all(color: scheme.primary.withValues(alpha: 0.3)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -386,24 +459,32 @@ class _ApiKeysScreenState extends State<ApiKeysScreen> {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: AppColors.primaryPurple.withValues(alpha: 0.2),
+              color: scheme.primary.withValues(alpha: 0.15),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.shield_outlined, color: AppColors.accentLavender, size: 22),
+            child: Icon(Icons.shield_outlined, color: scheme.primary, size: 22),
           ),
           const SizedBox(width: 14),
-          const Expanded(
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   'End-to-End Encrypted',
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+                  style: TextStyle(
+                    color: scheme.onSurface,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
                 ),
-                SizedBox(height: 4),
+                const SizedBox(height: 4),
                 Text(
-                  'Your Gemini API key and Gmail App Password are AES-256 encrypted at rest. When your Gemini key is saved, your personal quota is used for AI actions.',
-                  style: TextStyle(color: AppColors.secondaryText, fontSize: 12, height: 1.4),
+                  'Your Gemini API key and Gmail App Password are AES-256 encrypted at rest. Multiple keys can be stored; select which one to keep Active.',
+                  style: TextStyle(
+                    color: isLight ? AppColors.lightSecondaryOnSurface : AppColors.secondaryText,
+                    fontSize: 12,
+                    height: 1.4,
+                  ),
                 ),
               ],
             ),
@@ -413,43 +494,67 @@ class _ApiKeysScreenState extends State<ApiKeysScreen> {
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final isLight = theme.brightness == Brightness.light;
+
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E1B38).withValues(alpha: 0.6),
+        color: isLight ? scheme.surfaceContainerHighest : const Color(0xFF1E1B38).withValues(alpha: 0.6),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white10),
+        border: Border.all(
+          color: isLight ? scheme.outlineVariant.withValues(alpha: 0.4) : Colors.white10,
+        ),
       ),
       child: Column(
         children: [
-          Icon(Icons.key_off_rounded, size: 48, color: Colors.white.withValues(alpha: 0.3)),
+          Icon(
+            Icons.key_off_rounded,
+            size: 48,
+            color: isLight ? Colors.black26 : Colors.white24,
+          ),
           const SizedBox(height: 12),
-          const Text(
+          Text(
             'No Custom Keys Added',
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+            style: TextStyle(
+              color: scheme.onSurface,
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+            ),
           ),
           const SizedBox(height: 6),
-          const Text(
+          Text(
             'MineAI platform default keys are currently active for your daily credits. Add your own Gemini API key or Gmail App Password anytime.',
             textAlign: TextAlign.center,
-            style: TextStyle(color: AppColors.secondaryText, fontSize: 13),
+            style: TextStyle(
+              color: isLight ? AppColors.lightSecondaryOnSurface : AppColors.secondaryText,
+              fontSize: 13,
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildKeyCard(ApiKeyModel key) {
+  Widget _buildKeyCard(BuildContext context, ApiKeyModel key) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final isLight = theme.brightness == Brightness.light;
     final isSmtp = key.providerName == 'email_smtp';
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E1B38),
+        color: isLight ? scheme.surfaceContainerHighest : const Color(0xFF1E1B38),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: key.isActive ? AppColors.primaryPurple.withValues(alpha: 0.4) : Colors.white10,
+          color: key.isActive
+              ? scheme.primary
+              : (isLight ? scheme.outlineVariant.withValues(alpha: 0.5) : Colors.white10),
+          width: key.isActive ? 1.5 : 1.0,
         ),
       ),
       child: Column(
@@ -462,12 +567,12 @@ class _ApiKeysScreenState extends State<ApiKeysScreen> {
                 decoration: BoxDecoration(
                   color: isSmtp
                       ? Colors.orangeAccent.withValues(alpha: 0.15)
-                      : AppColors.primaryPurple.withValues(alpha: 0.15),
+                      : scheme.primary.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(
                   isSmtp ? Icons.mail_outline_rounded : Icons.auto_awesome_rounded,
-                  color: isSmtp ? Colors.orangeAccent : AppColors.accentLavender,
+                  color: isSmtp ? Colors.orangeAccent : scheme.primary,
                   size: 20,
                 ),
               ),
@@ -478,8 +583,8 @@ class _ApiKeysScreenState extends State<ApiKeysScreen> {
                   children: [
                     Text(
                       key.keyName,
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: TextStyle(
+                        color: scheme.onSurface,
                         fontWeight: FontWeight.bold,
                         fontSize: 15,
                       ),
@@ -488,37 +593,44 @@ class _ApiKeysScreenState extends State<ApiKeysScreen> {
                     Text(
                       key.providerDisplayName ?? (isSmtp ? 'Gmail App Password' : 'Google Gemini'),
                       style: TextStyle(
-                        color: isSmtp ? Colors.orangeAccent : AppColors.primaryPurpleLight,
+                        color: isSmtp ? Colors.orangeAccent : scheme.primary,
                         fontSize: 12,
-                        fontWeight: FontWeight.w500,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ],
                 ),
               ),
+              // Switch to toggle active or inactive
               Switch(
                 value: key.isActive,
-                activeThumbColor: AppColors.primaryPurple,
+                activeThumbColor: scheme.primary,
                 onChanged: (val) => _toggleStatus(key, val),
               ),
             ],
           ),
           const SizedBox(height: 12),
-          const Divider(color: Colors.white10, height: 1),
+          Divider(
+            color: isLight ? Colors.black12 : Colors.white10,
+            height: 1,
+          ),
           const SizedBox(height: 12),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Row(
                 children: [
-                  const Text(
+                  Text(
                     'Key: ',
-                    style: TextStyle(color: AppColors.secondaryText, fontSize: 13),
+                    style: TextStyle(
+                      color: isLight ? AppColors.lightSecondaryOnSurface : AppColors.secondaryText,
+                      fontSize: 13,
+                    ),
                   ),
                   Text(
                     '•••• •••• •••• ${key.keyLastFour}',
-                    style: const TextStyle(
-                      color: Colors.white70,
+                    style: TextStyle(
+                      color: scheme.onSurface.withValues(alpha: 0.8),
                       fontFamily: 'monospace',
                       fontWeight: FontWeight.w600,
                       fontSize: 13,

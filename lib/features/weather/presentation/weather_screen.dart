@@ -86,10 +86,10 @@ class _WeatherView extends BaseScreen {
   bool get showAppBar => false;
 
   @override
-  bool get useGradientBackground => false;
+  bool get useGradientBackground => true;
 
   @override
-  Color? get backgroundColor => const Color(0xFF0F0E17);
+  Color? get backgroundColor => null;
 
   @override
   Widget buildBody(BuildContext context) {
@@ -290,11 +290,14 @@ class _WeatherView extends BaseScreen {
   // SHIMMER SKELETON LOADER
   // ---------------------------------------------------------------------------
   Widget _buildShimmerLoading(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     final isLight = Theme.of(context).brightness == Brightness.light;
-    final baseColor = isLight ? Colors.grey[300]! : const Color(0xFF1E1B38);
+    final baseColor = isLight
+        ? scheme.surfaceContainerHighest
+        : scheme.surfaceContainer;
     final highlightColor = isLight
-        ? Colors.grey[100]!
-        : const Color(0xFF2E2752);
+        ? scheme.surface
+        : scheme.surfaceContainerHigh;
 
     return Shimmer.fromColors(
       baseColor: baseColor,
@@ -309,7 +312,7 @@ class _WeatherView extends BaseScreen {
               height: 190,
               width: double.infinity,
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: baseColor,
                 borderRadius: BorderRadius.circular(24),
               ),
             ),
@@ -320,7 +323,7 @@ class _WeatherView extends BaseScreen {
               height: 100,
               width: double.infinity,
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: baseColor,
                 borderRadius: BorderRadius.circular(20),
               ),
             ),
@@ -335,7 +338,7 @@ class _WeatherView extends BaseScreen {
                       Container(
                         height: 90,
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: baseColor,
                           borderRadius: BorderRadius.circular(18),
                         ),
                       ),
@@ -343,7 +346,7 @@ class _WeatherView extends BaseScreen {
                       Container(
                         height: 90,
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: baseColor,
                           borderRadius: BorderRadius.circular(18),
                         ),
                       ),
@@ -357,7 +360,7 @@ class _WeatherView extends BaseScreen {
                       Container(
                         height: 90,
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: baseColor,
                           borderRadius: BorderRadius.circular(18),
                         ),
                       ),
@@ -365,7 +368,7 @@ class _WeatherView extends BaseScreen {
                       Container(
                         height: 90,
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: baseColor,
                           borderRadius: BorderRadius.circular(18),
                         ),
                       ),
@@ -381,7 +384,7 @@ class _WeatherView extends BaseScreen {
               height: 20,
               width: 140,
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: baseColor,
                 borderRadius: BorderRadius.circular(6),
               ),
             ),
@@ -392,7 +395,7 @@ class _WeatherView extends BaseScreen {
               height: 160,
               width: double.infinity,
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: baseColor,
                 borderRadius: BorderRadius.circular(20),
               ),
             ),
@@ -419,10 +422,10 @@ class _WeatherView extends BaseScreen {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: isLight
-              ? [scheme.primary.withValues(alpha: 0.1), scheme.surface]
+              ? [scheme.primary.withValues(alpha: 0.12), scheme.surfaceContainerHighest]
               : [
-                  const Color(0xFF7C3AED).withValues(alpha: 0.35),
-                  const Color(0xFF1E1B38).withValues(alpha: 0.85),
+                  scheme.primary.withValues(alpha: 0.35),
+                  scheme.surfaceContainer.withValues(alpha: 0.85),
                 ],
         ),
         border: Border.all(color: scheme.primary.withValues(alpha: 0.35)),
@@ -470,7 +473,7 @@ class _WeatherView extends BaseScreen {
                   shape: BoxShape.circle,
                   color: isLight
                       ? scheme.surfaceContainerHighest.withValues(alpha: 0.7)
-                      : const Color(0xFF2E2752).withValues(alpha: 0.7),
+                      : scheme.surfaceContainerHigh.withValues(alpha: 0.7),
                   border: Border.all(
                     color: scheme.secondary.withValues(alpha: 0.4),
                   ),
@@ -533,7 +536,7 @@ class _WeatherView extends BaseScreen {
           end: Alignment.bottomRight,
           colors: isLight
               ? [scheme.surfaceContainerHighest, scheme.surface]
-              : [const Color(0xFF2E1A47), const Color(0xFF1B1832)],
+              : [scheme.surfaceContainerHigh, scheme.surfaceContainer],
         ),
         border: Border.all(color: scheme.primary.withValues(alpha: 0.35)),
       ),
@@ -646,7 +649,7 @@ class _WeatherView extends BaseScreen {
       decoration: BoxDecoration(
         color: isLight
             ? scheme.surfaceContainerHighest
-            : const Color(0xFF1E1B38).withValues(alpha: 0.65),
+            : scheme.surfaceContainer.withValues(alpha: 0.65),
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
           color: isLight
@@ -701,7 +704,7 @@ class _WeatherView extends BaseScreen {
       decoration: BoxDecoration(
         color: isLight
             ? scheme.surfaceContainerHighest
-            : const Color(0xFF1E1B38).withValues(alpha: 0.65),
+            : scheme.surfaceContainer.withValues(alpha: 0.65),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: isLight

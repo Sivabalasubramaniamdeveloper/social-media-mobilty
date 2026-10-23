@@ -27,6 +27,8 @@ import 'package:mineai/features/api_keys/presentation/api_keys_screen.dart';
 import 'package:mineai/features/email_helper/presentation/email_helper_screen.dart';
 import 'package:mineai/features/tasks/presentation/ai_voice_assistant_screen.dart';
 import 'package:mineai/features/tasks/presentation/tasks_list_screen.dart';
+import 'package:mineai/features/news/presentation/city_news_screen.dart';
+import 'package:mineai/features/vault/presentation/vault_screen.dart';
 
 class AppRouter {
   static GoRouter router = GoRouter(
@@ -153,6 +155,16 @@ class AppRouter {
         name: RouteNames.tasksList,
         path: RouteNames.tasksList,
         builder: (context, state) => const TasksListScreen(),
+      ),
+      GoRoute(
+        name: RouteNames.news,
+        path: RouteNames.news,
+        builder: (context, state) => const CityNewsScreen(),
+      ),
+      GoRoute(
+        name: RouteNames.vault,
+        path: RouteNames.vault,
+        builder: (context, state) => const VaultScreen(),
       ),
     ],
   );

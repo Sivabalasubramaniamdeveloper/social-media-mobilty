@@ -3,6 +3,7 @@ class UserProfileModel {
   final String email;
   final String username;
   final String fullName;
+  final String? phone;
   final String? dob;
   final String? gender;
   final String? countryCode;
@@ -20,6 +21,7 @@ class UserProfileModel {
     required this.email,
     required this.username,
     required this.fullName,
+    this.phone,
     this.dob,
     this.gender,
     this.countryCode,
@@ -39,6 +41,7 @@ class UserProfileModel {
       email: json['email'] as String? ?? '',
       username: json['username'] as String? ?? '',
       fullName: json['full_name'] as String? ?? 'User',
+      phone: json['phone'] as String?,
       dob: json['dob'] as String?,
       gender: json['gender'] as String?,
       countryCode: json['country_code'] as String?,

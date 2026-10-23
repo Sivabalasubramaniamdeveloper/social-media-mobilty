@@ -52,3 +52,48 @@ class SmtpStatusModel {
     );
   }
 }
+
+class SavedEmailModel {
+  final int? id;
+  final String userId;
+  final String label;
+  final String subject;
+  final String body;
+  final String tone;
+  final String? recipient;
+  final DateTime createdAt;
+
+  SavedEmailModel({
+    this.id,
+    required this.userId,
+    required this.label,
+    required this.subject,
+    required this.body,
+    required this.tone,
+    this.recipient,
+    required this.createdAt,
+  });
+
+  Map<String, dynamic> toMap() => {
+    if (id != null) 'id': id,
+    'user_id': userId,
+    'label': label,
+    'subject': subject,
+    'body': body,
+    'tone': tone,
+    'recipient': recipient,
+    'created_at': createdAt.toIso8601String(),
+  };
+
+  factory SavedEmailModel.fromMap(Map<String, dynamic> map) => SavedEmailModel(
+    id: map['id'] as int?,
+    userId: map['user_id'] as String? ?? '',
+    label: map['label'] as String? ?? 'General',
+    subject: map['subject'] as String? ?? '',
+    body: map['body'] as String? ?? '',
+    tone: map['tone'] as String? ?? 'Professional',
+    recipient: map['recipient'] as String?,
+    createdAt:
+        DateTime.tryParse(map['created_at'] as String? ?? '') ?? DateTime.now(),
+  );
+}

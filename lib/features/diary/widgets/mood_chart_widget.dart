@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mineai/core/constants/app_colors.dart';
 
 class MoodChartWidget extends StatelessWidget {
   final List<double> scores; // 7 points for week, or up to 30 for month
@@ -12,13 +13,21 @@ class MoodChartWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final isLight = theme.brightness == Brightness.light;
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: const Color(0xFF161426),
+        color: isLight ? scheme.surfaceContainerHighest : scheme.surfaceContainer,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withOpacity(0.06)),
+        border: Border.all(
+          color: isLight
+              ? scheme.outlineVariant.withValues(alpha: 0.5)
+              : Colors.white.withValues(alpha: 0.06),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -26,7 +35,15 @@ class MoodChartWidget extends StatelessWidget {
           SizedBox(
             height: 140,
             width: double.infinity,
-            child: CustomPaint(painter: _MoodGraphPainter(scores: scores)),
+            child: CustomPaint(
+              painter: _MoodGraphPainter(
+                scores: scores,
+                primaryColor: scheme.primary,
+                gridColor: isLight
+                    ? Colors.black.withValues(alpha: 0.06)
+                    : Colors.white.withValues(alpha: 0.04),
+              ),
+            ),
           ),
           const SizedBox(height: 12),
           Row(
@@ -35,8 +52,10 @@ class MoodChartWidget extends StatelessWidget {
                 .map(
                   (lbl) => Text(
                     lbl,
-                    style: const TextStyle(
-                      color: Color(0xFF94A3B8),
+                    style: TextStyle(
+                      color: isLight
+                          ? AppColors.lightSecondaryOnSurface
+                          : const Color(0xFF94A3B8),
                       fontSize: 11,
                       fontWeight: FontWeight.w500,
                     ),
@@ -52,14 +71,21 @@ class MoodChartWidget extends StatelessWidget {
 
 class _MoodGraphPainter extends CustomPainter {
   final List<double> scores; // Scores scaled 1.0 to 5.0
-  _MoodGraphPainter({required this.scores});
+  final Color primaryColor;
+  final Color gridColor;
+
+  _MoodGraphPainter({
+    required this.scores,
+    required this.primaryColor,
+    required this.gridColor,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
     if (scores.isEmpty) return;
 
     final gridPaint = Paint()
-      ..color = Colors.white.withOpacity(0.04)
+      ..color = gridColor
       ..strokeWidth = 1.0;
 
     for (int i = 0; i <= 4; i++) {
@@ -96,15 +122,15 @@ class _MoodGraphPainter extends CustomPainter {
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
         colors: [
-          const Color(0xFFA78BFA).withOpacity(0.35),
-          const Color(0xFFA78BFA).withOpacity(0.0),
+          primaryColor.withValues(alpha: 0.35),
+          primaryColor.withValues(alpha: 0.0),
         ],
       ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
 
     canvas.drawPath(fillPath, fillPaint);
 
     final linePaint = Paint()
-      ..color = const Color(0xFFA78BFA)
+      ..color = primaryColor
       ..strokeWidth = 3.0
       ..style = PaintingStyle.stroke;
 
@@ -115,9 +141,9 @@ class _MoodGraphPainter extends CustomPainter {
     canvas.drawCircle(
       lastPoint,
       7,
-      Paint()..color = const Color(0xFF8B5CF6).withOpacity(0.4),
+      Paint()..color = primaryColor.withValues(alpha: 0.35),
     );
-    canvas.drawCircle(lastPoint, 4, Paint()..color = const Color(0xFFA78BFA));
+    canvas.drawCircle(lastPoint, 4, Paint()..color = primaryColor);
   }
 
   @override

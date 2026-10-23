@@ -35,7 +35,6 @@ class _IncomeBudgetScreenState extends State<IncomeBudgetScreen> {
     _loadData();
   }
 
-  @override
   /// Loads local transactions and current monthly budget progress.
   Future<void> _loadData() async {
     setState(() => _isLoading = true);

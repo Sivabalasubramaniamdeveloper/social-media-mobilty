@@ -3,13 +3,14 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mineai/config/router/route_names.dart';
 import 'package:mineai/core/constants/app_colors.dart';
-import 'package:mineai/core/utils/toast_helper.dart';
+import 'package:mineai/core/utils/snackbar_helper.dart';
 import 'package:mineai/core/widgets/cards/credits_tracker_card.dart';
 import 'package:mineai/core/widgets/gradiant_background.dart';
 import 'package:mineai/features/profile/cubit/user_profile_cubit.dart';
 import 'package:mineai/features/profile/cubit/user_profile_state.dart';
 import 'package:mineai/features/tasks/presentation/task_detail_screen.dart';
 import 'package:mineai/features/tasks/services/task_service.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
 
 class AiVoiceAssistantScreen extends StatefulWidget {
   final String? initialPrompt;
@@ -24,12 +25,14 @@ class _AiVoiceAssistantScreenState extends State<AiVoiceAssistantScreen>
     with SingleTickerProviderStateMixin {
   final TaskService _taskService = TaskService();
   final TextEditingController _promptController = TextEditingController();
+  final stt.SpeechToText _speech = stt.SpeechToText();
 
   late AnimationController _animController;
   late Animation<double> _scaleAnimation;
 
   bool _isListening = false;
   bool _isProcessing = false;
+  bool _speechEnabled = false;
 
   final List<String> _quickSuggestions = [
     'Schedule a meeting with design team tomorrow at 10 AM',
@@ -55,35 +58,84 @@ class _AiVoiceAssistantScreenState extends State<AiVoiceAssistantScreen>
       _promptController.text = widget.initialPrompt!;
     }
 
+    _initSpeech();
+
     // Refresh credits
     context.read<UserProfileCubit>().loadProfile();
   }
 
+  void _initSpeech() async {
+    try {
+      _speechEnabled = await _speech.initialize(
+        onStatus: (status) {
+          if (status == 'done' || status == 'notListening') {
+            if (mounted) setState(() => _isListening = false);
+          }
+        },
+        onError: (errorNotification) {
+          if (mounted) {
+            setState(() => _isListening = false);
+            SnackBarHelper.showError(context, 'Microphone error: ${errorNotification.errorMsg}');
+          }
+        },
+      );
+    } catch (_) {
+      _speechEnabled = false;
+    }
+  }
+
   @override
   void dispose() {
+    _speech.stop();
     _animController.dispose();
     _promptController.dispose();
     super.dispose();
   }
 
-  void _toggleListening() {
-    setState(() => _isListening = !_isListening);
+  Future<void> _toggleListening() async {
     if (_isListening) {
-      showToast('Listening... Speak your task or type below');
+      await _speech.stop();
+      if (mounted) setState(() => _isListening = false);
+      return;
+    }
+
+    if (!_speechEnabled) {
+      _speechEnabled = await _speech.initialize();
+    }
+
+    if (_speechEnabled) {
+      if (mounted) setState(() => _isListening = true);
+      SnackBarHelper.showInfo(null, 'Listening... Speak your task now');
+      await _speech.listen(
+        onResult: (result) {
+          if (mounted) {
+            setState(() {
+              _promptController.text = result.recognizedWords;
+            });
+          }
+        },
+        listenOptions: stt.SpeechListenOptions(
+          listenMode: stt.ListenMode.confirmation,
+          partialResults: true,
+        ),
+      );
+    } else {
+      SnackBarHelper.showWarning(null, 'Microphone or Speech Recognition not available');
     }
   }
 
   Future<void> _processTask() async {
     final prompt = _promptController.text.trim();
     if (prompt.isEmpty) {
-      showToast('Please speak or type a task to process with AI');
+      SnackBarHelper.showWarning(context, 'Please speak or type a task to process with AI');
       return;
     }
 
     // Check credits
     final profileState = context.read<UserProfileCubit>().state;
     if (profileState is UserProfileLoaded && profileState.profile.credits < 10) {
-      showToast(
+      SnackBarHelper.showError(
+        context,
         'Insufficient credits (requires 10). Recharges in ${profileState.profile.creditsRechargeCountdown ?? "tomorrow"}.',
       );
       return;
@@ -111,7 +163,7 @@ class _AiVoiceAssistantScreenState extends State<AiVoiceAssistantScreen>
     } catch (e) {
       if (mounted) {
         setState(() => _isProcessing = false);
-        showToast('Failed to process task: $e');
+        SnackBarHelper.showError(context, 'Failed to process task: $e');
       }
     }
   }

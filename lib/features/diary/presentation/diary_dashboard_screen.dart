@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
+import 'package:mineai/core/utils/snackbar_helper.dart';
+import 'package:mineai/features/profile/cubit/user_profile_cubit.dart';
+import 'package:mineai/features/profile/cubit/user_profile_state.dart';
+import 'package:mineai/features/diary/widgets/diary_mood_hype_dialog.dart';
 import 'package:mineai/features/diary/widgets/emotions_tracker_card.dart';
 import 'package:table_calendar/table_calendar.dart';
 import '../../../core/constants/app_strings.dart';
@@ -52,15 +56,12 @@ class _DiaryDashboardScreenState extends State<DiaryDashboardScreen> {
       body: BlocConsumer<DiaryCubit, DiaryState>(
         listener: (context, state) {
           if (state is DiarySyncSuccess) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(AppStrings.syncSuccess(state.syncedCount)),
-              ),
+            SnackBarHelper.showSuccess(
+              context,
+              AppStrings.syncSuccess(state.syncedCount),
             );
           } else if (state is DiaryError) {
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(SnackBar(content: Text(state.message)));
+            SnackBarHelper.showError(context, state.message);
           }
         },
         builder: (context, state) {
@@ -264,6 +265,44 @@ class _DiaryDashboardScreenState extends State<DiaryDashboardScreen> {
                     ],
                   ),
                 ),
+                if (dayEntry != null) ...[
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 44,
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFFF007F),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                      icon: const Icon(Icons.share_rounded,
+                          color: Colors.white, size: 18),
+                      label: const Text(
+                        'Share Today\'s Mood Vibe 🔥',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                      onPressed: () {
+                        final profileState =
+                            context.read<UserProfileCubit>().state;
+                        final userName = profileState is UserProfileLoaded
+                            ? profileState.profile.fullName
+                            : 'MineAI User';
+                        DiaryMoodHypeDialog.show(
+                          context,
+                          entry: dayEntry,
+                          userName: userName,
+                          dailyQuote: state.dailyQuote,
+                        );
+                      },
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 24),
 
                 EmotionsTrackerCard(userId: widget.userId),

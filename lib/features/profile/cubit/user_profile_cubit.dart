@@ -21,19 +21,23 @@ class UserProfileCubit extends Cubit<UserProfileState> {
 
   Future<bool> updateProfile({
     required String fullName,
+    String? phone,
     String? dob,
     String? gender,
     String? countryCode,
     String? language,
+    String? avatarUrl,
   }) async {
     try {
-      final payload = {
+      final payload = <String, dynamic>{
         'full_name': fullName.trim(),
-        if (dob != null) 'dob': dob,
-        if (gender != null) 'gender': gender,
-        if (countryCode != null) 'country_code': countryCode.toUpperCase(),
-        if (language != null) 'language': language,
       };
+      if (phone != null) payload['phone'] = phone.trim();
+      if (dob != null) payload['dob'] = dob;
+      if (gender != null) payload['gender'] = gender;
+      if (countryCode != null) payload['country_code'] = countryCode.toUpperCase();
+      if (language != null) payload['language'] = language;
+      if (avatarUrl != null) payload['avatar_url'] = avatarUrl;
 
       final updated = await _repository.updateProfile(payload);
       emit(UserProfileLoaded(updated));

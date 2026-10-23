@@ -100,10 +100,14 @@ class TaskService {
       '&location=${Uri.encodeComponent(task.location ?? '')}',
     );
 
-    if (await canLaunchUrl(uri)) {
-      return await launchUrl(uri, mode: LaunchMode.externalApplication);
-    }
-    return false;
+    try {
+      if (await canLaunchUrl(uri)) {
+        final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+        if (launched) return true;
+      }
+    } catch (_) {}
+
+    return await launchUrl(uri, mode: LaunchMode.platformDefault);
   }
 
   static String _twoDigits(int n) => n >= 10 ? '$n' : '0$n';

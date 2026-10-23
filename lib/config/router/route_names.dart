@@ -23,4 +23,6 @@ class RouteNames {
   static const String emailHelper = '/email-helper';
   static const String voiceTasks = '/voice-tasks';
   static const String tasksList = '/tasks-list';
+  static const String news = '/news';
+  static const String vault = '/vault';
 }

@@ -8,7 +8,7 @@ import 'package:mineai/core/utils/secure_storage.dart';
 import 'package:mineai/core/utils/user_helper.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../instance/locator.dart';
-import '../utils/toast_helper.dart';
+import '../utils/snackbar_helper.dart';
 import 'alice.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 
@@ -203,12 +203,13 @@ class CustomApiCallService {
         rethrow;
       } else if (e.response?.statusCode == 504 ||
           e.response?.statusCode == 500) {
-        showErrorToast('Something went wrong, please try again.');
+        SnackBarHelper.showError(null, 'Something went wrong, please try again.');
         rethrow;
       } else if (e.response?.statusCode == 403) {
         // Let the login screen show the localized unverified-email message itself.
         if (e.response?.data['code'] != 'EMAIL_NOT_CONFIRMED') {
-          await showErrorToast(
+          SnackBarHelper.showError(
+            null,
             e.response?.data['error'] ??
                 e.response?.data['message'] ??
                 'Forbidden',
@@ -221,7 +222,7 @@ class CustomApiCallService {
         if (errorMessage != null &&
             errorMessage != "Invalid mail format" &&
             errorMessage != "Invalid mobile number") {
-          showErrorToast(errorMessage);
+          SnackBarHelper.showError(null, errorMessage);
         }
         rethrow;
       }

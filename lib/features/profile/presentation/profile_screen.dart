@@ -176,6 +176,31 @@ class _ProfileView extends BaseScreen {
                     fontWeight: FontWeight.w500,
                   ),
                 ),
+                if (profile?.phone != null && profile!.phone!.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.phone_outlined,
+                        size: 13,
+                        color: isLight
+                            ? AppColors.lightSecondaryOnSurface
+                            : AppColors.secondaryText,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        profile.phone!,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: isLight
+                              ? AppColors.lightSecondaryOnSurface
+                              : AppColors.secondaryText,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
 
                 const SizedBox(height: 16),
 

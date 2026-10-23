@@ -1,5 +1,7 @@
 import 'package:mineai/config/firebase/notification_service.dart';
 import 'package:mineai/core/database/app_database.dart';
+import 'package:mineai/core/utils/secure_storage.dart';
+import 'package:mineai/instance/locator.dart';
 import 'package:mineai/features/subscription/models/subscription_plan.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/budget_model.dart';
@@ -108,13 +110,19 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
               )
               .name;
 
-          for (final threshold in crossedThresholds) {
-            await NotificationService.instance.showBudgetWarning(
-              categoryName: categoryName,
-              threshold: threshold,
-              spent: totalSpent,
-              limit: budget.allocatedAmount,
-            );
+          // Only dispatch device push notification if user enabled notifications for this device
+          final notifPref = await getIt<CustomSecureStorage>().readSecureData('push_notifications_enabled');
+          final bool notificationsAllowed = notifPref != 'false';
+
+          if (notificationsAllowed) {
+            for (final threshold in crossedThresholds) {
+              await NotificationService.instance.showBudgetWarning(
+                categoryName: categoryName,
+                threshold: threshold,
+                spent: totalSpent,
+                limit: budget.allocatedAmount,
+              );
+            }
           }
         }
       }

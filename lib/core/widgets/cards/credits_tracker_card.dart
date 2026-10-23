@@ -5,6 +5,9 @@ import 'package:mineai/config/router/route_names.dart';
 import 'package:mineai/core/constants/app_colors.dart';
 import 'package:mineai/features/profile/cubit/user_profile_cubit.dart';
 import 'package:mineai/features/profile/cubit/user_profile_state.dart';
+import 'package:mineai/features/subscription/cubit/subscription_cubit.dart';
+import 'package:mineai/features/subscription/cubit/subscription_state.dart';
+import 'package:mineai/features/subscription/models/subscription_plan.dart';
 
 class CreditsTrackerCard extends StatelessWidget {
   final bool compact;
@@ -43,6 +46,9 @@ class CreditsTrackerCard extends StatelessWidget {
           final diff = nextReset.difference(now);
           countdown = '${diff.inHours}h ${diff.inMinutes % 60}m';
         }
+
+        final subState = context.watch<SubscriptionCubit>().state;
+        final bool isPremium = (subState is SubscriptionLoaded && subState.plan.tier == PlanTier.premium) || limit >= 5000;
 
         if (compact) {
           return Container(
@@ -128,17 +134,42 @@ class CreditsTrackerCard extends StatelessWidget {
                       ),
                     ],
                   ),
-                  InkWell(
-                    onTap: () => context.push(RouteNames.subscription),
-                    child: Text(
-                      'Upgrade Plan →',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: scheme.primary,
+                  if (isPremium)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: scheme.primary.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: scheme.primary.withValues(alpha: 0.25)),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.workspace_premium_rounded, size: 13, color: scheme.primary),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Premium Plan',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: scheme.primary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  else
+                    InkWell(
+                      onTap: () => context.push(RouteNames.subscription),
+                      child: Text(
+                        'Upgrade Plan →',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: scheme.primary,
+                        ),
                       ),
                     ),
-                  ),
                 ],
               ),
               const SizedBox(height: 12),

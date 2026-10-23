@@ -29,7 +29,7 @@ class DioProvider {
     darkTheme: true,
   );
 
-  initAlice(Alice aliceInstance) async {
+  Future<void> initAlice(Alice aliceInstance) async {
     alice = aliceInstance;
     dio = Dio();
     final connectivity = Connectivity();

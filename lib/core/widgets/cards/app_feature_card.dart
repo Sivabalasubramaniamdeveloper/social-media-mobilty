@@ -21,15 +21,34 @@ class AppFeatureCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final isLight = theme.brightness == Brightness.light;
+
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(AppSizes.radiusLg),
       child: Container(
         padding: const EdgeInsets.all(AppSizes.lg),
-        decoration: AppDecorations.glass(
-          radius: AppSizes.radiusLg,
-          fillOpacity: 0.65,
-        ),
+        decoration: isLight
+            ? BoxDecoration(
+                color: scheme.surfaceContainerHighest,
+                borderRadius: BorderRadius.circular(AppSizes.radiusLg),
+                border: Border.all(
+                  color: scheme.outlineVariant.withValues(alpha: 0.45),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.03),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              )
+            : AppDecorations.glass(
+                radius: AppSizes.radiusLg,
+                fillOpacity: 0.65,
+              ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.spaceBetween,

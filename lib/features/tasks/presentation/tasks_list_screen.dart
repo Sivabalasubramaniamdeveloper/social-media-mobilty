@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mineai/config/router/route_names.dart';
 import 'package:mineai/core/constants/app_colors.dart';
-import 'package:mineai/core/utils/toast_helper.dart';
-import 'package:mineai/core/utils/user_helper.dart';
+import 'package:mineai/core/utils/snackbar_helper.dart';
 import 'package:mineai/core/widgets/cards/credits_tracker_card.dart';
 import 'package:mineai/core/widgets/gradiant_background.dart';
 import 'package:mineai/core/widgets/headers/app_screen_header.dart';
+import 'package:mineai/features/profile/cubit/user_profile_cubit.dart';
+import 'package:mineai/features/profile/cubit/user_profile_state.dart';
+import 'package:mineai/features/tasks/cubit/task_cubit.dart';
+import 'package:mineai/features/tasks/cubit/task_state.dart';
 import 'package:mineai/features/tasks/models/task_model.dart';
-import 'package:mineai/features/tasks/services/task_database_service.dart';
+import 'package:mineai/features/tasks/presentation/widgets/task_hype_poster_dialog.dart';
 import 'package:mineai/features/tasks/services/task_service.dart';
 
 class TasksListScreen extends StatefulWidget {
@@ -20,8 +24,14 @@ class TasksListScreen extends StatefulWidget {
 
 class _TasksListScreenState extends State<TasksListScreen> {
   final TaskService _taskService = TaskService();
-  List<TaskModel> _tasks = [];
-  bool _isLoading = true;
+  String _selectedPeriod = 'week';
+
+  final List<Map<String, String>> _periods = [
+    {'id': 'day', 'label': 'Today'},
+    {'id': 'week', 'label': 'This Week'},
+    {'id': 'month', 'label': 'This Month'},
+    {'id': 'year', 'label': 'This Year'},
+  ];
 
   @override
   void initState() {
@@ -29,32 +39,40 @@ class _TasksListScreenState extends State<TasksListScreen> {
     _loadTasks();
   }
 
-  Future<void> _loadTasks() async {
-    setState(() => _isLoading = true);
-    final userId = await UserHelper.getCurrentUserId();
-    final tasks = await TaskDatabaseService.instance.getTasks(userId);
-    if (mounted) {
-      setState(() {
-        _tasks = tasks;
-        _isLoading = false;
-      });
-    }
+  void _loadTasks() {
+    context.read<TaskCubit>().loadTasks(period: _selectedPeriod);
   }
 
   Future<void> _toggleComplete(TaskModel task) async {
     if (task.id == null) return;
-    await TaskDatabaseService.instance.toggleTaskCompleted(
-      task.id!,
-      !task.isCompleted,
-    );
-    await _loadTasks();
+    await context
+        .read<TaskCubit>()
+        .toggleCompleted(task.id!, !task.isCompleted, _selectedPeriod);
   }
 
   Future<void> _deleteTask(TaskModel task) async {
     if (task.id == null) return;
-    await TaskDatabaseService.instance.deleteTask(task.id!);
-    await _loadTasks();
-    showToast('Task removed');
+    await context.read<TaskCubit>().deleteTask(task.id!, _selectedPeriod);
+    if (mounted) SnackBarHelper.showSuccess(context, 'Task removed');
+  }
+
+  void _showHypePoster({
+    required int total,
+    required int completed,
+    required double percentage,
+  }) {
+    final profileState = context.read<UserProfileCubit>().state;
+    final userName =
+        profileState is UserProfileLoaded ? profileState.profile.fullName : 'MineAI User';
+
+    TaskHypePosterDialog.show(
+      context,
+      periodName: _periods.firstWhere((p) => p['id'] == _selectedPeriod)['label']!,
+      totalTasks: total,
+      completedTasks: completed,
+      percentage: percentage,
+      userName: userName,
+    );
   }
 
   @override
@@ -71,33 +89,110 @@ class _TasksListScreenState extends State<TasksListScreen> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: AppScreenHeader(
-                  title: 'Saved Tasks',
+                  title: 'Task Tracker & Assistant',
                   centerTitle: true,
                   onBack: () => context.pop(),
                 ),
               ),
-              Expanded(
-                child: _isLoading
-                    ? Center(
-                        child: CircularProgressIndicator(color: scheme.primary),
-                      )
-                    : RefreshIndicator(
-                        onRefresh: _loadTasks,
-                        child: ListView(
+
+              // Period Filter Chips (Day / Week / Month / Year)
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: _periods.map((p) {
+                      final isSelected = _selectedPeriod == p['id'];
+                      return GestureDetector(
+                        onTap: () {
+                          setState(() => _selectedPeriod = p['id']!);
+                          _loadTasks();
+                        },
+                        child: Container(
+                          margin: const EdgeInsets.only(right: 8),
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 12,
+                              horizontal: 16, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? scheme.primary
+                                : (isLight
+                                    ? scheme.surfaceContainerHighest
+                                    : const Color(0xFF1E1B38)),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: isSelected ? scheme.primary : Colors.transparent,
+                            ),
                           ),
-                          children: [
-                            const CreditsTrackerCard(compact: true),
-                            const SizedBox(height: 16),
-                            if (_tasks.isEmpty)
-                              _buildEmptyState(scheme, isLight)
-                            else
-                              ..._tasks.map((task) => _buildTaskItem(task, scheme, isLight)),
-                          ],
+                          child: Text(
+                            p['label']!,
+                            style: TextStyle(
+                              color: isSelected
+                                  ? Colors.white
+                                  : scheme.onSurface.withValues(alpha: 0.8),
+                              fontWeight:
+                                  isSelected ? FontWeight.bold : FontWeight.w500,
+                              fontSize: 13,
+                            ),
+                          ),
                         ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ),
+
+              Expanded(
+                child: BlocBuilder<TaskCubit, TaskState>(
+                  builder: (context, state) {
+                    if (state is TaskLoading) {
+                      return Center(
+                        child: CircularProgressIndicator(color: scheme.primary),
+                      );
+                    }
+
+                    List<TaskModel> tasks = [];
+                    int total = 0;
+                    int completed = 0;
+                    double percentage = 0.0;
+
+                    if (state is TaskLoaded) {
+                      tasks = state.filteredTasks;
+                      total = state.totalCount;
+                      completed = state.completedCount;
+                      percentage = state.completionPercentage;
+                    }
+
+                    return RefreshIndicator(
+                      onRefresh: () async => _loadTasks(),
+                      child: ListView(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 12,
+                        ),
+                        children: [
+                          const CreditsTrackerCard(compact: true),
+                          const SizedBox(height: 14),
+
+                          // Completion Status Progress Card
+                          _buildCompletionStatusCard(
+                            scheme,
+                            isLight,
+                            total: total,
+                            completed: completed,
+                            percentage: percentage,
+                          ),
+                          const SizedBox(height: 16),
+
+                          if (tasks.isEmpty)
+                            _buildEmptyState(scheme, isLight)
+                          else
+                            ...tasks.map(
+                                (task) => _buildTaskItem(task, scheme, isLight)),
+                        ],
                       ),
+                    );
+                  },
+                ),
               ),
             ],
           ),
@@ -108,49 +203,174 @@ class _TasksListScreenState extends State<TasksListScreen> {
         onPressed: () => context.push(RouteNames.voiceTasks),
         icon: const Icon(Icons.mic_rounded, color: Colors.white),
         label: const Text(
-          'New Voice Task',
+          'Speak New Task',
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
       ),
     );
   }
 
-  Widget _buildEmptyState(ColorScheme scheme, bool isLight) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.only(top: 60),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.event_note_rounded,
-              size: 64,
-              color: isLight
-                  ? Colors.black26
-                  : Colors.white.withValues(alpha: 0.3),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'No tasks saved yet',
-              style: TextStyle(
-                color: scheme.onSurface,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Use the AI Voice Assistant to speak or type tasks, send email confirmations, and sync with your calendar.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: isLight
-                    ? AppColors.lightSecondaryOnSurface
-                    : AppColors.secondaryText,
-                fontSize: 13,
-              ),
-            ),
-          ],
+  Widget _buildCompletionStatusCard(
+    ColorScheme scheme,
+    bool isLight, {
+    required int total,
+    required int completed,
+    required double percentage,
+  }) {
+    final periodLabel =
+        _periods.firstWhere((p) => p['id'] == _selectedPeriod)['label']!;
+
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: isLight
+            ? scheme.surfaceContainerHighest
+            : const Color(0xFF1E1B38),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isLight ? Colors.black12 : Colors.white10,
         ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '$periodLabel Completion',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: isLight
+                          ? AppColors.lightSecondaryOnSurface
+                          : AppColors.secondaryText,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '$completed of $total Tasks Done',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: scheme.onSurface,
+                    ),
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: percentage >= 80
+                      ? Colors.green.withValues(alpha: 0.15)
+                      : scheme.primary.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: percentage >= 80 ? Colors.green : scheme.primary,
+                  ),
+                ),
+                child: Text(
+                  '${percentage.toStringAsFixed(0)}%',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: percentage >= 80 ? Colors.green : scheme.primary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(6),
+            child: LinearProgressIndicator(
+              value: total == 0 ? 0 : (completed / total),
+              minHeight: 8,
+              backgroundColor: isLight ? Colors.black12 : Colors.white10,
+              valueColor: AlwaysStoppedAnimation<Color>(
+                percentage >= 80 ? Colors.green : scheme.primary,
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          // Hyped Movie / District Style Share Button
+          SizedBox(
+            width: double.infinity,
+            height: 44,
+            child: ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFFF0055),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                elevation: 4,
+              ),
+              icon: const Icon(Icons.local_fire_department_rounded,
+                  color: Colors.white, size: 20),
+              label: const Text(
+                'Share Status to Social Media 🔥',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+              ),
+              onPressed: total == 0
+                  ? null
+                  : () => _showHypePoster(
+                        total: total,
+                        completed: completed,
+                        percentage: percentage,
+                      ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState(ColorScheme scheme, bool isLight) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
+      decoration: BoxDecoration(
+        color: isLight
+            ? scheme.surfaceContainerHighest
+            : const Color(0xFF1E1B38).withValues(alpha: 0.6),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isLight ? Colors.black12 : Colors.white10,
+        ),
+      ),
+      child: Column(
+        children: [
+          Icon(
+            Icons.checklist_rounded,
+            size: 48,
+            color: isLight ? Colors.black26 : Colors.white24,
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'No tasks found for this period',
+            style: TextStyle(
+              color: scheme.onSurface,
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Tap the microphone below to dictate meetings, reminders, or tasks using AI.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: isLight
+                  ? AppColors.lightSecondaryOnSurface
+                  : AppColors.secondaryText,
+              fontSize: 13,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -160,12 +380,15 @@ class _TasksListScreenState extends State<TasksListScreen> {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isLight ? scheme.surfaceContainerHighest : AppColors.surface,
+        color: isLight
+            ? scheme.surfaceContainerHighest
+            : const Color(0xFF1E1B38),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: task.isCompleted
-              ? (isLight ? Colors.black12 : Colors.white10)
-              : scheme.primary.withValues(alpha: 0.3),
+              ? Colors.green.withValues(alpha: 0.4)
+              : (isLight ? Colors.black12 : Colors.white10),
+          width: task.isCompleted ? 1.5 : 1.0,
         ),
       ),
       child: Column(
@@ -174,70 +397,104 @@ class _TasksListScreenState extends State<TasksListScreen> {
           Row(
             children: [
               IconButton(
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
                 icon: Icon(
                   task.isCompleted
                       ? Icons.check_circle_rounded
-                      : Icons.radio_button_unchecked,
-                  color: task.isCompleted ? Colors.greenAccent : scheme.primary,
-                  size: 22,
+                      : Icons.radio_button_unchecked_rounded,
+                  color: task.isCompleted ? Colors.green : scheme.primary,
+                  size: 24,
                 ),
                 onPressed: () => _toggleComplete(task),
               ),
-              const SizedBox(width: 12),
               Expanded(
-                child: Text(
-                  task.title,
-                  style: TextStyle(
-                    color: task.isCompleted
-                        ? (isLight ? Colors.black38 : Colors.white38)
-                        : scheme.onSurface,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    decoration:
-                        task.isCompleted ? TextDecoration.lineThrough : null,
-                  ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      task.title,
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: scheme.onSurface,
+                        decoration: task.isCompleted
+                            ? TextDecoration.lineThrough
+                            : null,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${task.dateDisplay} at ${task.timeDisplay}',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: scheme.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: scheme.primary.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(10),
+                  color: isLight
+                      ? scheme.primary.withValues(alpha: 0.1)
+                      : Colors.white10,
+                  borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
                   task.category,
                   style: TextStyle(
-                    color: scheme.primary,
                     fontSize: 11,
-                    fontWeight: FontWeight.bold,
+                    color: scheme.onSurface.withValues(alpha: 0.7),
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              Icon(
-                Icons.calendar_today_rounded,
-                size: 14,
-                color: isLight
-                    ? AppColors.lightSecondaryOnSurface
-                    : AppColors.secondaryText,
-              ),
-              const SizedBox(width: 6),
-              Text(
-                '${task.dateDisplay} at ${task.timeDisplay}',
+          if (task.details != null && task.details!.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Padding(
+              padding: const EdgeInsets.only(left: 48),
+              child: Text(
+                task.details!,
                 style: TextStyle(
+                  fontSize: 13,
                   color: isLight
                       ? AppColors.lightSecondaryOnSurface
                       : AppColors.secondaryText,
-                  fontSize: 13,
                 ),
               ),
-              const Spacer(),
+            ),
+          ],
+          const SizedBox(height: 8),
+          const Divider(height: 1),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              if (task.location != null && task.location!.isNotEmpty) ...[
+                Icon(
+                  Icons.location_on_outlined,
+                  size: 14,
+                  color: isLight
+                      ? AppColors.lightSecondaryOnSurface
+                      : AppColors.secondaryText,
+                ),
+                const SizedBox(width: 4),
+                Expanded(
+                  child: Text(
+                    task.location!,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: isLight
+                          ? AppColors.lightSecondaryOnSurface
+                          : AppColors.secondaryText,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ] else
+                const Spacer(),
               IconButton(
                 icon: Icon(
                   Icons.calendar_month_rounded,
@@ -255,8 +512,19 @@ class _TasksListScreenState extends State<TasksListScreen> {
                 ),
                 tooltip: 'Send Email Reminder',
                 onPressed: () async {
-                  await _taskService.notifyTaskEmail(task);
-                  showToast('Task email reminder sent!');
+                  try {
+                    await _taskService.notifyTaskEmail(task);
+                    if (mounted) {
+                      SnackBarHelper.showSuccess(
+                        context,
+                        'Task email reminder sent! (Check Inbox & Spam folder)',
+                      );
+                    }
+                  } catch (e) {
+                    if (mounted) {
+                      SnackBarHelper.showError(context, 'Failed to send: $e');
+                    }
+                  }
                 },
               ),
               IconButton(

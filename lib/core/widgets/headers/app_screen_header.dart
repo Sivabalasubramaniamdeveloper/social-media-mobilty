@@ -67,7 +67,7 @@ class AppScreenHeader extends StatelessWidget {
         back,
         const SizedBox(width: AppSizes.sm),
         Expanded(child: titleText),
-        if (trailing != null) trailing!,
+        ?trailing,
       ],
     );
   }

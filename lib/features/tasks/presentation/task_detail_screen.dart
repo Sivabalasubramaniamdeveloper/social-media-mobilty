@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mineai/config/router/route_names.dart';
 import 'package:mineai/core/constants/app_colors.dart';
-import 'package:mineai/core/utils/toast_helper.dart';
+import 'package:mineai/core/utils/snackbar_helper.dart';
 import 'package:mineai/core/widgets/gradiant_background.dart';
 import 'package:mineai/core/widgets/headers/app_screen_header.dart';
+import 'package:mineai/features/profile/cubit/user_profile_cubit.dart';
+import 'package:mineai/features/profile/cubit/user_profile_state.dart';
 import 'package:mineai/features/tasks/models/task_model.dart';
 import 'package:mineai/features/tasks/services/task_database_service.dart';
 import 'package:mineai/features/tasks/services/task_service.dart';
@@ -48,30 +51,36 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
 
       if (mounted) {
         setState(() => _isSaving = false);
-        showToast('Task saved, emailed & opened in Calendar!');
+        SnackBarHelper.showSuccess(context, 'Task saved, emailed & opened in Calendar! (Check Inbox & Spam folder)');
         // Navigate to the tasks list screen to view all saved tasks
         context.pushReplacement(RouteNames.tasksList);
       }
     } catch (e) {
       if (mounted) {
         setState(() => _isSaving = false);
-        showToast('Failed to save task: $e');
+        SnackBarHelper.showError(context, 'Failed to save task: $e');
       }
     }
   }
 
   Future<void> _sendEmailOnly() async {
+    final profileState = context.read<UserProfileCubit>().state;
+    final userEmail = profileState is UserProfileLoaded ? profileState.profile.email : 'your registered email';
+
     setState(() => _isEmailSending = true);
     try {
       await _taskService.notifyTaskEmail(_task);
       if (mounted) {
         setState(() => _isEmailSending = false);
-        showToast('Task details sent to your registered email!');
+        SnackBarHelper.showSuccess(
+          context,
+          'Task details sent to $userEmail! (Please check your Inbox and Spam/Junk folder)',
+        );
       }
     } catch (e) {
       if (mounted) {
         setState(() => _isEmailSending = false);
-        showToast('Could not send email: $e');
+        SnackBarHelper.showError(context, 'Could not send email: $e');
       }
     }
   }

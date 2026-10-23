@@ -6,7 +6,9 @@ import 'package:mineai/core/constants/app_colors.dart';
 import 'package:mineai/core/constants/app_sizes.dart';
 import 'package:mineai/core/constants/app_strings.dart';
 import 'package:mineai/core/database/app_database.dart';
+import 'package:mineai/core/network/custom_api_call.dart';
 import 'package:mineai/core/utils/secure_storage.dart';
+import 'package:mineai/core/utils/snackbar_helper.dart';
 import 'package:mineai/core/utils/user_helper.dart';
 import 'package:mineai/core/widgets/cards/app_list_tile_card.dart';
 import 'package:mineai/core/widgets/headers/app_screen_header.dart';
@@ -24,9 +26,12 @@ class ExpenseSettingsScreen extends StatefulWidget {
 
 class _ExpenseSettingsScreenState extends State<ExpenseSettingsScreen> {
   static const String _autoRefreshKey = 'expense_auto_refresh_budget';
+  static const String _monthlyEmailKey = 'expense_monthly_email_report';
 
   bool _budgetAlerts = true;
   bool _autoRefreshMonthlyBudget = true;
+  bool _monthlyEmailReport = true;
+  bool _isSendingEmailReport = false;
   int _totalTransactionsCount = 0;
   int _activeBudgetsCount = 0;
   List<TransactionModel> _allTransactions = [];
@@ -46,6 +51,8 @@ class _ExpenseSettingsScreenState extends State<ExpenseSettingsScreen> {
     final storage = getIt<CustomSecureStorage>();
     final savedAutoRefresh = await storage.readSecureData(_autoRefreshKey);
     final autoRefresh = savedAutoRefresh == null || savedAutoRefresh == 'true';
+    final savedEmailPref = await storage.readSecureData(_monthlyEmailKey);
+    final emailPref = savedEmailPref == null || savedEmailPref == 'true';
 
     final txList = await ExpenseDatabaseService.instance.getTransactions(
       userId,
@@ -58,6 +65,7 @@ class _ExpenseSettingsScreenState extends State<ExpenseSettingsScreen> {
     if (mounted) {
       setState(() {
         _autoRefreshMonthlyBudget = autoRefresh;
+        _monthlyEmailReport = emailPref;
         _totalTransactionsCount = txList.length;
         _activeBudgetsCount = budgets.length;
         _allTransactions = txList;
@@ -66,21 +74,87 @@ class _ExpenseSettingsScreenState extends State<ExpenseSettingsScreen> {
     }
   }
 
+  Future<void> _onMonthlyEmailChanged(bool value) async {
+    setState(() => _monthlyEmailReport = value);
+    final storage = getIt<CustomSecureStorage>();
+    await storage.writeSecureData(_monthlyEmailKey, value ? 'true' : 'false');
+    if (mounted) {
+      SnackBarHelper.showSuccess(
+        context,
+        value
+            ? 'Monthly expense report email enabled (sent at month-end)'
+            : 'Monthly expense report email turned off',
+      );
+    }
+  }
+
+  Future<void> _sendMonthlyReportToEmailNow() async {
+    setState(() => _isSendingEmailReport = true);
+    try {
+      final currentMonth = DateFormat('MMMM yyyy').format(DateTime.now());
+      double totalIncome = 0;
+      double totalExpense = 0;
+      final categoryMap = <String, double>{};
+
+      for (var tx in _allTransactions) {
+        if (tx.type == 'income') {
+          totalIncome += tx.amount;
+        } else {
+          totalExpense += tx.amount;
+          categoryMap[tx.categoryId] =
+              (categoryMap[tx.categoryId] ?? 0) + tx.amount;
+        }
+      }
+
+      final categorySummary = categoryMap.entries
+          .map((e) => {'category': e.key, 'spent': e.value})
+          .toList();
+
+      final apiService = getIt<CustomApiCallService>();
+      final token =
+          await getIt<CustomSecureStorage>().readSecureData('loginToken') ?? '';
+
+      await apiService.makeApiRequest(
+        method: 'POST',
+        token: token,
+        url: '${UserHelper.baseUrl}/user/me/expense-report-email',
+        data: {
+          'monthYear': currentMonth,
+          'totalIncome': totalIncome,
+          'totalExpense': totalExpense,
+          'balance': totalIncome - totalExpense,
+          'categorySummary': categorySummary,
+        },
+      );
+
+      if (mounted) {
+        setState(() => _isSendingEmailReport = false);
+        SnackBarHelper.showSuccess(
+          context,
+          'Monthly expense report sent to registered email! (Note: Please check Inbox & Spam folder)',
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isSendingEmailReport = false);
+        SnackBarHelper.showError(
+          context,
+          'Could not send expense report email: $e',
+        );
+      }
+    }
+  }
+
   Future<void> _onAutoRefreshChanged(bool value) async {
     setState(() => _autoRefreshMonthlyBudget = value);
     final storage = getIt<CustomSecureStorage>();
     await storage.writeSecureData(_autoRefreshKey, value ? 'true' : 'false');
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            value
-                ? AppStrings.autoRefreshBudgetEnabled
-                : AppStrings.manualBudgetModeEnabled,
-          ),
-          backgroundColor: Theme.of(context).colorScheme.primary,
-          duration: const Duration(seconds: 2),
-        ),
+      SnackBarHelper.showSuccess(
+        context,
+        value
+            ? AppStrings.autoRefreshBudgetEnabled
+            : AppStrings.manualBudgetModeEnabled,
       );
     }
   }
@@ -94,20 +168,13 @@ class _ExpenseSettingsScreenState extends State<ExpenseSettingsScreen> {
 
     if (!mounted) return;
     if (count > 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(AppStrings.copiedCategoryBudgets(count)),
-          backgroundColor: AppColors.statusSuccess,
-        ),
+      SnackBarHelper.showSuccess(
+        context,
+        AppStrings.copiedCategoryBudgets(count),
       );
       _loadSettingsAndStats();
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(AppStrings.noPreviousBudgets),
-          backgroundColor: Colors.orangeAccent,
-        ),
-      );
+      SnackBarHelper.showWarning(context, AppStrings.noPreviousBudgets);
     }
   }
 
@@ -177,12 +244,7 @@ class _ExpenseSettingsScreenState extends State<ExpenseSettingsScreen> {
     if (confirmed == true) {
       await onConfirmed();
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppStrings.dataClearedSuccess),
-            backgroundColor: AppColors.statusSuccess,
-          ),
-        );
+        SnackBarHelper.showSuccess(context, AppStrings.dataClearedSuccess);
         _loadSettingsAndStats();
       }
     }
@@ -301,6 +363,30 @@ class _ExpenseSettingsScreenState extends State<ExpenseSettingsScreen> {
                           value: _budgetAlerts,
                           onChanged: (val) =>
                               setState(() => _budgetAlerts = val),
+                        ),
+                        AppListTileCard.toggle(
+                          icon: Icons.mark_email_read_outlined,
+                          title: 'Monthly Expense Report Email',
+                          subtitle:
+                              'Automatically email monthly financial statements to registered email at every month end.',
+                          value: _monthlyEmailReport,
+                          onChanged: _onMonthlyEmailChanged,
+                        ),
+                        AppListTileCard(
+                          icon: Icons.send_rounded,
+                          title: 'Send Month Report to Email Now',
+                          subtitle:
+                              'Generate this month\'s report and send it to your email inbox.',
+                          trailing: _isSendingEmailReport
+                              ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                )
+                              : null,
+                          onTap: _isSendingEmailReport
+                              ? null
+                              : _sendMonthlyReportToEmailNow,
                         ),
 
                         const SizedBox(height: AppSizes.xxl),

@@ -1,12 +1,17 @@
+import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:mineai/core/base/abstract/base_form.dart';
 import 'package:mineai/core/constants/app_colors.dart';
 import 'package:mineai/core/constants/app_strings.dart';
 import 'package:mineai/core/utils/snackbar_helper.dart';
+import 'package:mineai/core/utils/user_helper.dart';
 import 'package:mineai/core/widgets/forms/app_text_field.dart';
 import 'package:mineai/features/profile/models/user_profile_model.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../cubit/user_profile_cubit.dart';
 import '../cubit/user_profile_state.dart';
 
@@ -21,11 +26,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameController;
   late TextEditingController _emailController;
+  late TextEditingController _phoneController;
   late TextEditingController _dobController;
   late TextEditingController _countryController;
   String _selectedGender = 'prefer_not_to_say';
   String _selectedLanguage = 'en';
+  File? _avatarFile;
+  String? _avatarUrl;
   bool _isSaving = false;
+  bool _isPhoneLocked = false;
 
   @override
   void initState() {
@@ -38,48 +47,109 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
     _nameController = TextEditingController(text: profile?.fullName ?? '');
     _emailController = TextEditingController(text: profile?.email ?? '');
+    _phoneController = TextEditingController(text: profile?.phone ?? '');
     _dobController = TextEditingController(text: profile?.dob ?? '2000-01-01');
     _countryController = TextEditingController(
       text: profile?.countryCode ?? 'IN',
     );
     _selectedGender = profile?.gender ?? 'prefer_not_to_say';
     _selectedLanguage = profile?.language ?? 'en';
+    _avatarUrl = profile?.avatarUrl;
+    _isPhoneLocked = profile?.phone != null && profile!.phone!.trim().isNotEmpty;
   }
 
   @override
   void dispose() {
     _nameController.dispose();
     _emailController.dispose();
+    _phoneController.dispose();
     _dobController.dispose();
     _countryController.dispose();
     super.dispose();
   }
 
-  Future<void> _handleSave(BuildContext context) async {
+  Future<void> _pickAvatar() async {
+    try {
+      final picker = ImagePicker();
+      final picked = await picker.pickImage(source: ImageSource.gallery, imageQuality: 85);
+      if (picked != null) {
+        setState(() {
+          _avatarFile = File(picked.path);
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        SnackBarHelper.showError(context, 'Could not select photo: $e');
+      }
+    }
+  }
+
+  Future<void> _handleSave([BuildContext? _]) async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
+    final phoneText = _phoneController.text.trim();
+    if (!_isPhoneLocked && phoneText.isNotEmpty) {
+      final indianPhoneRegex = RegExp(r'^[6-9]\d{9}$');
+      if (!indianPhoneRegex.hasMatch(phoneText)) {
+        SnackBarHelper.showError(
+          context,
+          'Phone number must be a valid 10-digit Indian number (starting with 6-9)',
+        );
+        return;
+      }
+    }
+
+    final cubit = context.read<UserProfileCubit>();
     setState(() => _isSaving = true);
 
-    final success = await context.read<UserProfileCubit>().updateProfile(
+    if (_avatarFile != null) {
+      try {
+        final bytes = await _avatarFile!.readAsBytes();
+        final ext = _avatarFile!.path.split('.').last.toLowerCase();
+        final mime = ext == 'png' ? 'image/png' : 'image/jpeg';
+        final userId = await UserHelper.getCurrentUserId();
+        final fileName = 'avatar_${userId}_${DateTime.now().millisecondsSinceEpoch}.$ext';
+        bool uploaded = false;
+        try {
+          await Supabase.instance.client.storage.from('avatars').uploadBinary(
+            fileName,
+            bytes,
+            fileOptions: FileOptions(contentType: mime, upsert: true),
+          );
+          _avatarUrl = Supabase.instance.client.storage.from('avatars').getPublicUrl(fileName);
+          uploaded = true;
+        } catch (_) {}
+
+        if (!uploaded) {
+          // Pass base64 to backend which saves to bucket using service role and returns URL
+          _avatarUrl = 'data:$mime;base64,${base64Encode(bytes)}';
+        }
+      } catch (e) {
+        debugPrint('[EditProfile] Failed to process avatar: $e');
+      }
+    }
+
+    final success = await cubit.updateProfile(
       fullName: _nameController.text,
+      phone: _phoneController.text.trim(),
       dob: _dobController.text.trim(),
       gender: _selectedGender,
       countryCode: _countryController.text.trim(),
       language: _selectedLanguage,
+      avatarUrl: _avatarUrl,
     );
 
+    if (!mounted) return;
     setState(() => _isSaving = false);
 
-    if (mounted) {
-      if (success) {
-        SnackBarHelper.showSuccess(
-          context,
-          AppStrings.profileUpdatedSuccessfully,
-        );
-        context.pop();
-      } else {
-        SnackBarHelper.showError(context, AppStrings.failedToUpdateProfile);
-      }
+    if (success) {
+      SnackBarHelper.showSuccess(
+        context,
+        AppStrings.profileUpdatedSuccessfully,
+      );
+      if (mounted) context.pop();
+    } else {
+      SnackBarHelper.showError(context, AppStrings.failedToUpdateProfile);
     }
   }
 
@@ -89,11 +159,16 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       formKey: _formKey,
       nameController: _nameController,
       emailController: _emailController,
+      phoneController: _phoneController,
       dobController: _dobController,
       countryController: _countryController,
       selectedGender: _selectedGender,
       selectedLanguage: _selectedLanguage,
+      avatarFile: _avatarFile,
+      avatarUrl: _avatarUrl,
+      onPickAvatar: _pickAvatar,
       isSaving: _isSaving,
+      isPhoneLocked: _isPhoneLocked,
       onGenderChanged: (val) => setState(() => _selectedGender = val),
       onLanguageChanged: (val) => setState(() => _selectedLanguage = val),
       onSubmitCallback: _handleSave,
@@ -105,11 +180,16 @@ class _EditProfileFormView extends BaseFormScreen {
   final GlobalKey<FormState> _key;
   final TextEditingController nameController;
   final TextEditingController emailController;
+  final TextEditingController phoneController;
   final TextEditingController dobController;
   final TextEditingController countryController;
   final String selectedGender;
   final String selectedLanguage;
+  final File? avatarFile;
+  final String? avatarUrl;
+  final VoidCallback onPickAvatar;
   final bool isSaving;
+  final bool isPhoneLocked;
   final ValueChanged<String> onGenderChanged;
   final ValueChanged<String> onLanguageChanged;
   final void Function(BuildContext) onSubmitCallback;
@@ -118,11 +198,16 @@ class _EditProfileFormView extends BaseFormScreen {
     required GlobalKey<FormState> formKey,
     required this.nameController,
     required this.emailController,
+    required this.phoneController,
     required this.dobController,
     required this.countryController,
     required this.selectedGender,
     required this.selectedLanguage,
+    required this.avatarFile,
+    required this.avatarUrl,
+    required this.onPickAvatar,
     required this.isSaving,
+    required this.isPhoneLocked,
     required this.onGenderChanged,
     required this.onLanguageChanged,
     required this.onSubmitCallback,
@@ -186,41 +271,49 @@ class _EditProfileFormView extends BaseFormScreen {
             ),
             const SizedBox(height: 16),
 
-            // Profile Picture Circle
+            // Profile Picture Circle with Upload
             Center(
-              child: Stack(
-                children: [
-                  Container(
-                    width: 96,
-                    height: 96,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(color: scheme.primary, width: 2.5),
-                      image: const DecorationImage(
-                        image: NetworkImage(
-                          'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200',
-                        ),
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    bottom: 0,
-                    right: 0,
-                    child: Container(
-                      padding: const EdgeInsets.all(6),
+              child: InkWell(
+                onTap: onPickAvatar,
+                borderRadius: BorderRadius.circular(48),
+                child: Stack(
+                  children: [
+                    Container(
+                      width: 96,
+                      height: 96,
                       decoration: BoxDecoration(
-                        color: scheme.primary,
                         shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        Icons.camera_alt_rounded,
-                        size: 16,
-                        color: scheme.onPrimary,
+                        border: Border.all(color: scheme.primary, width: 2.5),
+                        image: DecorationImage(
+                          image: avatarFile != null
+                              ? FileImage(avatarFile!) as ImageProvider
+                              : NetworkImage(
+                                  avatarUrl != null && avatarUrl!.isNotEmpty
+                                      ? avatarUrl!
+                                      : 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200',
+                                ),
+                          fit: BoxFit.cover,
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                    Positioned(
+                      bottom: 0,
+                      right: 0,
+                      child: Container(
+                        padding: const EdgeInsets.all(7),
+                        decoration: BoxDecoration(
+                          color: scheme.primary,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.camera_alt_rounded,
+                          size: 16,
+                          color: scheme.onPrimary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: 28),
@@ -235,10 +328,60 @@ class _EditProfileFormView extends BaseFormScreen {
             ),
             const SizedBox(height: 18),
 
-            // Email Input
+            // Mobile Number Input (Indian 10-digit, immutable once entered)
+            AppTextField(
+              controller: phoneController,
+              label: 'Mobile Number (India)',
+              hint: isPhoneLocked ? phoneController.text : '10-digit Indian number (e.g. 9876543210)',
+              prefixIcon: Icons.phone_outlined,
+              suffixIcon: isPhoneLocked ? const Icon(Icons.lock_outline_rounded, size: 18) : null,
+              enabled: !isPhoneLocked,
+              readOnly: isPhoneLocked,
+              keyboardType: TextInputType.phone,
+              style: AppTextFieldStyle.glass,
+              validator: (val) {
+                if (isPhoneLocked) return null;
+                if (val == null || val.trim().isEmpty) return null;
+                final regex = RegExp(r'^[6-9]\d{9}$');
+                if (!regex.hasMatch(val.trim())) {
+                  return 'Enter valid 10-digit Indian number (starts 6-9)';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 6),
+            Padding(
+              padding: const EdgeInsets.only(left: 4),
+              child: Text(
+                isPhoneLocked
+                    ? 'Registered mobile number cannot be edited once saved.'
+                    : '10-digit Indian mobile number. Once saved, it cannot be changed.',
+                style: TextStyle(
+                  fontSize: 11,
+                  color: isLight ? AppColors.lightSecondaryOnSurface : AppColors.secondaryText,
+                ),
+              ),
+            ),
+            const SizedBox(height: 18),
+
+            // Email Input (Non-editable / locked)
             AppTextField.email(
               controller: emailController,
+              enabled: false,
+              readOnly: true,
+              suffixIcon: const Icon(Icons.lock_outline_rounded, size: 18),
               style: AppTextFieldStyle.glass,
+            ),
+            const SizedBox(height: 6),
+            Padding(
+              padding: const EdgeInsets.only(left: 4),
+              child: Text(
+                'Registered account email cannot be edited.',
+                style: TextStyle(
+                  fontSize: 11,
+                  color: isLight ? AppColors.lightSecondaryOnSurface : AppColors.secondaryText,
+                ),
+              ),
             ),
             const SizedBox(height: 18),
 
