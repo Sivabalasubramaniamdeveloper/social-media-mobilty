@@ -1,0 +1,67 @@
+{
+  "project_info": {
+    "project_number": "226389926564",
+    "project_id": "mine-ai-app-782c0",
+    "storage_bucket": "mine-ai-app-782c0.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:226389926564:android:18041829b4ce862bbbfc31",
+        "android_client_info": {
+          "package_name": "com.minai.sivaapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBtv2B3mIaPBgwfmPMb5ZaSZpfqrUn6d20"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:226389926564:android:3adf6c126925ac30bbfc31",
+        "android_client_info": {
+          "package_name": "com.minai.sivaapp.dev"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBtv2B3mIaPBgwfmPMb5ZaSZpfqrUn6d20"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:226389926564:android:b187707f5978ea9bbbfc31",
+        "android_client_info": {
+          "package_name": "com.minai.sivaapp.uat"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBtv2B3mIaPBgwfmPMb5ZaSZpfqrUn6d20"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

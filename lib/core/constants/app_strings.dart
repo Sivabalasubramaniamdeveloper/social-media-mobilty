@@ -8,6 +8,7 @@ class AppStrings {
   static String get all => 'all'.tr();
   static String get appName => 'app_name'.tr();
   static String get mindAi => 'mind_ai'.tr();
+  static String get mineAi => 'mind_ai'.tr();
   static String get poweredByLlms => 'powered_by_llms'.tr();
   static String get version => 'version'.tr();
   static String get yourAiProductivityHub => 'your_ai_productivity_hub'.tr();
@@ -180,6 +181,7 @@ class AppStrings {
   static String get monthlyLimitUsed => 'monthly_limit_used'.tr();
   static String get topUp => 'top_up'.tr();
   static String get upgradeToMindAiUltra => 'upgrade_to_mindai_ultra'.tr();
+  static String get upgradeToMineAiUltra => upgradeToMindAiUltra;
   static String get unlimitedPromptsEarlyAccess =>
       'unlimited_prompts_early_access'.tr();
 
@@ -401,6 +403,7 @@ class AppStrings {
   static String get retry => 'retry'.tr();
   static String get tryAgain => 'try_again'.tr();
   static String get mindAiSuggests => 'mind_ai_suggests'.tr();
+  static String get mineAiSuggests => mindAiSuggests;
   static String homeGreeting(String name) =>
       'home_greeting'.tr(namedArgs: {'name': name});
   static String get appTheme => 'app_theme'.tr();
@@ -460,6 +463,7 @@ class AppStrings {
       'export_excel_format_description'.tr();
   static String get shareLabel => 'share'.tr();
   static String get mindAiExpenseExport => 'mind_ai_expense_export'.tr();
+  static String get mineAiExpenseExport => mindAiExpenseExport;
   static String expenseExportFileName(String date, String extension) =>
       'expense_export_file_name'.tr(
         namedArgs: {'date': date, 'extension': extension},
@@ -551,6 +555,7 @@ class AppStrings {
   static String get findDeals => 'find_deals'.tr();
   static String get comparePrices => 'compare_prices'.tr();
   static String get mindAiSuggestion => 'mind_ai_suggestion'.tr();
+  static String get mineAiSuggestion => mindAiSuggestion;
   static String get showAiDeal => 'show_ai_deal'.tr();
   static String get hideAiDeal => 'hide_ai_deal'.tr();
   static String get lowestPrice => 'lowest_price'.tr();
@@ -570,6 +575,7 @@ class AppStrings {
   static String get compareButton => 'compare_button'.tr();
   static String get enterQueryPrompt => 'enter_query_prompt'.tr();
   static String get mindAiDealAnalysis => 'mindai_deal_analysis'.tr();
+  static String get mineAiDealAnalysis => mindAiDealAnalysis;
   static String get bestDealVerdict => 'best_deal_verdict'.tr();
   static String get savingsOpportunity => 'savings_opportunity'.tr();
   // static String get priceDifference => 'price_difference'.tr();

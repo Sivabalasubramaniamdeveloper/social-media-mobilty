@@ -5,6 +5,7 @@ import 'package:mineai/config/router/route_names.dart';
 import 'package:mineai/core/constants/app_colors.dart';
 import 'package:mineai/core/constants/app_sizes.dart';
 import 'package:mineai/core/constants/app_strings.dart';
+import 'package:mineai/core/widgets/animations/app_lottie_view.dart';
 import 'package:mineai/core/widgets/gradiant_background.dart';
 import 'package:mineai/core/widgets/headers/app_screen_header.dart';
 import 'package:mineai/features/support/models/ticket_model.dart';
@@ -522,19 +523,12 @@ class _SupportTicketsScreenState extends State<SupportTicketsScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              padding: const EdgeInsets.all(22),
-              decoration: BoxDecoration(
-                color: AppColors.primaryPurple.withValues(alpha: 0.12),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.check_circle_outline_rounded,
-                size: 56,
-                color: AppColors.primaryPurpleLight,
-              ),
+            const AppLottieView(
+              type: LottieAnimationType.emptyState,
+              width: 140,
+              height: 140,
             ),
-            const SizedBox(height: 18),
+            const SizedBox(height: 14),
             Text(
               AppStrings.noTicketsFound,
               style: TextStyle(

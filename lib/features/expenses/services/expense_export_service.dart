@@ -657,9 +657,12 @@ class ExpenseExportService {
           label: AppStrings.shareLabel,
           textColor: Colors.white,
           onPressed: () {
-            Share.shareXFiles([
-              XFile(filePath),
-            ], text: AppStrings.mindAiExpenseExport);
+            SharePlus.instance.share(
+              ShareParams(
+                files: [XFile(filePath)],
+                text: AppStrings.mineAiExpenseExport,
+              ),
+            );
           },
         ),
       ),

@@ -1,9 +1,12 @@
-name: Sample Connect CI/CD
+name: Mine AI CI/CD
 
 on:
   push:
     branches:
+      - "main"
+      - "master"
       - "sample"
+  workflow_dispatch:
 
 env:
   JAVA_VERSION: "17"
@@ -11,28 +14,37 @@ env:
 
 jobs:
   build:
-    name: Build Flutter App and Distribute to Firebase
+    name: Build Dev APK & Distribute to Firebase
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-#      - name: Set up Java
-#        uses: actions/setup-java@v3
-#        with:
-#          java-version: ${{ env.JAVA_VERSION }}
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: "gradle"
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
 
       - name: Decode Keystore
+        if: ${{ env.KEYSTORE_EXISTS != '' }}
+        env:
+          KEYSTORE_EXISTS: ${{ secrets.KEYSTORE_BASE64 }}
         run: |
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/my-release-key.jks
 
       - name: Decode and save Firebase service account
+        if: ${{ env.FIREBASE_CREDS != '' }}
+        env:
+          FIREBASE_CREDS: ${{ secrets.FIREBASE_CREDENTIALS_SIT }}
         run: |
           echo "${{ secrets.FIREBASE_CREDENTIALS_SIT }}" > firebase_credentials.json
 
@@ -42,42 +54,56 @@ jobs:
           echo "signIn.storePassword=${{ secrets.KEYSTORE_PASSWORD }}" >> android/local.properties
           echo "signIn.keyAlias=${{ secrets.KEY_ALIAS }}" >> android/local.properties
           echo "signIn.keyPassword=${{ secrets.KEY_PASSWORD }}" >> android/local.properties
-      
 
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Build release APK
-        run: flutter build apk --flavor prod --target lib/Flavour/Flavour_prod.dart --release
+      - name: Build Dev Release APK
+        run: flutter build apk --flavor dev --target lib/main.dart --release
+
+      - name: Determine APK Output Path
+        id: apk_locator
+        run: |
+          if [ -f "build/app/outputs/flutter-apk/app-dev-release.apk" ]; then
+            echo "path=build/app/outputs/flutter-apk/app-dev-release.apk" >> "$GITHUB_OUTPUT"
+          elif [ -f "build/app/outputs/apk/dev/release/app-dev-release.apk" ]; then
+            echo "path=build/app/outputs/apk/dev/release/app-dev-release.apk" >> "$GITHUB_OUTPUT"
+          else
+            FOUND_APK=$(find build/app/outputs -name "*dev*release*.apk" 2>/dev/null | head -n 1)
+            echo "path=${FOUND_APK:-build/app/outputs/flutter-apk/app-dev-release.apk}" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Upload to Firebase App Distribution
         uses: wzieba/Firebase-Distribution-Github-Action@v1
         with:
           appId: ${{ secrets.FIREBASE_APP_ID }}
+          serviceCredentialsFile: firebase_credentials.json
           token: ${{ secrets.FIREBASE_TOKEN }}
-          file: build/app/outputs/apk/prod/release/app-prod-release.apk
+          file: ${{ steps.apk_locator.outputs.path }}
           groups: sampleTest
           releaseNotes: |
-            ✅ New Features:
-            - With Flutter map implementation
+            🚀 Mine AI Dev Build
+            - Flavor: dev
+            - Target: lib/main.dart
+            - Build delivered via Firebase App Distribution
 
       - name: Send email notification
-        if: ${{ success() }}
+        if: ${{ success() && secrets.EMAIL_USERNAME != '' }}
         uses: dawidd6/action-send-mail@v3
         with:
           server_address: smtp.gmail.com
           server_port: 465
           username: ${{ secrets.EMAIL_USERNAME }}
           password: ${{ secrets.EMAIL_PASSWORD }}
-          subject: "✅ CI/CD Success: Sample Connect"
+          subject: "✅ CI/CD Success: Mine AI Dev Flavour"
           to: karanvkp2015@gmail.com,sivabala.piramuthu@gmail.com
-          from: Flutter CI/CD
+          from: Mine AI CI/CD
           body: |
             Hello Team,
-            
-            🎉 The CI/CD workflow for the `sample` branch completed **successfully**.
-            
-            📦 APK built and uploaded to Firebase App Distribution.
-            
-            Regards,  
-            GitHub CI/CD Bot
+
+            🎉 The CI/CD workflow for the Dev Flavor build completed **successfully**.
+
+            📦 Dev APK built from lib/main.dart and uploaded to Firebase App Distribution.
+
+            Regards,
+            Mine AI GitHub Actions Bot

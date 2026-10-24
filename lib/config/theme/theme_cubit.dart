@@ -18,7 +18,7 @@ extension AppThemeModeExtension on AppThemeMode {
   String get displayName {
     switch (this) {
       case AppThemeMode.primary:
-        return 'MindAI Purple (Dark)';
+        return 'MineAI Purple (Dark)';
       // case AppThemeMode.dark:
       //   return 'Midnight Dark';
       // case AppThemeMode.light:

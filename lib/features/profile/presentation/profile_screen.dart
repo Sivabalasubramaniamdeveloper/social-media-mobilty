@@ -488,7 +488,7 @@ class _ProfileView extends BaseScreen {
 
                 const SizedBox(height: 18),
 
-                // Upgrade to MindAI Ultra Banner
+                // Upgrade to MineAI Ultra Banner
                 Container(
                   padding: const EdgeInsets.all(18),
                   decoration: BoxDecoration(

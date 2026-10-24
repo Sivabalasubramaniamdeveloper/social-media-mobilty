@@ -1,12 +1,16 @@
 import 'dart:async';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_alice/alice.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mineai/config/env/env_config.dart';
+import 'package:mineai/config/firebase/crashlytics_service.dart';
 import 'package:mineai/config/firebase/notification_service.dart';
+import 'package:mineai/config/firebase/push_notification.dart';
+import 'package:mineai/firebase_options.dart';
 import 'package:overlay_support/overlay_support.dart';
 import 'app.dart';
 import 'config/flavor/flavor_config.dart';
@@ -26,7 +30,16 @@ Future<void> main() async {
         DeviceOrientation.landscapeLeft,
         DeviceOrientation.landscapeRight,
       ]);
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
       await NotificationService.instance.init();
+      try {
+        await CrashlyticsService.instance.init();
+        await PushNotificationService.instance.init();
+      } catch (e) {
+        debugPrint('Firebase services non-fatal init error: $e');
+      }
       await EasyLocalization.ensureInitialized();
 
       try {
@@ -66,6 +79,7 @@ Future<void> main() async {
     },
     (error, stack) {
       CustomAppLogger.error(error.toString(), "runZonedGuarded");
+      CrashlyticsService.instance.recordError(error, stack, fatal: true);
     },
   );
 }

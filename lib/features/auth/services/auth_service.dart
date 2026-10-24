@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:mineai/config/env/env_config.dart';
+import 'package:mineai/config/firebase/push_notification.dart';
 import 'package:mineai/core/constants/app_strings.dart';
 import 'package:mineai/core/utils/user_helper.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -23,11 +24,20 @@ class AuthService {
     required String password,
   }) async {
     try {
+      String? fcmToken;
+      try {
+        fcmToken = await PushNotificationService.instance.refreshFcmToken();
+      } catch (_) {}
+
       final response = await _apiService.makeApiRequest(
         method: 'POST',
         token: '',
         url: '${UserHelper.baseUrl}/auth/login',
-        data: {'email': email.trim(), 'password': password},
+        data: {
+          'email': email.trim(),
+          'password': password,
+          if (fcmToken != null && fcmToken.isNotEmpty) 'fcm_token': fcmToken,
+        },
       );
 
       final responseData = response.data as Map<String, dynamic>;
@@ -66,6 +76,11 @@ class AuthService {
           );
         } catch (_) {}
       }
+
+      // Automatically sync the device's FCM push token to user profile
+      try {
+        await PushNotificationService.instance.refreshFcmToken();
+      } catch (_) {}
 
       return authModel;
     } on DioException catch (e) {
@@ -216,6 +231,15 @@ class AuthService {
 
   /// Wipes token on user logout
   Future<void> clearAuthSession() async {
+    try {
+      final user = Supabase.instance.client.auth.currentUser;
+      if (user != null) {
+        await Supabase.instance.client
+            .from('user_devices')
+            .update({'is_active': false, 'push_token': null})
+            .eq('user_id', user.id);
+      }
+    } catch (_) {}
     await _secureStorage.deleteSecureData(_tokenKey);
     await _secureStorage.deleteSecureData(_refreshTokenKey);
     await _secureStorage.deleteSecureData(_userIdKey);

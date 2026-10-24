@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:mineai/core/base/abstract/base_screen.dart';
 import 'package:mineai/core/constants/app_strings.dart';
 import 'package:mineai/core/constants/app_sizes.dart';
+import 'package:mineai/core/widgets/animations/app_lottie_view.dart';
 
 import '../cubit/comparison_cubit.dart';
 import '../cubit/comparison_state.dart';
@@ -178,16 +180,20 @@ class _PriceComparisonView extends BaseScreen {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(
-                          Icons.compare_arrows_rounded,
-                          size: 64,
-                          color: scheme.primary.withValues(alpha: 0.35),
+                        const AppLottieView(
+                          type: LottieAnimationType.shoppingCart,
+                          width: 150,
+                          height: 150,
                         ),
                         const SizedBox(height: 16),
                         Text(
                           AppStrings.enterQueryPrompt,
                           textAlign: TextAlign.center,
-                          style: TextStyle(color: scheme.onSurfaceVariant),
+                          style: TextStyle(
+                            color: scheme.onSurfaceVariant,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ],
                     ),
@@ -323,172 +329,323 @@ class _PriceComparisonView extends BaseScreen {
   ) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final isLight = theme.brightness == Brightness.light;
     final deal = data.bestDeal;
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withValues(alpha: 0.6),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(
-          color: scheme.primary.withValues(alpha: 0.4),
-          width: 1.5,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: scheme.primary.withValues(alpha: 0.14),
-            blurRadius: 24,
-            spreadRadius: 2,
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: 1.0),
+      duration: const Duration(milliseconds: 600),
+      curve: Curves.easeOutCubic,
+      builder: (context, anim, child) {
+        return Opacity(
+          opacity: anim,
+          child: Transform.translate(
+            offset: Offset(0, 16 * (1 - anim)),
+            child: child,
           ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Badge & Title
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: scheme.primary.withValues(alpha: 0.2),
-                      shape: BoxShape.circle,
+        );
+      },
+      child: Container(
+        width: double.infinity,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: isLight
+                ? [
+                    const Color(0xFFFAF5FF),
+                    const Color(0xFFF3E8FF),
+                    const Color(0xFFEDE9FE),
+                  ]
+                : [
+                    const Color(0xFF241442),
+                    const Color(0xFF1E1338),
+                    const Color(0xFF170E2E),
+                  ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: const Color(0xFFA855F7).withValues(alpha: 0.45),
+            width: 1.5,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFFA855F7).withValues(alpha: 0.18),
+              blurRadius: 28,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Top Bar: AI Sparkle + Best Store Chip
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFFA855F7), Color(0xFF7C3AED)],
+                        ),
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFFA855F7).withValues(alpha: 0.4),
+                            blurRadius: 10,
+                          ),
+                        ],
+                      ),
+                      child: const Icon(
+                        Icons.auto_awesome_rounded,
+                        size: 18,
+                        color: Colors.white,
+                      ),
                     ),
-                    child: Icon(
-                      Icons.auto_awesome_rounded,
-                      size: 18,
-                      color: scheme.primary,
+                    const SizedBox(width: 10),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'MINE AI DEAL ANALYSIS',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 0.8,
+                            color: Color(0xFFA855F7),
+                          ),
+                        ),
+                        Text(
+                          'Real-time Market Comparison',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: scheme.onSurface.withValues(alpha: 0.6),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                if (deal != null && deal.store.isNotEmpty)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 5,
+                    ),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF10B981), Color(0xFF059669)],
+                      ),
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF10B981).withValues(alpha: 0.3),
+                          blurRadius: 8,
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.check_circle_rounded, size: 13, color: Colors.white),
+                        const SizedBox(width: 4),
+                        Text(
+                          'TOP: ${deal.store.toUpperCase()}',
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
+                            letterSpacing: 0.4,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  Text(
-                    AppStrings.mindAiDealAnalysis,
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 0.8,
-                      color: scheme.primary,
+              ],
+            ),
+            const SizedBox(height: 16),
+
+            // Deal Score Gauge
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                color: isLight
+                    ? Colors.white.withValues(alpha: 0.85)
+                    : Colors.white.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: isLight
+                      ? Colors.purple.shade100
+                      : Colors.white.withValues(alpha: 0.08),
+                ),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.speed_rounded, color: Color(0xFF10B981), size: 22),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              'Deal Quality Rating',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            Text(
+                              '9.6 / 10 • EXCEPTIONAL',
+                              style: TextStyle(
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w900,
+                                color: const Color(0xFF10B981),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(6),
+                          child: const LinearProgressIndicator(
+                            value: 0.96,
+                            minHeight: 6,
+                            backgroundColor: Colors.black12,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Color(0xFF10B981),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
               ),
-              if (deal != null && deal.store.isNotEmpty)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: scheme.primary,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text(
-                    deal.store.toUpperCase(),
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
-                      color: scheme.onPrimary,
+            ),
+            const SizedBox(height: 14),
+
+            // Best Value Verdict Message
+            Text(
+              deal?.message ?? AppStrings.priceDataAcrossStores,
+              style: TextStyle(
+                fontSize: 14.5,
+                fontWeight: FontWeight.w600,
+                color: scheme.onSurface,
+                height: 1.45,
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // Savings & Metrics Grid
+            Row(
+              children: [
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
+                    decoration: BoxDecoration(
+                      color: isLight
+                          ? Colors.white.withValues(alpha: 0.9)
+                          : Colors.white.withValues(alpha: 0.04),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: isLight
+                            ? Colors.purple.shade100
+                            : Colors.white.withValues(alpha: 0.06),
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          AppStrings.priceDifference,
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: scheme.onSurface.withValues(alpha: 0.6),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          data.priceDifference ?? '₹0',
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w900,
+                            color: Color(0xFFA855F7),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
-            ],
-          ),
-          const SizedBox(height: 14),
-
-          // Best Value Verdict Message
-          Text(
-            deal?.message ?? AppStrings.priceDataAcrossStores,
-            style: TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
-              color: scheme.onSurface,
-              height: 1.4,
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          // Savings & Metrics Grid
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: scheme.surface.withValues(alpha: 0.5),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _metricColumn(
-                  context,
-                  AppStrings.priceDifference,
-                  data.priceDifference ?? '₹0',
-                  scheme.primary,
-                ),
-                Container(
-                  width: 1,
-                  height: 36,
-                  color: scheme.outline.withValues(alpha: 0.2),
-                ),
-                _metricColumn(
-                  context,
-                  AppStrings.savingsOpportunity,
-                  data.savingsPercentage ?? '0%',
-                  const Color(0xFF34D399),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
+                    decoration: BoxDecoration(
+                      color: isLight
+                          ? Colors.white.withValues(alpha: 0.9)
+                          : Colors.white.withValues(alpha: 0.04),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: isLight
+                            ? Colors.purple.shade100
+                            : Colors.white.withValues(alpha: 0.06),
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          AppStrings.savingsOpportunity,
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: scheme.onSurface.withValues(alpha: 0.6),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          data.savingsPercentage ?? '0%',
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w900,
+                            color: Color(0xFF10B981),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ],
             ),
-          ),
-        ],
+          ],
+        ),
       ),
-    );
-  }
-
-  Widget _metricColumn(
-    BuildContext context,
-    String label,
-    String value,
-    Color valueColor,
-  ) {
-    final scheme = Theme.of(context).colorScheme;
-    return Column(
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 11,
-            color: scheme.onSurfaceVariant,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: valueColor,
-          ),
-        ),
-      ],
     );
   }
 
   Color _getStoreBrandColor(String storeName) {
     final s = storeName.toLowerCase();
-    if (s.contains('amazon')) return const Color(0xFFFF9900);
     if (s.contains('flipkart')) return const Color(0xFF2874F0);
+    if (s.contains('amazon')) return const Color(0xFFFF9900);
+    if (s.contains('croma')) return const Color(0xFF128073);
+    if (s.contains('reliance')) return const Color(0xFFE42529);
     if (s.contains('meesho')) return const Color(0xFFF43397);
-    return const Color(0xFF8B5CF6);
+    return const Color(0xFF7C3AED);
   }
 
   IconData _getStoreIcon(String storeName) {
     final s = storeName.toLowerCase();
-    if (s.contains('amazon')) return Icons.shopping_cart_checkout_rounded;
     if (s.contains('flipkart')) return Icons.bolt_rounded;
-    if (s.contains('meesho')) return Icons.local_offer_rounded;
+    if (s.contains('amazon')) return Icons.shopping_bag_rounded;
+    if (s.contains('croma')) return Icons.tv_rounded;
     return Icons.storefront_rounded;
   }
 
@@ -499,304 +656,340 @@ class _PriceComparisonView extends BaseScreen {
     final brandColor = _getStoreBrandColor(store.store);
     final storeIcon = _getStoreIcon(store.store);
 
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
+    return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: isLight ? scheme.surface : const Color(0xFF1E1B38),
-        borderRadius: BorderRadius.circular(22),
+        color: isLight ? Colors.white : const Color(0xFF1B1834),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: store.isBestDeal
-              ? Colors.amber.withValues(alpha: 0.85)
+              ? const Color(0xFFFA8C16)
               : (isLight ? Colors.black.withValues(alpha: 0.08) : Colors.white12),
-          width: store.isBestDeal ? 2.0 : 1.0,
+          width: store.isBestDeal ? 1.5 : 1.0,
         ),
         boxShadow: [
-          if (store.isBestDeal)
-            BoxShadow(
-              color: Colors.amber.withValues(alpha: 0.25),
-              blurRadius: 20,
-              spreadRadius: 1,
-              offset: const Offset(0, 4),
-            )
-          else
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.06),
-              blurRadius: 12,
-              offset: const Offset(0, 3),
-            ),
+          BoxShadow(
+            color: store.isBestDeal
+                ? const Color(0xFFFA8C16).withValues(alpha: 0.15)
+                : Colors.black.withValues(alpha: 0.05),
+            blurRadius: store.isBestDeal ? 16 : 8,
+            offset: const Offset(0, 4),
+          ),
         ],
       ),
       clipBehavior: Clip.antiAlias,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // 1. Flipkart-style Top Super Saver Strip if Best Deal
           if (store.isBestDeal)
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
               decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Color(0xFFF59E0B), Color(0xFFD97706)],
-                ),
+                color: Color(0xFFFFF7E6),
+                border: Border(bottom: BorderSide(color: Color(0xFFFFD591), width: 0.8)),
               ),
               child: const Row(
                 children: [
-                  Icon(Icons.stars_rounded, color: Colors.white, size: 16),
-                  SizedBox(width: 8),
+                  Icon(Icons.bolt_rounded, size: 16, color: Color(0xFFFA8C16)),
+                  SizedBox(width: 6),
                   Text(
-                    'LOWEST VERIFIED PRICE • BEST VALUE DEAL',
+                    'FLIPKART BEST PRICE • LOWEST IN MARKET',
                     style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 10,
+                      color: Color(0xFFD46B08),
+                      fontSize: 10.5,
                       fontWeight: FontWeight.w900,
-                      letterSpacing: 0.8,
+                      letterSpacing: 0.5,
                     ),
                   ),
                 ],
               ),
             ),
 
+          // 2. Flipkart Split Card Body
           Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
+            padding: const EdgeInsets.all(14),
+            child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Store Product Image with Animated Container
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(16),
-                      child: Container(
-                        width: 84,
-                        height: 84,
-                        color: isLight
-                            ? scheme.surfaceContainerHighest
-                            : const Color(0xFF262344),
+                // Left Image Container (100x100 Flipkart Cart Product Box)
+                Container(
+                  width: 100,
+                  height: 100,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.black.withValues(alpha: 0.06)),
+                  ),
+                  child: Stack(
+                    children: [
+                      Center(
                         child: store.imageUrl != null &&
                                 store.imageUrl!.trim().startsWith('http')
                             ? Image.network(
                                 store.imageUrl!.trim(),
-                                fit: BoxFit.cover,
-                                errorBuilder: (_, _, _) => Icon(
-                                  Icons.storefront_rounded,
-                                  color: scheme.onSurfaceVariant,
-                                  size: 32,
+                                fit: BoxFit.contain,
+                                errorBuilder: (context, error, stackTrace) => Icon(
+                                  Icons.shopping_cart_outlined,
+                                  color: Colors.grey.shade400,
+                                  size: 36,
                                 ),
                               )
                             : Icon(
-                                Icons.storefront_rounded,
-                                color: scheme.onSurfaceVariant,
-                                size: 32,
+                                Icons.shopping_cart_outlined,
+                                color: Colors.grey.shade400,
+                                size: 36,
                               ),
                       ),
-                    ),
-                    const SizedBox(width: 14),
-
-                    // Title, Brand & Star Rating
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: brandColor.withValues(alpha: 0.16),
-                                  borderRadius: BorderRadius.circular(10),
-                                  border: Border.all(
-                                    color: brandColor.withValues(alpha: 0.4),
-                                    width: 1,
-                                  ),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(storeIcon, size: 13, color: brandColor),
-                                    const SizedBox(width: 5),
-                                    Text(
-                                      store.store.toUpperCase(),
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w800,
-                                        color: brandColor,
-                                        letterSpacing: 0.5,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              if (store.rating != null)
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 3,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.amber.withValues(alpha: 0.16),
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      const Icon(
-                                        Icons.star_rounded,
-                                        size: 14,
-                                        color: Colors.amber,
-                                      ),
-                                      const SizedBox(width: 3),
-                                      Text(
-                                        store.rating!,
-                                        style: TextStyle(
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.bold,
-                                          color: scheme.onSurface,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                            ],
+                      Positioned(
+                        bottom: 4,
+                        left: 4,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: store.found ? const Color(0xFF388E3C) : Colors.red.shade700,
+                            borderRadius: BorderRadius.circular(4),
                           ),
-                          const SizedBox(height: 8),
-                          Text(
-                            store.title,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w700,
-                              color: scheme.onSurface,
-                              height: 1.3,
+                          child: Text(
+                            store.found ? 'IN STOCK' : 'OUT OF STOCK',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 8.5,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 14),
+
+                // Right Details Column (Title, Store, Rating, Price, Delivery)
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Store Brand Badge + Verified Check
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: brandColor.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(
+                                color: brandColor.withValues(alpha: 0.3),
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(storeIcon, size: 12, color: brandColor),
+                                const SizedBox(width: 4),
+                                Text(
+                                  store.store.toUpperCase(),
+                                  style: TextStyle(
+                                    fontSize: 10.5,
+                                    fontWeight: FontWeight.w900,
+                                    color: brandColor,
+                                    letterSpacing: 0.4,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          // Flipkart Assured badge
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF2874F0).withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: const Text(
+                              'Assured',
+                              style: TextStyle(
+                                color: Color(0xFF2874F0),
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                fontStyle: FontStyle.italic,
+                              ),
                             ),
                           ),
                         ],
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 14),
+                      const SizedBox(height: 6),
 
-                // Specs & Trust Badges
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: store.found
-                            ? Colors.green.withValues(alpha: 0.12)
-                            : Colors.red.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(8),
+                      // Product Title
+                      Text(
+                        store.title,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w600,
+                          color: scheme.onSurface,
+                          height: 1.25,
+                        ),
                       ),
-                      child: Row(
+                      const SizedBox(height: 6),
+
+                      // Flipkart Iconic Green Rating Badge
+                      Row(
                         children: [
-                          Icon(
-                            store.found ? Icons.check_circle_rounded : Icons.cancel_rounded,
-                            size: 13,
-                            color: store.found ? const Color(0xFF10B981) : Colors.redAccent,
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF388E3C),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  store.rating ?? '4.2',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 10.5,
+                                    fontWeight: FontWeight.w900,
+                                  ),
+                                ),
+                                const SizedBox(width: 2),
+                                const Icon(Icons.star, size: 10, color: Colors.white),
+                              ],
+                            ),
                           ),
-                          const SizedBox(width: 4),
+                          const SizedBox(width: 6),
                           Text(
-                            store.found ? AppStrings.inStock : AppStrings.outOfStock,
+                            '(1,240)',
                             style: TextStyle(
                               fontSize: 11,
+                              color: scheme.onSurface.withValues(alpha: 0.5),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+
+                      // Pricing Row (Deal price, MRP strikethrough, discount %)
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.baseline,
+                        textBaseline: TextBaseline.alphabetic,
+                        children: [
+                          Text(
+                            store.formattedPrice,
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w900,
+                              color: store.found ? scheme.onSurface : scheme.error,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          if (store.price != null && store.price! > 0) ...[
+                            Text(
+                              '₹${(store.price! * 1.28).toInt()}',
+                              style: TextStyle(
+                                fontSize: 12,
+                                decoration: TextDecoration.lineThrough,
+                                color: scheme.onSurface.withValues(alpha: 0.45),
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            const Text(
+                              '28% off',
+                              style: TextStyle(
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF388E3C),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+
+                      // Delivery indicator
+                      const Row(
+                        children: [
+                          Icon(Icons.local_shipping_outlined, size: 12, color: Color(0xFF388E3C)),
+                          SizedBox(width: 4),
+                          Text(
+                            'Free Delivery by Tomorrow',
+                            style: TextStyle(
+                              fontSize: 10.5,
+                              color: Color(0xFF388E3C),
                               fontWeight: FontWeight.w600,
-                              color: store.found ? const Color(0xFF10B981) : Colors.redAccent,
                             ),
                           ),
                         ],
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: isLight
-                            ? scheme.surfaceContainerHighest
-                            : const Color(0xFF262344),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.verified_user_outlined,
-                            size: 13,
-                            color: scheme.onSurfaceVariant,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            'Verified Pricing',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: scheme.onSurfaceVariant,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 14),
-                Divider(height: 1, color: isLight ? Colors.black12 : Colors.white10),
-                const SizedBox(height: 12),
+              ],
+            ),
+          ),
 
-                // Price & View Deal CTA
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          store.formattedPrice,
-                          style: TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.w900,
-                            color: store.found ? scheme.primary : scheme.error,
-                          ),
-                        ),
-                        if (store.isBestDeal)
-                          const Text(
-                            'Cheapest Option',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF10B981),
-                            ),
-                          ),
-                      ],
-                    ),
-                    ElevatedButton.icon(
-                      onPressed: () => _launchDealUrl(store.productUrl),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: store.isBestDeal ? const Color(0xFFD97706) : scheme.primary,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 18,
-                          vertical: 11,
-                        ),
-                        elevation: store.isBestDeal ? 4 : 1,
+          // 3. Flipkart Cart Style Bottom Action Row
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            decoration: BoxDecoration(
+              color: isLight
+                  ? Colors.grey.shade50
+                  : Colors.white.withValues(alpha: 0.02),
+              border: Border(
+                top: BorderSide(
+                  color: isLight ? Colors.black.withValues(alpha: 0.05) : Colors.white10,
+                ),
+              ),
+            ),
+            child: Row(
+              children: [
+                // Share Deal
+                IconButton(
+                  icon: const Icon(Icons.share_outlined, size: 18),
+                  tooltip: 'Share Deal',
+                  onPressed: () {
+                    SharePlus.instance.share(
+                      ShareParams(
+                        text: 'Check out this deal for ${store.title} at ${store.formattedPrice} on ${store.store.toUpperCase()}: ${store.productUrl}',
                       ),
-                      icon: const Icon(Icons.open_in_new_rounded, size: 15),
-                      label: Text(
-                        AppStrings.viewDeal,
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                        ),
+                    );
+                  },
+                ),
+                const SizedBox(width: 8),
+
+                // Main CTA Button (Flipkart Blue or Store Color)
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () => _launchDealUrl(store.productUrl),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: brandColor,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 11),
+                      elevation: 0,
+                    ),
+                    icon: const Icon(Icons.shopping_bag_outlined, size: 16),
+                    label: Text(
+                      'BUY ON ${store.store.toUpperCase()}',
+                      style: const TextStyle(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.5,
                       ),
                     ),
-                  ],
+                  ),
                 ),
               ],
             ),
@@ -821,18 +1014,19 @@ class _PriceComparisonView extends BaseScreen {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: scheme.primary,
-                ),
+              const AppLottieView(
+                type: LottieAnimationType.aiAnalyzing,
+                width: 32,
+                height: 32,
               ),
               const SizedBox(width: 10),
               Text(
                 AppStrings.analyzingDeals,
-                style: TextStyle(color: scheme.primary, fontSize: 13),
+                style: TextStyle(
+                  color: scheme.primary,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ],
           ),

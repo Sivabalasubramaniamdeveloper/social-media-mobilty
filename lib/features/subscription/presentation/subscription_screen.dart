@@ -463,10 +463,10 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                             : BorderSide.none,
                       ),
                     ),
-                    // onPressed: isCurrent || _changingPlanId != null
-                    //     ? null
-                    //     : () => _selectPlan(option),
-                    onPressed: null,
+                    onPressed: isCurrent || _changingPlanId != null
+                        ? null
+                        : () => _selectPlan(option),
+                    // onPressed: null,
                     child: isChanging
                         ? const SizedBox.square(
                             dimension: 20,

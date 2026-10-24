@@ -78,7 +78,7 @@ class AppScreenHeader extends StatelessWidget {
   }
 }
 
-/// Auth screens share this branded back row (logo + Mind AI).
+/// Auth screens share this branded back row (logo + Mine AI).
 class AppBrandHeader extends StatelessWidget {
   final VoidCallback onBack;
   final double logoSize;

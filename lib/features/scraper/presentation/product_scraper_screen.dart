@@ -216,7 +216,7 @@ class _ProductScraperView extends BaseScreen {
         AppSizes.bottomNavHeight + bottomInset + 30,
       ),
       children: [
-        // Action Header: Toggle MindAI Suggestions & Compare
+        // Action Header: Toggle MineAI Suggestions & Compare
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -261,7 +261,7 @@ class _ProductScraperView extends BaseScreen {
           ],
         ),
 
-        // MindAI Suggestions & Comparison Section (conditionally displayed)
+        // MineAI Suggestions & Comparison Section (conditionally displayed)
         if (state.showAiSuggestion) ...[
           const SizedBox(height: 10),
           _buildAiSuggestionCard(context, state),
@@ -587,7 +587,7 @@ class _ProductScraperView extends BaseScreen {
       child: ListView.builder(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         itemCount: 4,
-        itemBuilder: (_, __) => Container(
+        itemBuilder: (context, index) => Container(
           height: 100,
           margin: const EdgeInsets.only(bottom: 12),
           decoration: BoxDecoration(
