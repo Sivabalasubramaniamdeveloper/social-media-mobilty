@@ -8,6 +8,7 @@ class StoreProductDetail {
   final String? rating;
   final String productUrl;
   final String? imageUrl;
+  final bool isBestDeal;
 
   StoreProductDetail({
     required this.store,
@@ -19,9 +20,13 @@ class StoreProductDetail {
     this.rating,
     required this.productUrl,
     this.imageUrl,
+    this.isBestDeal = false,
   });
 
-  factory StoreProductDetail.fromJson(Map<String, dynamic> json) {
+  factory StoreProductDetail.fromJson(
+    Map<String, dynamic> json, {
+    bool isBestDeal = false,
+  }) {
     return StoreProductDetail(
       store: json['store'] as String? ?? 'Store',
       found: json['found'] as bool? ?? false,
@@ -32,6 +37,7 @@ class StoreProductDetail {
       rating: json['rating']?.toString(),
       productUrl: json['productUrl'] as String? ?? '',
       imageUrl: json['imageUrl'] as String?,
+      isBestDeal: isBestDeal || (json['isBestDeal'] as bool? ?? false),
     );
   }
 }
@@ -80,18 +86,24 @@ class DetailedComparisonModel {
     final comparisonsMap = json['comparisons'] as Map<String, dynamic>? ?? {};
     final List<StoreProductDetail> storeList = [];
 
+    final bestDealVerdict = json['bestDeal'] != null
+        ? BestDealVerdict.fromJson(json['bestDeal'] as Map<String, dynamic>)
+        : null;
+
     comparisonsMap.forEach((key, val) {
       if (val is Map<String, dynamic>) {
-        storeList.add(StoreProductDetail.fromJson(val));
+        final storeName = (val['store'] as String? ?? key).toLowerCase();
+        final isDeal = bestDealVerdict != null &&
+            bestDealVerdict.store.isNotEmpty &&
+            bestDealVerdict.store.toLowerCase().contains(storeName);
+        storeList.add(StoreProductDetail.fromJson(val, isBestDeal: isDeal));
       }
     });
 
     return DetailedComparisonModel(
       query: json['query'] as String? ?? '',
       searchedAt: json['searchedAt'] as String? ?? '',
-      bestDeal: json['bestDeal'] != null
-          ? BestDealVerdict.fromJson(json['bestDeal'] as Map<String, dynamic>)
-          : null,
+      bestDeal: bestDealVerdict,
       priceDifference: json['priceDifference'] as String?,
       savingsPercentage: json['savingsPercentage'] as String?,
       stores: storeList,

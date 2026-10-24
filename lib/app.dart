@@ -114,28 +114,35 @@ class _MyAppState extends State<MyApp> {
                 locale: context.locale,
                 debugShowCheckedModeBanner: false,
                 builder: (context, child) {
-                  return BlocListener<ConnectivityCubit, ConnectivityStatus>(
-                    listener: (context, state) {
-                      if (!_firstCheckDone &&
-                          state != ConnectivityStatus.disconnected) {
-                        _firstCheckDone = true; // skip first state
-                        return;
-                      }
+                  final mediaQueryData = MediaQuery.of(context);
+                  return MediaQuery(
+                    // Enforce standard fixed text scaling across the entire app so text doesn't overflow or distort layouts in production
+                    data: mediaQueryData.copyWith(
+                      textScaler: const TextScaler.linear(1.0),
+                    ),
+                    child: BlocListener<ConnectivityCubit, ConnectivityStatus>(
+                      listener: (context, state) {
+                        if (!_firstCheckDone &&
+                            state != ConnectivityStatus.disconnected) {
+                          _firstCheckDone = true; // skip first state
+                          return;
+                        }
 
-                      if (state == ConnectivityStatus.disconnected) {
-                        _firstCheckDone = true;
-                        SnackBarHelper.networkError(
-                          context,
-                          "No Internet Connection",
-                        );
-                      } else {
-                        SnackBarHelper.showSuccess(
-                          context,
-                          AppStrings.backOnline,
-                        );
-                      }
-                    },
-                    child: child!,
+                        if (state == ConnectivityStatus.disconnected) {
+                          _firstCheckDone = true;
+                          SnackBarHelper.networkError(
+                            context,
+                            AppStrings.networkConnectionErrorMessage,
+                          );
+                        } else {
+                          SnackBarHelper.showSuccess(
+                            context,
+                            AppStrings.backOnline,
+                          );
+                        }
+                      },
+                      child: child!,
+                    ),
                   );
                 },
               );

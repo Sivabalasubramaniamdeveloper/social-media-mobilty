@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:mineai/core/constants/app_strings.dart';
 import 'package:mineai/core/utils/snackbar_helper.dart';
 import 'package:mineai/core/utils/social_share_helper.dart';
 import '../models/diary_entry_model.dart';
@@ -78,9 +79,9 @@ class _DiaryMoodHypeDialogState extends State<DiaryMoodHypeDialog> {
     if (mounted) {
       setState(() => _isSharing = false);
       if (success) {
-        SnackBarHelper.showSuccess(context, 'Mood poster shared successfully!');
+        SnackBarHelper.showSuccess(context, AppStrings.moodPosterShared);
       } else {
-        SnackBarHelper.showError(context, 'Failed to share mood poster');
+        SnackBarHelper.showError(context, AppStrings.moodPosterShareFailed);
       }
     }
   }
@@ -88,8 +89,7 @@ class _DiaryMoodHypeDialogState extends State<DiaryMoodHypeDialog> {
   @override
   Widget build(BuildContext context) {
     final entryDate = DateTime.tryParse(widget.entry.date) ?? DateTime.now();
-    final dateStr =
-        DateFormat('EEEE • MMMM d, yyyy').format(entryDate);
+    final dateStr = DateFormat('EEEE • MMMM d, yyyy').format(entryDate);
     final moodUpper = widget.entry.mood.toUpperCase();
     final emoji = _getMoodEmoji(widget.entry.mood);
 
@@ -140,7 +140,9 @@ class _DiaryMoodHypeDialogState extends State<DiaryMoodHypeDialog> {
                     children: [
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 6),
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
                         decoration: BoxDecoration(
                           color: const Color(0xFFFF007F).withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(20),
@@ -152,8 +154,11 @@ class _DiaryMoodHypeDialogState extends State<DiaryMoodHypeDialog> {
                         child: const Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.bolt_rounded,
-                                color: Color(0xFFFF007F), size: 14),
+                            Icon(
+                              Icons.bolt_rounded,
+                              color: Color(0xFFFF007F),
+                              size: 14,
+                            ),
                             SizedBox(width: 4),
                             Text(
                               'DISTRICT MOOD HYPED',
@@ -196,18 +201,14 @@ class _DiaryMoodHypeDialogState extends State<DiaryMoodHypeDialog> {
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color:
-                              const Color(0xFFFF007F).withValues(alpha: 0.4),
+                          color: const Color(0xFFFF007F).withValues(alpha: 0.4),
                           blurRadius: 30,
                           spreadRadius: 6,
                         ),
                       ],
                     ),
                     alignment: Alignment.center,
-                    child: Text(
-                      emoji,
-                      style: const TextStyle(fontSize: 54),
-                    ),
+                    child: Text(emoji, style: const TextStyle(fontSize: 54)),
                   ),
                   const SizedBox(height: 16),
 
@@ -240,7 +241,9 @@ class _DiaryMoodHypeDialogState extends State<DiaryMoodHypeDialog> {
                   // Daily Quote Snippet
                   Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 14, vertical: 10),
+                      horizontal: 14,
+                      vertical: 10,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(14),
@@ -268,8 +271,11 @@ class _DiaryMoodHypeDialogState extends State<DiaryMoodHypeDialog> {
                     children: [
                       Row(
                         children: [
-                          const Icon(Icons.auto_stories_rounded,
-                              color: Color(0xFFFF007F), size: 14),
+                          const Icon(
+                            Icons.auto_stories_rounded,
+                            color: Color(0xFFFF007F),
+                            size: 14,
+                          ),
                           const SizedBox(width: 4),
                           Text(
                             'MineAI Personal Diary',
@@ -310,8 +316,10 @@ class _DiaryMoodHypeDialogState extends State<DiaryMoodHypeDialog> {
                     padding: const EdgeInsets.symmetric(vertical: 14),
                   ),
                   onPressed: () => Navigator.pop(context),
-                  child: const Text('Close',
-                      style: TextStyle(color: Colors.white70)),
+                  child: Text(
+                    "close",
+                    style: const TextStyle(color: Colors.white70),
+                  ),
                 ),
               ),
               const SizedBox(width: 12),
@@ -335,11 +343,14 @@ class _DiaryMoodHypeDialogState extends State<DiaryMoodHypeDialog> {
                             strokeWidth: 2,
                           ),
                         )
-                      : const Icon(Icons.share_rounded,
-                          color: Colors.white, size: 20),
-                  label: const Text(
-                    'Share Mood Vibe 🔥',
-                    style: TextStyle(
+                      : const Icon(
+                          Icons.share_rounded,
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                  label: Text(
+                    AppStrings.shareMoodVibe,
+                    style: const TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
                       fontSize: 14,

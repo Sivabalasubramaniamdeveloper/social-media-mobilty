@@ -15,8 +15,13 @@ import 'package:mineai/features/expenses/repositories/expense_repository.dart';
 
 class AddExpenseScreen extends StatefulWidget {
   final String initialType;
+  final TransactionModel? transactionToEdit;
 
-  const AddExpenseScreen({super.key, this.initialType = 'expense'});
+  const AddExpenseScreen({
+    super.key,
+    this.initialType = 'expense',
+    this.transactionToEdit,
+  });
 
   @override
   State<AddExpenseScreen> createState() => _AddExpenseScreenState();
@@ -28,7 +33,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   final _amountController = TextEditingController();
   final _noteController = TextEditingController();
 
-  late String _type = widget.initialType;
+  late String _type = widget.transactionToEdit?.type ?? widget.initialType;
   String _selectedCatId = '';
   DateTime _date = DateTime.now();
   TimeOfDay _time = TimeOfDay.now();
@@ -39,9 +44,23 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   bool _isSaving = false;
   String _currentUserId = 'guest_user';
 
+  bool get _isEditing => widget.transactionToEdit != null;
+
   @override
   void initState() {
     super.initState();
+    if (_isEditing) {
+      final t = widget.transactionToEdit!;
+      _type = t.type;
+      _titleController.text = t.title;
+      _amountController.text = t.amount.toStringAsFixed(
+        t.amount.truncateToDouble() == t.amount ? 0 : 2,
+      );
+      _noteController.text = t.note ?? '';
+      _selectedCatId = t.categoryId;
+      _date = t.time;
+      _time = TimeOfDay.fromDateTime(t.time);
+    }
     _initData();
   }
 
@@ -74,10 +93,14 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
         setState(() {
           _expCategories = exp;
           _incCategories = inc;
-          if (_type == 'expense' && exp.isNotEmpty) {
-            _selectedCatId = exp.first.id;
-          } else if (_type == 'income' && inc.isNotEmpty) {
-            _selectedCatId = inc.first.id;
+          final currentList = _type == 'expense' ? exp : inc;
+          final matchesExisting = currentList.any((c) => c.id == _selectedCatId);
+          if (!matchesExisting) {
+            if (_type == 'expense' && exp.isNotEmpty) {
+              _selectedCatId = exp.first.id;
+            } else if (_type == 'income' && inc.isNotEmpty) {
+              _selectedCatId = inc.first.id;
+            }
           }
           _isLoading = false;
         });
@@ -125,46 +148,82 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
             : CategoryModel(id: 'other', name: 'Other', type: _type),
       );
 
-      final transaction = TransactionModel(
-        userId: userId,
-        title: _titleController.text.trim().isEmpty
-            ? selectedCat.name
-            : _titleController.text.trim(),
-        amount: amt,
-        type: _type,
-        categoryId: selectedCat.id,
-        time: DateTime(
-          _date.year,
-          _date.month,
-          _date.day,
-          _time.hour,
-          _time.minute,
-        ),
-        updateTime: DateTime.now(),
-        note: _noteController.text.trim().isEmpty
-            ? null
-            : _noteController.text.trim(),
-      );
-
-      debugPrint(
-        'Saving transaction for user: $userId, amount: $amt, type: $_type',
-      );
-      await ExpenseRepositoryImpl().addTransaction(transaction, false);
-      debugPrint('Transaction successfully logged!');
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              _type == 'expense'
-                  ? AppStrings.expenseSaved
-                  : AppStrings.incomeSaved,
-            ),
-            backgroundColor: AppColors.statusSuccess,
-            duration: const Duration(seconds: 2),
+      if (_isEditing) {
+        final updated = widget.transactionToEdit!.copyWith(
+          title: _titleController.text.trim().isEmpty
+              ? selectedCat.name
+              : _titleController.text.trim(),
+          amount: amt,
+          type: _type,
+          categoryId: selectedCat.id,
+          time: DateTime(
+            _date.year,
+            _date.month,
+            _date.day,
+            _time.hour,
+            _time.minute,
           ),
+          updateTime: DateTime.now(),
+          note: _noteController.text.trim().isEmpty
+              ? null
+              : _noteController.text.trim(),
         );
-        context.pop(true);
+
+        await ExpenseRepositoryImpl().updateTransaction(updated, true);
+        debugPrint('Transaction successfully updated!');
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(AppStrings.transactionUpdated),
+              backgroundColor: AppColors.statusSuccess,
+              duration: const Duration(seconds: 2),
+            ),
+          );
+          context.pop(true);
+        }
+      } else {
+        final transaction = TransactionModel(
+          userId: userId,
+          title: _titleController.text.trim().isEmpty
+              ? selectedCat.name
+              : _titleController.text.trim(),
+          amount: amt,
+          type: _type,
+          categoryId: selectedCat.id,
+          time: DateTime(
+            _date.year,
+            _date.month,
+            _date.day,
+            _time.hour,
+            _time.minute,
+          ),
+          updateTime: DateTime.now(),
+          note: _noteController.text.trim().isEmpty
+              ? null
+              : _noteController.text.trim(),
+        );
+
+        debugPrint(
+          'Saving transaction for user: $userId, amount: $amt, type: $_type',
+        );
+        await ExpenseRepositoryImpl().addTransaction(transaction, false);
+        debugPrint('Transaction successfully logged!');
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                _type == 'expense'
+                    ? AppStrings.expenseSaved
+                    : AppStrings.incomeSaved,
+              ),
+              backgroundColor: AppColors.statusSuccess,
+              duration: const Duration(seconds: 2),
+            ),
+          );
+          context.pop(true);
+        }
       }
     } catch (e, stack) {
       debugPrint('Failed to save transaction: $e\n$stack');
@@ -206,9 +265,11 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       AppScreenHeader(
-                        title: isExpense
-                            ? AppStrings.addNewExpense
-                            : AppStrings.addIncome,
+                        title: _isEditing
+                            ? AppStrings.editTransaction
+                            : (isExpense
+                                ? AppStrings.addNewExpense
+                                : AppStrings.addIncome),
                         titleSize: AppSizes.fontHeading,
                         onBack: () => context.pop(),
                       ),
@@ -514,9 +575,11 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
 
                       // Save Button
                       GradientActionButton(
-                        text: isExpense
-                            ? AppStrings.addNewExpense
-                            : AppStrings.saveIncome,
+                        text: _isEditing
+                            ? AppStrings.updateTransaction
+                            : (isExpense
+                                ? AppStrings.addNewExpense
+                                : AppStrings.saveIncome),
                         gradientColors: isExpense
                             ? [AppColors.expenseRed, AppColors.expenseRedDark]
                             : [

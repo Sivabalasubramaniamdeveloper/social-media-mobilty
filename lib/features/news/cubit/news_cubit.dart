@@ -10,10 +10,14 @@ class NewsCubit extends Cubit<NewsState> {
       : _newsService = newsService ?? NewsService(),
         super(const NewsInitial());
 
-  Future<void> loadNews({String? city}) async {
+  Future<void> loadNews({String? city, String? provider}) async {
     emit(const NewsLoading());
     try {
       String resolvedCity = city?.trim() ?? '';
+      if (resolvedCity.isEmpty && state is NewsLoaded) {
+        resolvedCity = (state as NewsLoaded).city;
+      }
+
       if (resolvedCity.isEmpty) {
         try {
           final loc = await LocationService.getCurrentStateAndCity();
@@ -27,8 +31,17 @@ class NewsCubit extends Cubit<NewsState> {
         resolvedCity = 'Chennai';
       }
 
-      final articles = await _newsService.fetchCityNews(resolvedCity);
-      emit(NewsLoaded(city: resolvedCity, articles: articles));
+      final resolvedProvider = provider ?? (state is NewsLoaded ? (state as NewsLoaded).provider : 'all');
+      final articles = await _newsService.fetchCityNews(
+        resolvedCity,
+        provider: resolvedProvider,
+      );
+
+      emit(NewsLoaded(
+        city: resolvedCity,
+        provider: resolvedProvider,
+        articles: articles,
+      ));
     } catch (e) {
       emit(NewsError(e.toString()));
     }

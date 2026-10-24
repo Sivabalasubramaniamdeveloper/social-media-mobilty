@@ -28,10 +28,7 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   bool _notifications = true;
-  bool _autoSummarize = true;
-  bool _hapticFeedback = true;
 
-  /// Refreshes plan status and loads device push notification settings whenever settings is opened.
   @override
   void initState() {
     super.initState();
@@ -53,35 +50,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
     await getIt<CustomSecureStorage>().writeSecureData('push_notifications_enabled', val ? 'true' : 'false');
   }
 
-  /// Passes local preference values and callbacks to the settings view.
   @override
   Widget build(BuildContext context) {
     return _SettingsView(
       notifications: _notifications,
-      autoSummarize: _autoSummarize,
-      hapticFeedback: _hapticFeedback,
       onNotificationChanged: _handleNotificationChange,
-      onAutoSummarizeChanged: (v) => setState(() => _autoSummarize = v),
-      onHapticChanged: (v) => setState(() => _hapticFeedback = v),
     );
   }
 }
 
 class _SettingsView extends BaseScreen {
   final bool notifications;
-  final bool autoSummarize;
-  final bool hapticFeedback;
   final ValueChanged<bool> onNotificationChanged;
-  final ValueChanged<bool> onAutoSummarizeChanged;
-  final ValueChanged<bool> onHapticChanged;
 
   const _SettingsView({
     required this.notifications,
-    required this.autoSummarize,
-    required this.hapticFeedback,
     required this.onNotificationChanged,
-    required this.onAutoSummarizeChanged,
-    required this.onHapticChanged,
   });
 
   /// Returns the localized page title used by the shared screen scaffold.
@@ -374,12 +358,6 @@ class _SettingsView extends BaseScreen {
                   value: notifications,
                   onChanged: onNotificationChanged,
                 ),
-                AppListTileCard.toggle(
-                  icon: Icons.auto_awesome_outlined,
-                  title: AppStrings.aiAutoSummarize,
-                  value: autoSummarize,
-                  onChanged: onAutoSummarizeChanged,
-                ),
                 AppListTileCard(
                   icon: Icons.translate_rounded,
                   title: AppStrings.appLanguage,
@@ -387,12 +365,6 @@ class _SettingsView extends BaseScreen {
                       ? 'தமிழ்'
                       : 'English',
                   onTap: () => _showLanguageSheet(context),
-                ),
-                AppListTileCard.toggle(
-                  icon: Icons.vibration_rounded,
-                  title: AppStrings.hapticFeedback,
-                  value: hapticFeedback,
-                  onChanged: onHapticChanged,
                 ),
                 BlocBuilder<ThemeCubit, ThemeState>(
                   builder: (context, themeState) {
@@ -418,6 +390,12 @@ class _SettingsView extends BaseScreen {
                   isEyebrow: true,
                 ),
                 AppListTileCard(
+                  icon: Icons.confirmation_number_outlined,
+                  title: AppStrings.supportTickets,
+                  subtitle: AppStrings.trackIssuesAndRequests,
+                  onTap: () => context.push(RouteNames.supportTickets),
+                ),
+                AppListTileCard(
                   icon: Icons.mail_outline_rounded,
                   title: AppStrings.contactSupport,
                   subtitle: AppStrings.contactSupportSubtitle,
@@ -434,22 +412,39 @@ class _SettingsView extends BaseScreen {
                 AppListTileCard(
                   icon: Icons.privacy_tip_outlined,
                   title: AppStrings.privacyPolicy,
-                  onTap: () {},
+                  onTap: () => _showLegalDialog(
+                    context,
+                    AppStrings.privacyPolicy,
+                    'MineAI Privacy Policy (v1.0.0)\n\n'
+                    '1. Data Collection: MineAI collects minimal essential data (email, name, device token) strictly to deliver AI productivity, expense management, secure vault, and localized news features.\n\n'
+                    '2. Local Storage: Personal diary entries, private vault credentials, and expenses are encrypted and stored locally on your device with biometric protection.\n\n'
+                    '3. Third-Party AI: Prompts sent to Gemini or LLM providers are processed securely and never used to train public models without consent.\n\n'
+                    '4. Data Deletion: You retain full ownership and can export or delete your account data at any time from Settings.',
+                  ),
                 ),
                 AppListTileCard(
                   icon: Icons.description_outlined,
                   title: AppStrings.termsOfService,
-                  onTap: () {},
+                  onTap: () => _showLegalDialog(
+                    context,
+                    AppStrings.termsOfService,
+                    'MineAI Terms & Conditions (v1.0.0)\n\n'
+                    '1. Acceptance: By installing and using MineAI, you agree to these Terms of Service.\n\n'
+                    '2. Responsible Use: You agree not to misuse AI services for unlawful content, harassment, or unauthorized automated crawling.\n\n'
+                    '3. Subscriptions & Credits: Daily credits recharge automatically. Paid tiers unlock expanded image quotas and cloud sync.\n\n'
+                    '4. Warranty: Services are provided "as is". MineAI is designed for personal productivity and decision support.',
+                  ),
                 ),
                 AppListTileCard(
                   icon: Icons.info_outline_rounded,
                   title: AppStrings.appVersionLabel,
                   showChevron: false,
                   trailing: const Text(
-                    '2.4.0-pro',
+                    '1.0.0 (First Version)',
                     style: TextStyle(
                       color: AppColors.secondaryText,
                       fontSize: 12,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                   onTap: () {},
@@ -496,6 +491,27 @@ class _SettingsView extends BaseScreen {
                 const SizedBox(height: 40),
               ],
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showLegalDialog(BuildContext context, String title, String body) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(title),
+        content: SingleChildScrollView(
+          child: Text(
+            body,
+            style: const TextStyle(fontSize: 13, height: 1.5),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(AppStrings.close),
           ),
         ],
       ),

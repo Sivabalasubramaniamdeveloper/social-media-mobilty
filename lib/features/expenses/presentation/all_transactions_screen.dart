@@ -303,6 +303,13 @@ class _AllTransactionsScreenState extends State<AllTransactionsScreen> {
                         return TransactionTile(
                           transaction: tx,
                           currencyFormat: currencyFormat,
+                          onEdit: () async {
+                            final updated = await context.push<bool>(
+                              RouteNames.addExpense,
+                              extra: tx,
+                            );
+                            if (updated == true) _loadTransactions();
+                          },
                           onDelete: () => _confirmDelete(tx),
                         );
                       },

@@ -25,4 +25,9 @@ class RouteNames {
   static const String tasksList = '/tasks-list';
   static const String news = '/news';
   static const String vault = '/vault';
+  static const String customCategories = '/custom-categories';
+  static const String mineAiStreams = '/ott';
+  static const String supportTickets = '/support-tickets';
+  static const String createTicket = '/create-ticket';
+  static const String ticketDetail = '/ticket-detail';
 }

@@ -18,12 +18,17 @@ class NewsLoading extends NewsState {
 
 class NewsLoaded extends NewsState {
   final String city;
+  final String provider;
   final List<NewsArticleModel> articles;
 
-  const NewsLoaded({required this.city, required this.articles});
+  const NewsLoaded({
+    required this.city,
+    this.provider = 'all',
+    required this.articles,
+  });
 
   @override
-  List<Object?> get props => [city, articles];
+  List<Object?> get props => [city, provider, articles];
 }
 
 class NewsError extends NewsState {

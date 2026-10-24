@@ -8,6 +8,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:mineai/config/router/route_names.dart';
 import 'package:mineai/core/constants/app_colors.dart';
+import 'package:mineai/core/constants/app_strings.dart';
 import 'package:mineai/core/utils/snackbar_helper.dart';
 import 'package:mineai/core/utils/user_helper.dart';
 import 'package:mineai/core/widgets/gradiant_background.dart';
@@ -32,17 +33,25 @@ class VaultScreen extends StatefulWidget {
 class _VaultScreenState extends State<VaultScreen> {
   String _selectedFilter = 'all';
 
-  final List<Map<String, dynamic>> _tabs = [
-    {'id': 'all', 'label': 'All', 'icon': Icons.folder_special_rounded},
+  List<Map<String, dynamic>> get _tabs => [
+    {
+      'id': 'all',
+      'label': AppStrings.all,
+      'icon': Icons.folder_special_rounded,
+    },
     {
       'id': 'password',
-      'label': 'Passwords',
+      'label': AppStrings.passwords,
       'icon': Icons.lock_outline_rounded,
     },
-    {'id': 'photo', 'label': 'Photos', 'icon': Icons.photo_library_outlined},
+    {
+      'id': 'photo',
+      'label': AppStrings.photos,
+      'icon': Icons.photo_library_outlined,
+    },
     {
       'id': 'document',
-      'label': 'Documents',
+      'label': AppStrings.documents,
       'icon': Icons.description_outlined,
     },
   ];
@@ -357,7 +366,7 @@ class _VaultScreenState extends State<VaultScreen> {
       );
 
       if (success) {
-        SnackBarHelper.showSuccess(null, 'Private photo saved securely!');
+        SnackBarHelper.showSuccess(null, AppStrings.privatePhotoSaved);
       }
     } catch (e) {
       SnackBarHelper.showError(null, 'Failed to save photo: $e');
@@ -413,10 +422,7 @@ class _VaultScreenState extends State<VaultScreen> {
       );
 
       if (success) {
-        SnackBarHelper.showSuccess(
-          null,
-          'Document stored securely in vault!',
-        );
+        SnackBarHelper.showSuccess(null, AppStrings.documentStoredVault);
       }
     } catch (e) {
       SnackBarHelper.showError(null, 'Failed to save document: $e');
@@ -694,7 +700,7 @@ class _VaultScreenState extends State<VaultScreen> {
                   vertical: 8,
                 ),
                 child: AppScreenHeader(
-                  title: 'Private Information Vault',
+                  title: AppStrings.secureVault,
                   centerTitle: true,
                   onBack: () => context.pop(),
                   trailing: IconButton(
@@ -1180,7 +1186,7 @@ class _VaultScreenState extends State<VaultScreen> {
             onPressed: () {
               Clipboard.setData(ClipboardData(text: item.content));
               Navigator.pop(ctx);
-              SnackBarHelper.showSuccess(context, 'Password copied!');
+              SnackBarHelper.showSuccess(context, AppStrings.passwordCopied);
             },
             child: const Text(
               'Copy Password',
@@ -1275,7 +1281,7 @@ class _VaultScreenState extends State<VaultScreen> {
   void _viewPhotoFullScreen(VaultItemModel item) {
     final file = File(item.content);
     if (!file.existsSync()) {
-      SnackBarHelper.showError(context, 'Image file missing from vault');
+      SnackBarHelper.showError(context, AppStrings.imageMissingVault);
       return;
     }
 
@@ -1304,7 +1310,9 @@ class _VaultScreenState extends State<VaultScreen> {
               right: 20,
               child: FloatingActionButton.small(
                 backgroundColor: Colors.purpleAccent,
-                onPressed: () => SharePlus.instance.share(ShareParams(files: [XFile(file.path)])),
+                onPressed: () => SharePlus.instance.share(
+                  ShareParams(files: [XFile(file.path)]),
+                ),
                 child: const Icon(Icons.share_rounded, color: Colors.white),
               ),
             ),
@@ -1423,7 +1431,7 @@ class _VaultScreenState extends State<VaultScreen> {
         tier: tier,
         currentFilter: _selectedFilter,
       );
-      SnackBarHelper.showSuccess(null, 'Item deleted from vault');
+      SnackBarHelper.showSuccess(null, AppStrings.itemDeletedVault);
     }
   }
 }

@@ -6,6 +6,7 @@ class NewsArticleModel {
   final String source;
   final String snippet;
   final String city;
+  final String? imageUrl;
 
   NewsArticleModel({
     required this.id,
@@ -15,6 +16,7 @@ class NewsArticleModel {
     required this.source,
     required this.snippet,
     required this.city,
+    this.imageUrl,
   });
 
   factory NewsArticleModel.fromJson(Map<String, dynamic> json) {
@@ -26,6 +28,7 @@ class NewsArticleModel {
       source: json['source'] as String? ?? 'Local News',
       snippet: json['snippet'] as String? ?? '',
       city: json['city'] as String? ?? 'Chennai',
+      imageUrl: json['imageUrl'] as String?,
     );
   }
 }

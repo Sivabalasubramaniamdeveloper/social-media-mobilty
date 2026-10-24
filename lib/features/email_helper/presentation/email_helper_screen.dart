@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:mineai/config/router/route_names.dart';
 import 'package:mineai/core/constants/app_colors.dart';
+import 'package:mineai/core/constants/app_strings.dart';
 import 'package:mineai/core/utils/snackbar_helper.dart';
 import 'package:mineai/core/widgets/cards/credits_tracker_card.dart';
 import 'package:mineai/core/widgets/gradiant_background.dart';
@@ -32,6 +33,9 @@ class _EmailHelperScreenState extends State<EmailHelperScreen>
     with SingleTickerProviderStateMixin {
   final EmailHelperService _service = EmailHelperService();
   final TextEditingController _instructionController = TextEditingController();
+  final TextEditingController _directToController = TextEditingController();
+  final TextEditingController _directSubjectController = TextEditingController();
+  final TextEditingController _directBodyController = TextEditingController();
   late TabController _tabController;
 
   final List<String> _tones = [
@@ -44,14 +48,16 @@ class _EmailHelperScreenState extends State<EmailHelperScreen>
   ];
 
   String _selectedTone = 'Professional';
+  String _directTone = 'Professional';
   bool _isGenerating = false;
   SmtpStatusModel? _smtpStatus;
   EmailGenerationResult? _generatedEmail;
+  String? _expandedEmailId;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
     _loadSmtpStatus();
     context.read<UserProfileCubit>().loadProfile();
     _loadSavedEmails();
@@ -73,6 +79,9 @@ class _EmailHelperScreenState extends State<EmailHelperScreen>
   void dispose() {
     _tabController.dispose();
     _instructionController.dispose();
+    _directToController.dispose();
+    _directSubjectController.dispose();
+    _directBodyController.dispose();
     super.dispose();
   }
 
@@ -86,7 +95,7 @@ class _EmailHelperScreenState extends State<EmailHelperScreen>
   Future<void> _generateEmail() async {
     final text = _instructionController.text.trim();
     if (text.isEmpty) {
-      SnackBarHelper.showWarning(context, 'Please describe the email purpose');
+      SnackBarHelper.showWarning(context, AppStrings.describeEmailPurpose);
       return;
     }
 
@@ -125,7 +134,10 @@ class _EmailHelperScreenState extends State<EmailHelperScreen>
     }
   }
 
-  void _copyToClipboard(String text, [String message = 'Copied to clipboard!']) {
+  void _copyToClipboard(
+    String text, [
+    String message = 'Copied to clipboard!',
+  ]) {
     Clipboard.setData(ClipboardData(text: text));
     SnackBarHelper.showSuccess(context, message);
   }
@@ -149,9 +161,11 @@ class _EmailHelperScreenState extends State<EmailHelperScreen>
 
         return AlertDialog(
           backgroundColor: isLight ? scheme.surface : const Color(0xFF1E1B38),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
           title: Text(
-            'Save Generated Email',
+            AppStrings.saveGeneratedEmail,
             style: TextStyle(
               color: scheme.onSurface,
               fontWeight: FontWeight.bold,
@@ -163,7 +177,7 @@ class _EmailHelperScreenState extends State<EmailHelperScreen>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Label Name (e.g. Work, Pitch, Personal, Client)',
+                AppStrings.labelNameHint,
                 style: TextStyle(
                   fontSize: 12,
                   color: isLight
@@ -176,7 +190,7 @@ class _EmailHelperScreenState extends State<EmailHelperScreen>
               TextField(
                 controller: labelController,
                 decoration: InputDecoration(
-                  hintText: 'Enter label name',
+                  hintText: AppStrings.enterLabelName,
                   filled: true,
                   fillColor: isLight
                       ? scheme.surfaceContainerHighest
@@ -189,7 +203,7 @@ class _EmailHelperScreenState extends State<EmailHelperScreen>
               ),
               const SizedBox(height: 14),
               Text(
-                'Intended Recipient (Optional)',
+                AppStrings.intendedRecipient,
                 style: TextStyle(
                   fontSize: 12,
                   color: isLight
@@ -219,8 +233,10 @@ class _EmailHelperScreenState extends State<EmailHelperScreen>
             TextButton(
               onPressed: () => Navigator.pop(ctx),
               child: Text(
-                'Cancel',
-                style: TextStyle(color: scheme.onSurface.withValues(alpha: 0.6)),
+                AppStrings.cancel,
+                style: TextStyle(
+                  color: scheme.onSurface.withValues(alpha: 0.6),
+                ),
               ),
             ),
             ElevatedButton(
@@ -236,22 +252,25 @@ class _EmailHelperScreenState extends State<EmailHelperScreen>
                 Navigator.pop(ctx);
 
                 final saved = await context.read<EmailHelperCubit>().saveEmail(
-                      label: label.isEmpty ? 'General' : label,
-                      subject: subject,
-                      body: body,
-                      tone: tone,
-                      recipient: recipient.isEmpty ? null : recipient,
-                      tier: tier,
-                    );
+                  label: label.isEmpty ? 'General' : label,
+                  subject: subject,
+                  body: body,
+                  tone: tone,
+                  recipient: recipient.isEmpty ? null : recipient,
+                  tier: tier,
+                );
 
                 if (saved && mounted) {
                   SnackBarHelper.showSuccess(
                     context,
-                    'Email saved under "$label" successfully!',
+                    AppStrings.emailSavedSuccess,
                   );
                 }
               },
-              child: const Text('Save Email', style: TextStyle(color: Colors.white)),
+              child: Text(
+                AppStrings.saveEmail,
+                style: const TextStyle(color: Colors.white),
+              ),
             ),
           ],
         );
@@ -286,8 +305,9 @@ class _EmailHelperScreenState extends State<EmailHelperScreen>
               child: Container(
                 decoration: BoxDecoration(
                   color: isLight ? scheme.surface : const Color(0xFF1B192E),
-                  borderRadius:
-                      const BorderRadius.vertical(top: Radius.circular(24)),
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(24),
+                  ),
                 ),
                 padding: const EdgeInsets.all(20),
                 child: Column(
@@ -306,8 +326,10 @@ class _EmailHelperScreenState extends State<EmailHelperScreen>
                           ),
                         ),
                         IconButton(
-                          icon: Icon(Icons.close,
-                              color: scheme.onSurface.withValues(alpha: 0.7)),
+                          icon: Icon(
+                            Icons.close,
+                            color: scheme.onSurface.withValues(alpha: 0.7),
+                          ),
                           onPressed: () => Navigator.pop(bottomSheetCtx),
                         ),
                       ],
@@ -385,19 +407,23 @@ class _EmailHelperScreenState extends State<EmailHelperScreen>
                                 if (isSmtpConfigured) {
                                   setModalState(() => isSending = true);
                                   try {
-                                    await _service.sendDirectEmail(
-                                      to: toEmail,
-                                      cc: ccController.text.trim(),
-                                      subject: subjectController.text.trim(),
-                                      body: bodyController.text.trim(),
-                                    );
+                                    final sendResult = await _service
+                                        .sendDirectEmail(
+                                          to: toEmail,
+                                          cc: ccController.text.trim(),
+                                          subject: subjectController.text
+                                              .trim(),
+                                          body: bodyController.text.trim(),
+                                        );
                                     if (bottomSheetCtx.mounted) {
                                       Navigator.pop(bottomSheetCtx);
                                     }
                                     if (mounted) {
                                       SnackBarHelper.showSuccess(
                                         context,
-                                        'Email sent successfully! (Note: Please check Inbox & Spam folder)',
+                                        sendResult.deliveryNotice.isNotEmpty
+                                            ? sendResult.deliveryNotice
+                                            : 'Email accepted by the mail server. Please check Inbox and Spam/Junk.',
                                       );
                                     }
                                   } catch (e) {
@@ -411,8 +437,7 @@ class _EmailHelperScreenState extends State<EmailHelperScreen>
                                   }
                                 } else {
                                   Navigator.pop(bottomSheetCtx);
-                                  final subject =
-                                      subjectController.text.trim();
+                                  final subject = subjectController.text.trim();
                                   final body = bodyController.text.trim();
                                   final cc = ccController.text.trim();
 
@@ -423,9 +448,10 @@ class _EmailHelperScreenState extends State<EmailHelperScreen>
                                   bool opened = false;
                                   try {
                                     if (await canLaunchUrl(mailtoUri)) {
-                                      opened = await launchUrl(mailtoUri,
-                                          mode:
-                                              LaunchMode.externalApplication);
+                                      opened = await launchUrl(
+                                        mailtoUri,
+                                        mode: LaunchMode.externalApplication,
+                                      );
                                     }
                                   } catch (_) {}
 
@@ -438,7 +464,7 @@ class _EmailHelperScreenState extends State<EmailHelperScreen>
                                     if (mounted) {
                                       SnackBarHelper.showSuccess(
                                         context,
-                                        'Opening email app... (Check Spam folder note)',
+                                        AppStrings.emailSent,
                                       );
                                     }
                                   }
@@ -456,8 +482,11 @@ class _EmailHelperScreenState extends State<EmailHelperScreen>
                             : Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  const Icon(Icons.send_rounded,
-                                      color: Colors.white, size: 18),
+                                  const Icon(
+                                    Icons.send_rounded,
+                                    color: Colors.white,
+                                    size: 18,
+                                  ),
                                   const SizedBox(width: 8),
                                   Text(
                                     isSmtpConfigured
@@ -495,15 +524,19 @@ class _EmailHelperScreenState extends State<EmailHelperScreen>
           child: Column(
             children: [
               Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 child: AppScreenHeader(
                   title: 'Email Helper AI',
                   centerTitle: true,
                   onBack: () => context.pop(),
                   trailing: IconButton(
-                    icon: Icon(Icons.key_rounded,
-                        color: scheme.onSurface.withValues(alpha: 0.8)),
+                    icon: Icon(
+                      Icons.key_rounded,
+                      color: scheme.onSurface.withValues(alpha: 0.8),
+                    ),
                     tooltip: 'Email App Passwords',
                     onPressed: () => context.push(RouteNames.apiKeys),
                   ),
@@ -533,12 +566,16 @@ class _EmailHelperScreenState extends State<EmailHelperScreen>
                   indicatorSize: TabBarIndicatorSize.tab,
                   tabs: const [
                     Tab(
-                      icon: Icon(Icons.auto_awesome_rounded, size: 18),
-                      text: 'Compose',
+                      icon: Icon(Icons.auto_awesome_rounded, size: 17),
+                      text: 'AI Draft',
                     ),
                     Tab(
-                      icon: Icon(Icons.bookmark_added_rounded, size: 18),
-                      text: 'Saved Emails',
+                      icon: Icon(Icons.edit_note_rounded, size: 18),
+                      text: 'Direct Compose',
+                    ),
+                    Tab(
+                      icon: Icon(Icons.bookmark_added_rounded, size: 17),
+                      text: 'Saved Mails',
                     ),
                   ],
                 ),
@@ -548,6 +585,7 @@ class _EmailHelperScreenState extends State<EmailHelperScreen>
                   controller: _tabController,
                   children: [
                     _buildComposeTab(scheme, isLight),
+                    _buildDirectComposeTab(scheme, isLight),
                     _buildSavedEmailsTab(scheme, isLight),
                   ],
                 ),
@@ -577,12 +615,15 @@ class _EmailHelperScreenState extends State<EmailHelperScreen>
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Icon(Icons.info_outline_rounded,
-                  color: Colors.amber, size: 20),
+              const Icon(
+                Icons.info_outline_rounded,
+                color: Colors.amber,
+                size: 20,
+              ),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
-                  'Important: Mails may initially arrive in the recipient\'s Spam or Junk folder. Advise your recipients to check Spam and mark "Not Spam".',
+                  AppStrings.emailSpamNotice,
                   style: TextStyle(
                     fontSize: 12,
                     color: isLight
@@ -599,7 +640,7 @@ class _EmailHelperScreenState extends State<EmailHelperScreen>
 
         // Tone Selector
         Text(
-          'Choose Tone',
+          AppStrings.chooseTone,
           style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w600,
@@ -616,14 +657,16 @@ class _EmailHelperScreenState extends State<EmailHelperScreen>
                 onTap: () => setState(() => _selectedTone = tone),
                 child: Container(
                   margin: const EdgeInsets.only(right: 8),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
                     color: isSelected
                         ? scheme.primary
                         : (isLight
-                            ? scheme.surfaceContainerHighest
-                            : const Color(0xFF1E1B38)),
+                              ? scheme.surfaceContainerHighest
+                              : const Color(0xFF1E1B38)),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
                       color: isSelected ? scheme.primary : Colors.transparent,
@@ -636,8 +679,9 @@ class _EmailHelperScreenState extends State<EmailHelperScreen>
                           ? Colors.white
                           : scheme.onSurface.withValues(alpha: 0.8),
                       fontSize: 13,
-                      fontWeight:
-                          isSelected ? FontWeight.bold : FontWeight.w500,
+                      fontWeight: isSelected
+                          ? FontWeight.bold
+                          : FontWeight.w500,
                     ),
                   ),
                 ),
@@ -649,7 +693,7 @@ class _EmailHelperScreenState extends State<EmailHelperScreen>
 
         // Prompt / Instruction Field
         Text(
-          'Email Purpose & Instructions',
+          AppStrings.emailPurposeInstructions,
           style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w600,
@@ -715,8 +759,11 @@ class _EmailHelperScreenState extends State<EmailHelperScreen>
                 : const Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.auto_awesome_rounded,
-                          color: Colors.white, size: 18),
+                      Icon(
+                        Icons.auto_awesome_rounded,
+                        color: Colors.white,
+                        size: 18,
+                      ),
                       SizedBox(width: 8),
                       Text(
                         'Generate Email (20 Credits)',
@@ -754,7 +801,9 @@ class _EmailHelperScreenState extends State<EmailHelperScreen>
                   children: [
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 4),
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: scheme.primary.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(12),
@@ -786,7 +835,10 @@ class _EmailHelperScreenState extends State<EmailHelperScreen>
                           ),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.bookmark_add_rounded, size: 20),
+                          icon: const Icon(
+                            Icons.bookmark_add_rounded,
+                            size: 20,
+                          ),
                           tooltip: 'Save with Label',
                           onPressed: () => _showSaveEmailModal(
                             _generatedEmail!.subject,
@@ -827,8 +879,11 @@ class _EmailHelperScreenState extends State<EmailHelperScreen>
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    icon: Icon(Icons.send_rounded,
-                        color: scheme.primary, size: 16),
+                    icon: Icon(
+                      Icons.send_rounded,
+                      color: scheme.primary,
+                      size: 16,
+                    ),
                     label: Text(
                       'Send Directly or via Email Client',
                       style: TextStyle(
@@ -847,6 +902,252 @@ class _EmailHelperScreenState extends State<EmailHelperScreen>
           ),
           const SizedBox(height: 24),
         ],
+      ],
+    );
+  }
+
+  Widget _buildDirectComposeTab(ColorScheme scheme, bool isLight) {
+    return ListView(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      children: [
+        // Zero credit cost banner
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            color: Colors.green.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
+          ),
+          child: Row(
+            children: [
+              const Icon(
+                Icons.check_circle_outline_rounded,
+                color: Colors.green,
+                size: 20,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  'Direct Compose Active • 0 Credits Used (Completely Free)',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: isLight ? Colors.green.shade900 : Colors.green.shade200,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 14),
+
+        // Compose Form Card
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: isLight
+                ? scheme.surfaceContainerHighest
+                : const Color(0xFF1E1B38),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
+              color: isLight ? Colors.black12 : Colors.white10,
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Recipient Field
+              Text(
+                'To (Recipient Email)',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: isLight
+                      ? AppColors.lightSecondaryOnSurface
+                      : AppColors.secondaryText,
+                ),
+              ),
+              const SizedBox(height: 6),
+              TextField(
+                controller: _directToController,
+                keyboardType: TextInputType.emailAddress,
+                style: TextStyle(color: scheme.onSurface, fontSize: 14),
+                decoration: InputDecoration(
+                  hintText: 'recipient@example.com',
+                  prefixIcon: Icon(Icons.alternate_email_rounded, size: 18, color: scheme.primary),
+                  filled: true,
+                  fillColor: isLight ? scheme.surface : const Color(0xFF262344),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  isDense: true,
+                ),
+              ),
+              const SizedBox(height: 14),
+
+              // Subject Field
+              Text(
+                'Subject',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: isLight
+                      ? AppColors.lightSecondaryOnSurface
+                      : AppColors.secondaryText,
+                ),
+              ),
+              const SizedBox(height: 6),
+              TextField(
+                controller: _directSubjectController,
+                style: TextStyle(color: scheme.onSurface, fontSize: 14),
+                decoration: InputDecoration(
+                  hintText: 'Enter email subject...',
+                  prefixIcon: Icon(Icons.subject_rounded, size: 18, color: scheme.primary),
+                  filled: true,
+                  fillColor: isLight ? scheme.surface : const Color(0xFF262344),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  isDense: true,
+                ),
+              ),
+              const SizedBox(height: 14),
+
+              // Tone selector
+              Text(
+                'Style / Tone (Optional)',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: isLight
+                      ? AppColors.lightSecondaryOnSurface
+                      : AppColors.secondaryText,
+                ),
+              ),
+              const SizedBox(height: 8),
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: _tones.map((t) {
+                    final isSel = _directTone == t;
+                    return GestureDetector(
+                      onTap: () => setState(() => _directTone = t),
+                      child: Container(
+                        margin: const EdgeInsets.only(right: 8),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: isSel
+                              ? scheme.primary
+                              : (isLight ? scheme.surface : const Color(0xFF262344)),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: isSel ? scheme.primary : Colors.transparent,
+                          ),
+                        ),
+                        child: Text(
+                          t,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: isSel ? Colors.white : scheme.onSurface.withValues(alpha: 0.7),
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+              const SizedBox(height: 14),
+
+              // Body Field
+              Text(
+                'Message Body',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: isLight
+                      ? AppColors.lightSecondaryOnSurface
+                      : AppColors.secondaryText,
+                ),
+              ),
+              const SizedBox(height: 6),
+              TextField(
+                controller: _directBodyController,
+                maxLines: 7,
+                style: TextStyle(color: scheme.onSurface, fontSize: 14, height: 1.4),
+                decoration: InputDecoration(
+                  hintText: 'Type your email message directly here...',
+                  filled: true,
+                  fillColor: isLight ? scheme.surface : const Color(0xFF262344),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 18),
+
+              // Action Buttons
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: scheme.primary,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      icon: const Icon(Icons.send_rounded, size: 16),
+                      label: Text(
+                        AppStrings.sendEmail,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      onPressed: () {
+                        final subject = _directSubjectController.text.trim();
+                        final body = _directBodyController.text.trim();
+                        if (subject.isEmpty && body.isEmpty) {
+                          SnackBarHelper.showWarning(context, AppStrings.enterSubjectOrMessage);
+                          return;
+                        }
+                        _showSendEmailModal(subject, body);
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    icon: const Icon(Icons.bookmark_add_rounded, size: 16),
+                    label: Text(AppStrings.saveEmail),
+                    onPressed: () {
+                      final subject = _directSubjectController.text.trim();
+                      final body = _directBodyController.text.trim();
+                      if (subject.isEmpty && body.isEmpty) {
+                        SnackBarHelper.showWarning(context, AppStrings.enterEmailContentToSave);
+                        return;
+                      }
+                      _showSaveEmailModal(
+                        subject.isEmpty ? 'Untitled' : subject,
+                        body,
+                        _directTone,
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 24),
       ],
     );
   }
@@ -874,8 +1175,8 @@ class _EmailHelperScreenState extends State<EmailHelperScreen>
         final tierName = tier == PlanTier.premium
             ? 'Premium (50 Mails)'
             : tier == PlanTier.pro
-                ? 'Pro (20 Mails)'
-                : 'Basic (5 Mails)';
+            ? 'Pro (20 Mails)'
+            : 'Basic (5 Mails)';
 
         return RefreshIndicator(
           onRefresh: () async => _loadSavedEmails(),
@@ -922,7 +1223,9 @@ class _EmailHelperScreenState extends State<EmailHelperScreen>
                     ),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 5),
+                        horizontal: 10,
+                        vertical: 5,
+                      ),
                       decoration: BoxDecoration(
                         color: scheme.primary.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(12),
@@ -946,9 +1249,11 @@ class _EmailHelperScreenState extends State<EmailHelperScreen>
                   padding: const EdgeInsets.symmetric(vertical: 40),
                   child: Column(
                     children: [
-                      Icon(Icons.mark_email_read_outlined,
-                          size: 48,
-                          color: scheme.onSurface.withValues(alpha: 0.3)),
+                      Icon(
+                        Icons.mark_email_read_outlined,
+                        size: 48,
+                        color: scheme.onSurface.withValues(alpha: 0.3),
+                      ),
                       const SizedBox(height: 12),
                       Text(
                         'No Saved Emails Yet',
@@ -973,7 +1278,9 @@ class _EmailHelperScreenState extends State<EmailHelperScreen>
                   ),
                 )
               else
-                ...emails.map((mail) => _buildSavedEmailTile(mail, scheme, isLight)),
+                ...emails.map(
+                  (mail) => _buildSavedEmailTile(mail, scheme, isLight),
+                ),
             ],
           ),
         );
@@ -982,124 +1289,258 @@ class _EmailHelperScreenState extends State<EmailHelperScreen>
   }
 
   Widget _buildSavedEmailTile(
-      SavedEmailModel mail, ColorScheme scheme, bool isLight) {
+    SavedEmailModel mail,
+    ColorScheme scheme,
+    bool isLight,
+  ) {
     final dateStr = DateFormat('MMM dd, yyyy • hh:mm a').format(mail.createdAt);
+    final isExpanded = _expandedEmailId == mail.id;
 
-    return Container(
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
       margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: isLight
             ? scheme.surfaceContainerHighest
             : const Color(0xFF1E1B38),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(18),
         border: Border.all(
-          color: isLight ? Colors.black12 : Colors.white10,
+          color: isExpanded
+              ? scheme.primary.withValues(alpha: 0.6)
+              : (isLight ? Colors.black.withValues(alpha: 0.08) : Colors.white10),
+          width: isExpanded ? 1.5 : 1.0,
         ),
+        boxShadow: [
+          if (isExpanded)
+            BoxShadow(
+              color: scheme.primary.withValues(alpha: 0.12),
+              blurRadius: 16,
+              offset: const Offset(0, 4),
+            ),
+        ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.blueAccent.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(
-                  mail.label.toUpperCase(),
-                  style: const TextStyle(
-                    color: Colors.blueAccent,
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.copy_rounded, size: 18),
-                    tooltip: 'Copy',
-                    onPressed: () => _copyToClipboard(
-                      'Subject: ${mail.subject}\n\n${mail.body}',
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(18),
+          onTap: () {
+            setState(() {
+              _expandedEmailId = isExpanded ? null : mail.id;
+            });
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: scheme.primary.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text(
+                            mail.label.toUpperCase(),
+                            style: TextStyle(
+                              color: scheme.primary,
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 3,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.amber.withValues(alpha: 0.14),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            mail.tone,
+                            style: const TextStyle(
+                              color: Colors.amber,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
+                    Icon(
+                      isExpanded
+                          ? Icons.keyboard_arrow_up_rounded
+                          : Icons.keyboard_arrow_down_rounded,
+                      color: scheme.primary,
+                      size: 22,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  mail.subject,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    color: scheme.onSurface,
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.share_rounded, size: 18),
-                    tooltip: 'Share',
-                    onPressed: () => _shareEmail(mail.subject, mail.body),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.send_rounded, size: 18),
-                    tooltip: 'Send',
-                    onPressed: () => _showSendEmailModal(mail.subject, mail.body),
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.delete_outline_rounded,
-                        color: scheme.error, size: 18),
-                    tooltip: 'Delete',
-                    onPressed: () async {
-                      if (mail.id != null) {
-                        await context
-                            .read<EmailHelperCubit>()
-                            .deleteEmail(mail.id!, _getCurrentTier());
-                        if (mounted) {
-                          SnackBarHelper.showSuccess(
-                              context, 'Saved email deleted');
-                        }
-                      }
-                    },
+                ),
+                if (mail.recipient != null && mail.recipient!.isNotEmpty) ...[
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.alternate_email_rounded,
+                        size: 13,
+                        color: scheme.primary,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        'To: ${mail.recipient!}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: scheme.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            mail.subject,
-            style: TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.bold,
-              color: scheme.onSurface,
+                const SizedBox(height: 8),
+                AnimatedCrossFade(
+                  duration: const Duration(milliseconds: 250),
+                  crossFadeState: isExpanded
+                      ? CrossFadeState.showSecond
+                      : CrossFadeState.showFirst,
+                  firstChild: Text(
+                    mail.body,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: isLight
+                          ? AppColors.lightSecondaryOnSurface
+                          : AppColors.secondaryText,
+                      height: 1.4,
+                    ),
+                  ),
+                  secondChild: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: isLight ? scheme.surface : const Color(0xFF262344),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      mail.body,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: scheme.onSurface,
+                        height: 1.5,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Divider(
+                  height: 1,
+                  color: isLight ? Colors.black12 : Colors.white12,
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      dateStr,
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: scheme.onSurface.withValues(alpha: 0.5),
+                      ),
+                    ),
+                    Row(
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.copy_rounded, size: 18),
+                          tooltip: 'Copy',
+                          onPressed: () => _copyToClipboard(
+                            'Subject: ${mail.subject}\n\n${mail.body}',
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.share_rounded, size: 18),
+                          tooltip: 'Share',
+                          onPressed: () => _shareEmail(mail.subject, mail.body),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.send_rounded, size: 18),
+                          tooltip: 'Send',
+                          onPressed: () =>
+                              _showSendEmailModal(mail.subject, mail.body),
+                        ),
+                        IconButton(
+                          icon: const Icon(
+                            Icons.delete_outline_rounded,
+                            color: Colors.redAccent,
+                            size: 18,
+                          ),
+                          tooltip: 'Delete',
+                          onPressed: () async {
+                            final confirmed = await showDialog<bool>(
+                              context: context,
+                              builder: (ctx) => AlertDialog(
+                                title: Text(AppStrings.delete),
+                                content: Text(AppStrings.deleteSavedEmailConfirm),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(ctx, false),
+                                    child: Text(AppStrings.cancel),
+                                  ),
+                                  ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.redAccent,
+                                    ),
+                                    onPressed: () => Navigator.pop(ctx, true),
+                                    child: Text(
+                                      AppStrings.delete,
+                                      style: const TextStyle(color: Colors.white),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                            if (confirmed == true && mail.id != null && mounted) {
+                              await context.read<EmailHelperCubit>().deleteEmail(
+                                mail.id!,
+                                _getCurrentTier(),
+                              );
+                              if (mounted) {
+                                SnackBarHelper.showSuccess(
+                                  context,
+                                  AppStrings.itemDeleted,
+                                );
+                              }
+                            }
+                          },
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 6),
-          Text(
-            mail.body,
-            maxLines: 4,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: 13,
-              color: scheme.onSurface.withValues(alpha: 0.8),
-              height: 1.4,
-            ),
-          ),
-          const SizedBox(height: 10),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Tone: ${mail.tone}',
-                style: TextStyle(
-                  fontSize: 11,
-                  color: scheme.primary,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              Text(
-                dateStr,
-                style: TextStyle(
-                  fontSize: 11,
-                  color: scheme.onSurface.withValues(alpha: 0.5),
-                ),
-              ),
-            ],
-          ),
-        ],
+        ),
       ),
     );
   }

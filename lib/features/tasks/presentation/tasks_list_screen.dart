@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mineai/config/router/route_names.dart';
 import 'package:mineai/core/constants/app_colors.dart';
+import 'package:mineai/core/constants/app_strings.dart';
 import 'package:mineai/core/utils/snackbar_helper.dart';
 import 'package:mineai/core/widgets/cards/credits_tracker_card.dart';
 import 'package:mineai/core/widgets/gradiant_background.dart';
@@ -12,6 +13,7 @@ import 'package:mineai/features/profile/cubit/user_profile_state.dart';
 import 'package:mineai/features/tasks/cubit/task_cubit.dart';
 import 'package:mineai/features/tasks/cubit/task_state.dart';
 import 'package:mineai/features/tasks/models/task_model.dart';
+import 'package:mineai/features/tasks/presentation/task_detail_screen.dart';
 import 'package:mineai/features/tasks/presentation/widgets/task_hype_poster_dialog.dart';
 import 'package:mineai/features/tasks/services/task_service.dart';
 
@@ -52,8 +54,32 @@ class _TasksListScreenState extends State<TasksListScreen> {
 
   Future<void> _deleteTask(TaskModel task) async {
     if (task.id == null) return;
-    await context.read<TaskCubit>().deleteTask(task.id!, _selectedPeriod);
-    if (mounted) SnackBarHelper.showSuccess(context, 'Task removed');
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(AppStrings.delete),
+        content: Text(AppStrings.deleteTaskConfirm),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(AppStrings.cancel),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(
+              AppStrings.delete,
+              style: const TextStyle(color: Colors.white),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      await context.read<TaskCubit>().deleteTask(task.id!, _selectedPeriod);
+      if (mounted) SnackBarHelper.showSuccess(context, AppStrings.itemDeleted);
+    }
   }
 
   void _showHypePoster({
@@ -91,7 +117,13 @@ class _TasksListScreenState extends State<TasksListScreen> {
                 child: AppScreenHeader(
                   title: 'Task Tracker & Assistant',
                   centerTitle: true,
-                  onBack: () => context.pop(),
+                  onBack: () {
+                    if (context.canPop()) {
+                      context.pop();
+                    } else {
+                      context.go(RouteNames.dashboard);
+                    }
+                  },
                 ),
               ),
 
@@ -202,9 +234,9 @@ class _TasksListScreenState extends State<TasksListScreen> {
         backgroundColor: scheme.primary,
         onPressed: () => context.push(RouteNames.voiceTasks),
         icon: const Icon(Icons.mic_rounded, color: Colors.white),
-        label: const Text(
-          'Speak New Task',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        label: Text(
+          AppStrings.speakNow,
+          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
       ),
     );
@@ -352,7 +384,7 @@ class _TasksListScreenState extends State<TasksListScreen> {
           ),
           const SizedBox(height: 12),
           Text(
-            'No tasks found for this period',
+            AppStrings.noTasksFound,
             style: TextStyle(
               color: scheme.onSurface,
               fontWeight: FontWeight.bold,
@@ -378,166 +410,215 @@ class _TasksListScreenState extends State<TasksListScreen> {
   Widget _buildTaskItem(TaskModel task, ColorScheme scheme, bool isLight) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: isLight
             ? scheme.surfaceContainerHighest
             : const Color(0xFF1E1B38),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(18),
         border: Border.all(
           color: task.isCompleted
-              ? Colors.green.withValues(alpha: 0.4)
-              : (isLight ? Colors.black12 : Colors.white10),
+              ? Colors.green.withValues(alpha: 0.5)
+              : (isLight ? Colors.black.withValues(alpha: 0.08) : Colors.white12),
           width: task.isCompleted ? 1.5 : 1.0,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: task.isCompleted
+                ? Colors.green.withValues(alpha: 0.08)
+                : Colors.black.withValues(alpha: 0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              IconButton(
-                icon: Icon(
-                  task.isCompleted
-                      ? Icons.check_circle_rounded
-                      : Icons.radio_button_unchecked_rounded,
-                  color: task.isCompleted ? Colors.green : scheme.primary,
-                  size: 24,
-                ),
-                onPressed: () => _toggleComplete(task),
-              ),
-              Expanded(
-                child: Column(
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(18),
+          onTap: () async {
+            await Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => TaskDetailScreen(task: task)),
+            );
+            _loadTasks();
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      task.title,
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                        color: scheme.onSurface,
-                        decoration: task.isCompleted
-                            ? TextDecoration.lineThrough
-                            : null,
+                    IconButton(
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                      icon: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 250),
+                        child: Icon(
+                          task.isCompleted
+                              ? Icons.check_circle_rounded
+                              : Icons.radio_button_unchecked_rounded,
+                          key: ValueKey(task.isCompleted),
+                          color: task.isCompleted ? Colors.green : scheme.primary,
+                          size: 24,
+                        ),
+                      ),
+                      onPressed: () => _toggleComplete(task),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            task.title,
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                              color: scheme.onSurface,
+                              decoration: task.isCompleted
+                                  ? TextDecoration.lineThrough
+                                  : null,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.access_time_rounded,
+                                size: 13,
+                                color: scheme.primary,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                '${task.dateDisplay} • ${task.timeDisplay}',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: scheme.primary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${task.dateDisplay} at ${task.timeDisplay}',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: scheme.primary,
-                        fontWeight: FontWeight.w600,
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 9,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: scheme.primary.withValues(alpha: 0.14),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        task.category,
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: scheme.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ],
                 ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: isLight
-                      ? scheme.primary.withValues(alpha: 0.1)
-                      : Colors.white10,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  task.category,
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: scheme.onSurface.withValues(alpha: 0.7),
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          if (task.details != null && task.details!.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            Padding(
-              padding: const EdgeInsets.only(left: 48),
-              child: Text(
-                task.details!,
-                style: TextStyle(
-                  fontSize: 13,
-                  color: isLight
-                      ? AppColors.lightSecondaryOnSurface
-                      : AppColors.secondaryText,
-                ),
-              ),
-            ),
-          ],
-          const SizedBox(height: 8),
-          const Divider(height: 1),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              if (task.location != null && task.location!.isNotEmpty) ...[
-                Icon(
-                  Icons.location_on_outlined,
-                  size: 14,
-                  color: isLight
-                      ? AppColors.lightSecondaryOnSurface
-                      : AppColors.secondaryText,
-                ),
-                const SizedBox(width: 4),
-                Expanded(
-                  child: Text(
-                    task.location!,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: isLight
-                          ? AppColors.lightSecondaryOnSurface
-                          : AppColors.secondaryText,
+                if (task.details != null && task.details!.isNotEmpty) ...[
+                  const SizedBox(height: 10),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 36),
+                    child: Text(
+                      task.details!,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: isLight
+                            ? AppColors.lightSecondaryOnSurface
+                            : AppColors.secondaryText,
+                        height: 1.3,
+                      ),
                     ),
-                    overflow: TextOverflow.ellipsis,
                   ),
+                ],
+                const SizedBox(height: 12),
+                Divider(
+                  height: 1,
+                  color: isLight ? Colors.black12 : Colors.white12,
                 ),
-              ] else
-                const Spacer(),
-              IconButton(
-                icon: Icon(
-                  Icons.calendar_month_rounded,
-                  color: scheme.primary,
-                  size: 20,
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    if (task.location != null && task.location!.isNotEmpty) ...[
+                      Icon(
+                        Icons.location_on_outlined,
+                        size: 14,
+                        color: isLight
+                            ? AppColors.lightSecondaryOnSurface
+                            : AppColors.secondaryText,
+                      ),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          task.location!,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: isLight
+                                ? AppColors.lightSecondaryOnSurface
+                                : AppColors.secondaryText,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ] else
+                      const Spacer(),
+                    IconButton(
+                      icon: Icon(
+                        Icons.calendar_month_rounded,
+                        color: scheme.primary,
+                        size: 19,
+                      ),
+                      tooltip: 'Open in Calendar',
+                      onPressed: () => _taskService.openInCalendar(task),
+                    ),
+                    IconButton(
+                      icon: Icon(
+                        Icons.mail_outline_rounded,
+                        color: scheme.primary,
+                        size: 19,
+                      ),
+                      tooltip: 'Send Email Reminder',
+                      onPressed: () async {
+                        try {
+                          await _taskService.notifyTaskEmail(task);
+                          if (mounted) {
+                            SnackBarHelper.showSuccess(
+                              context,
+                              'Task email reminder sent! (Check Inbox & Spam folder)',
+                            );
+                          }
+                        } catch (e) {
+                          if (mounted) {
+                            SnackBarHelper.showError(context, 'Failed to send: $e');
+                          }
+                        }
+                      },
+                    ),
+                    IconButton(
+                      icon: const Icon(
+                        Icons.delete_outline_rounded,
+                        color: Colors.redAccent,
+                        size: 19,
+                      ),
+                      onPressed: () => _deleteTask(task),
+                    ),
+                  ],
                 ),
-                tooltip: 'Open in Calendar',
-                onPressed: () => _taskService.openInCalendar(task),
-              ),
-              IconButton(
-                icon: Icon(
-                  Icons.mail_outline_rounded,
-                  color: scheme.primary,
-                  size: 20,
-                ),
-                tooltip: 'Send Email Reminder',
-                onPressed: () async {
-                  try {
-                    await _taskService.notifyTaskEmail(task);
-                    if (mounted) {
-                      SnackBarHelper.showSuccess(
-                        context,
-                        'Task email reminder sent! (Check Inbox & Spam folder)',
-                      );
-                    }
-                  } catch (e) {
-                    if (mounted) {
-                      SnackBarHelper.showError(context, 'Failed to send: $e');
-                    }
-                  }
-                },
-              ),
-              IconButton(
-                icon: const Icon(
-                  Icons.delete_outline_rounded,
-                  color: Colors.redAccent,
-                  size: 20,
-                ),
-                onPressed: () => _deleteTask(task),
-              ),
-            ],
+              ],
+            ),
           ),
-        ],
+        ),
       ),
     );
   }

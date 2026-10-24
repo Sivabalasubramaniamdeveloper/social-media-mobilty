@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shimmer/shimmer.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
 import '../models/ott_video.dart';
@@ -36,15 +37,13 @@ class _OttHomeScreenState extends State<OttHomeScreen> {
         future: _videos,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(
-              child: CircularProgressIndicator(color: scheme.primary),
-            );
+            return _buildSkeletonLoader(context, isLight, scheme);
           }
           if (snapshot.hasError) {
             return _message(
               context,
-              'We couldn’t load the collection.',
-              'Check your connection and try again.',
+              AppStrings.ottLoadError,
+              AppStrings.ottRetrySub,
               retry: true,
             );
           }
@@ -52,15 +51,15 @@ class _OttHomeScreenState extends State<OttHomeScreen> {
           if (videos.isEmpty) {
             return _message(
               context,
-              'Your next favorite is coming.',
-              'Published titles will appear here.',
+              AppStrings.ottEmptyTitle,
+              AppStrings.ottEmptySub,
             );
           }
           final categories = [
-            'For you',
+            AppStrings.forYou,
             ...videos.map((v) => v.category).where((c) => c.isNotEmpty).toSet(),
           ];
-          final visible = _category == 'For you'
+          final visible = _category == AppStrings.forYou || _category == 'For you'
               ? videos
               : videos.where((v) => v.category == _category).toList();
           final featured = videos.first;
@@ -117,7 +116,9 @@ class _OttHomeScreenState extends State<OttHomeScreen> {
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
                     child: Text(
-                      _category == 'For you' ? 'Popular right now' : _category,
+                      _category == AppStrings.forYou || _category == 'For you'
+                          ? AppStrings.popularRightNow
+                          : _category,
                       style: TextStyle(
                         color: scheme.onSurface,
                         fontSize: 20,
@@ -199,7 +200,7 @@ class _OttHomeScreenState extends State<OttHomeScreen> {
                   ),
                   const SizedBox(width: 10),
                   Text(
-                    'DEVELOPER AI',
+                    AppStrings.developerAi,
                     style: TextStyle(
                       color: isLight ? scheme.onSurface : Colors.white,
                       letterSpacing: 2.0,
@@ -234,9 +235,9 @@ class _OttHomeScreenState extends State<OttHomeScreen> {
                     color: scheme.primary,
                     borderRadius: BorderRadius.circular(6),
                   ),
-                  child: const Text(
-                    'FEATURED',
-                    style: TextStyle(
+                  child: Text(
+                    AppStrings.featured,
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 10,
                       fontWeight: FontWeight.bold,
@@ -259,8 +260,8 @@ class _OttHomeScreenState extends State<OttHomeScreen> {
                 const SizedBox(height: 6),
                 Text(
                   video.category.isEmpty
-                      ? 'ORIGINAL • NOW STREAMING'
-                      : '${video.category.toUpperCase()} • NOW STREAMING',
+                      ? '${AppStrings.original} • ${AppStrings.nowStreaming}'
+                      : '${video.category.toUpperCase()} • ${AppStrings.nowStreaming}',
                   style: TextStyle(
                     color: isLight
                         ? AppColors.lightSecondaryOnSurface
@@ -502,4 +503,106 @@ class _OttHomeScreenState extends State<OttHomeScreen> {
   void _play(OttVideo video) => Navigator.of(
     context,
   ).push(MaterialPageRoute(builder: (_) => OttPlayerScreen(video: video)));
+
+  Widget _buildSkeletonLoader(
+    BuildContext context,
+    bool isLight,
+    ColorScheme scheme,
+  ) {
+    final baseColor = isLight ? Colors.grey[300]! : const Color(0xFF1E1B38);
+    final highlightColor = isLight ? Colors.grey[100]! : const Color(0xFF2E2752);
+
+    return SafeArea(
+      child: Shimmer.fromColors(
+        baseColor: baseColor,
+        highlightColor: highlightColor,
+        child: ListView(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          children: [
+            // Header bar
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  width: 140,
+                  height: 24,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                Container(
+                  width: 38,
+                  height: 38,
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+
+            // Hero Featured Video skeleton
+            Container(
+              width: double.infinity,
+              height: 240,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // Category pills skeleton
+            Row(
+              children: List.generate(
+                4,
+                (i) => Container(
+                  margin: const EdgeInsets.only(right: 10),
+                  width: 72,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // Section title skeleton
+            Container(
+              width: 120,
+              height: 18,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(6),
+              ),
+            ),
+            const SizedBox(height: 14),
+
+            // Grid cards skeleton
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                childAspectRatio: 0.82,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+              ),
+              itemCount: 4,
+              itemBuilder: (_, _) => Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }

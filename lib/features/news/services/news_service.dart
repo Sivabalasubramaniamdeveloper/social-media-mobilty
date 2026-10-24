@@ -8,13 +8,18 @@ class NewsService {
   final CustomApiCallService _apiService = getIt<CustomApiCallService>();
   final CustomSecureStorage _secureStorage = getIt<CustomSecureStorage>();
 
-  Future<List<NewsArticleModel>> fetchCityNews(String city) async {
+  Future<List<NewsArticleModel>> fetchCityNews(String city, {String? provider}) async {
     final token = await _secureStorage.readSecureData('loginToken') ?? '';
+
+    String url = '${UserHelper.baseUrl}/news?city=${Uri.encodeComponent(city)}';
+    if (provider != null && provider.isNotEmpty && provider != 'all') {
+      url += '&provider=${Uri.encodeComponent(provider)}';
+    }
 
     final response = await _apiService.makeApiRequest(
       method: 'GET',
       token: token,
-      url: '${UserHelper.baseUrl}/news?city=${Uri.encodeComponent(city)}',
+      url: url,
     );
 
     final data = response.data as Map<String, dynamic>;

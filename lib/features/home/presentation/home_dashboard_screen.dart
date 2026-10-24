@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 import 'package:mineai/config/router/route_names.dart';
 import 'package:mineai/core/constants/app_colors.dart';
 import 'package:mineai/core/constants/app_strings.dart';
 import 'package:mineai/core/constants/app_sizes.dart';
-import 'package:mineai/core/database/app_database.dart';
 import 'package:mineai/core/widgets/gradiant_background.dart';
 import 'package:mineai/core/widgets/cards/app_feature_card.dart';
 import 'package:mineai/core/widgets/cards/app_list_tile_card.dart';
@@ -174,50 +172,38 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
   Widget _buildToolsGrid(BuildContext context) {
     final List<_ToolItem> tools = [
       _ToolItem(
-        title: AppStrings.resumeAi,
-        description: AppStrings.resumeAiDesc,
-        icon: Icons.description_outlined,
-        onTap: () {},
-      ),
-      _ToolItem(
-        title: AppStrings.studyAi,
-        description: AppStrings.studyAiDesc,
-        icon: Icons.school_outlined,
-        onTap: () {},
-      ),
-      _ToolItem(
         title: AppStrings.voiceTasks,
         description: AppStrings.voiceTasksDesc,
         icon: Icons.mic_none_rounded,
         onTap: () => context.push(RouteNames.voiceTasks),
       ),
       _ToolItem(
-        title: 'Email Helper',
-        description: 'AI drafts & direct sending',
+        title: AppStrings.aiEmailHelper,
+        description: AppStrings.generateDraft,
         icon: Icons.mark_email_read_outlined,
         onTap: () => context.push(RouteNames.emailHelper),
       ),
       _ToolItem(
-        title: 'City News',
-        description: 'Location web-scraped news',
+        title: AppStrings.localCityNews,
+        description: AppStrings.webScrapingNews,
         icon: Icons.newspaper_rounded,
         onTap: () => context.push(RouteNames.news),
       ),
       _ToolItem(
-        title: 'Private Vault',
-        description: 'Passwords, photos & docs',
+        title: AppStrings.secureVault,
+        description: AppStrings.vaultSubtitle,
         icon: Icons.shield_rounded,
         onTap: () => context.push(RouteNames.vault),
       ),
       _ToolItem(
-        title: AppStrings.imageCaptions,
-        description: AppStrings.imageCaptionsDesc,
-        icon: Icons.image_outlined,
-        onTap: () {},
+        title: AppStrings.comparePricesTag,
+        description: AppStrings.searchingStores,
+        icon: Icons.compare_arrows_rounded,
+        onTap: () => context.push(RouteNames.comparePrices),
       ),
       _ToolItem(
-        title: AppStrings.developerAi,
-        description: AppStrings.developerAiDesc,
+        title: AppStrings.mineAiStreams,
+        description: AppStrings.mineAiStreamsDesc,
         icon: Icons.video_library_sharp,
         onTap: () => context.push(RouteNames.ott),
       ),
@@ -242,6 +228,12 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
             );
           }
         },
+      ),
+      _ToolItem(
+        title: AppStrings.apiKeysTitle,
+        description: AppStrings.apiKeysSubtitle,
+        icon: Icons.key_rounded,
+        onTap: () => context.push(RouteNames.apiKeys),
       ),
     ];
 
@@ -271,7 +263,10 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
     return AppSectionHeader(
       title: AppStrings.recentActivity,
       actionLabel: AppStrings.viewAll,
-      onAction: () => context.push(RouteNames.tasksList),
+      onAction: () async {
+        await context.push(RouteNames.tasksList);
+        _loadRecentTasks();
+      },
     );
   }
 
@@ -299,7 +294,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
-                task.isCompleted ? 'Done' : 'Pending',
+                task.isCompleted ? AppStrings.taskCompleted : AppStrings.taskPending,
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
@@ -406,24 +401,9 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
               : AppColors.secondaryText);
 
     return InkWell(
-      onTap: () async {
-        if (index == 2) {
-          final userId = await UserHelper.getCurrentUserId();
-          final monthYear = DateFormat('yyyy-MM').format(DateTime.now());
-          final budgets = await ExpenseDatabaseService.instance.getAllBudgets(
-            userId,
-            monthYear,
-          );
-          final txs = await ExpenseDatabaseService.instance.getTransactions(
-            userId,
-          );
-          if (budgets.isEmpty && txs.isEmpty && mounted) {
-            await context.push(RouteNames.incomeBudget);
-            if (mounted) setState(() => _navIndex = 2);
-            return;
-          }
-        }
+      onTap: () {
         setState(() => _navIndex = index);
+        if (index == 0) _loadRecentTasks();
       },
       child: Column(
         mainAxisSize: MainAxisSize.min,

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mineai/core/constants/app_strings.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:mineai/core/constants/app_colors.dart';
 import 'package:mineai/core/utils/snackbar_helper.dart';
 import 'package:mineai/core/widgets/gradiant_background.dart';
@@ -69,7 +71,7 @@ class _ApiKeysScreenState extends State<ApiKeysScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: isLight ? scheme.surface : const Color(0xFF1E1B38),
-        title: Text('Delete Key', style: TextStyle(color: scheme.onSurface)),
+        title: Text(AppStrings.deleteKeyTitle, style: TextStyle(color: scheme.onSurface)),
         content: Text(
           'Are you sure you want to delete "${key.keyName}"? Future AI requests will fall back to MineAI default key.',
           style: TextStyle(
@@ -79,12 +81,12 @@ class _ApiKeysScreenState extends State<ApiKeysScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text('Cancel', style: TextStyle(color: scheme.onSurface.withValues(alpha: 0.6))),
+            child: Text(AppStrings.cancel, style: TextStyle(color: scheme.onSurface.withValues(alpha: 0.6))),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: scheme.error),
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Delete', style: TextStyle(color: Colors.white)),
+            child: Text(AppStrings.delete, style: const TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -94,7 +96,7 @@ class _ApiKeysScreenState extends State<ApiKeysScreen> {
       try {
         await _service.deleteApiKey(key.id);
         await _loadData();
-        if (mounted) SnackBarHelper.showSuccess(context, 'API Key deleted');
+        if (mounted) SnackBarHelper.showSuccess(context, AppStrings.apiKeyDeleted);
       } catch (e) {
         if (mounted) SnackBarHelper.showError(context, 'Failed to delete key: $e');
       }
@@ -299,7 +301,7 @@ class _ApiKeysScreenState extends State<ApiKeysScreen> {
                                 final name = keyNameController.text.trim();
                                 final val = keyValController.text.trim();
                                 if (val.isEmpty) {
-                                  SnackBarHelper.showWarning(context, 'Please enter key value');
+                                  SnackBarHelper.showWarning(context, AppStrings.enterKeyValue);
                                   return;
                                 }
 
@@ -314,7 +316,7 @@ class _ApiKeysScreenState extends State<ApiKeysScreen> {
                                   );
                                   if (modalCtx.mounted) Navigator.pop(modalCtx);
                                   await _loadData();
-                                  SnackBarHelper.showSuccess(null, 'Key saved securely');
+                                  SnackBarHelper.showSuccess(null, AppStrings.keySavedSecurely);
                                 } catch (e) {
                                   setModalState(() => isSubmitting = false);
                                   SnackBarHelper.showError(null, 'Failed to add key: $e');
@@ -370,7 +372,7 @@ class _ApiKeysScreenState extends State<ApiKeysScreen> {
               ),
               Expanded(
                 child: _isLoading
-                    ? Center(child: CircularProgressIndicator(color: scheme.primary))
+                    ? _buildSkeletonLoader(context, scheme, isLight)
                     : RefreshIndicator(
                         color: scheme.primary,
                         onRefresh: _loadData,
@@ -643,6 +645,66 @@ class _ApiKeysScreenState extends State<ApiKeysScreen> {
                 onPressed: () => _deleteKey(key),
               ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSkeletonLoader(
+    BuildContext context,
+    ColorScheme scheme,
+    bool isLight,
+  ) {
+    final baseColor = isLight ? Colors.grey[300]! : const Color(0xFF1E1B38);
+    final highlightColor = isLight ? Colors.grey[100]! : const Color(0xFF2E2752);
+
+    return Shimmer.fromColors(
+      baseColor: baseColor,
+      highlightColor: highlightColor,
+      child: ListView(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        children: [
+          Container(
+            height: 90,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(18),
+            ),
+          ),
+          const SizedBox(height: 24),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                width: 120,
+                height: 16,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+              Container(
+                width: 60,
+                height: 16,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          ...List.generate(
+            3,
+            (i) => Container(
+              margin: const EdgeInsets.only(bottom: 14),
+              height: 110,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
           ),
         ],
       ),

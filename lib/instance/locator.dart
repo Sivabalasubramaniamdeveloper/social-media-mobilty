@@ -20,6 +20,7 @@ import 'package:mineai/features/scraper/services/product_scraper_service.dart';
 import 'package:mineai/features/weather/cubit/weather_cubit.dart';
 import 'package:mineai/features/weather/repositories/weather_repository.dart';
 import 'package:mineai/features/weather/services/weather_service.dart';
+import 'package:mineai/features/support/services/ticket_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../config/responsive/responsive_config.dart';
 import '../config/theme/theme_cubit.dart';
@@ -99,6 +100,7 @@ Future<void> setupLocator(BuildContext context) async {
   getIt.registerFactory<DiaryCubit>(
     () => DiaryCubit(repository: getIt<DiaryRepository>()),
   );
+  getIt.registerLazySingleton<TicketService>(() => TicketService());
   getIt.registerLazySingleton<ThemeCubit>(() => ThemeCubit());
 
   await getIt.allReady();

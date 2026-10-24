@@ -10,6 +10,7 @@ class TransactionTile extends StatelessWidget {
   final TransactionModel transaction;
   final NumberFormat currencyFormat;
   final VoidCallback? onTap;
+  final VoidCallback? onEdit;
   final VoidCallback? onDelete;
 
   const TransactionTile({
@@ -17,6 +18,7 @@ class TransactionTile extends StatelessWidget {
     required this.transaction,
     required this.currencyFormat,
     this.onTap,
+    this.onEdit,
     this.onDelete,
   });
 
@@ -30,7 +32,7 @@ class TransactionTile extends StatelessWidget {
     final isExpense = transaction.type == 'expense';
 
     return InkWell(
-      onTap: onTap,
+      onTap: onTap ?? onEdit,
       borderRadius: BorderRadius.circular(AppSizes.radiusLg - 2),
       child: Container(
         padding: const EdgeInsets.symmetric(
@@ -112,6 +114,18 @@ class TransactionTile extends StatelessWidget {
                   ),
               ],
             ),
+            if (onEdit != null) ...[
+              const SizedBox(width: AppSizes.xs),
+              IconButton(
+                icon: Icon(
+                  Icons.edit_outlined,
+                  color: secondaryText,
+                  size: AppSizes.iconSm,
+                ),
+                tooltip: AppStrings.edit,
+                onPressed: onEdit,
+              ),
+            ],
             if (onDelete != null) ...[
               const SizedBox(width: AppSizes.xs),
               IconButton(

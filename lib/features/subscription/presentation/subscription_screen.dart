@@ -55,7 +55,9 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
     final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.scaffoldBackground : const Color(0xFFF8FAFC),
+      backgroundColor: isDark
+          ? AppColors.scaffoldBackground
+          : const Color(0xFFF8FAFC),
       appBar: AppBar(
         title: Text(
           AppStrings.subscriptionPlan,
@@ -76,15 +78,23 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.error_outline_rounded, size: 48, color: AppColors.expenseRed),
+                  const Icon(
+                    Icons.error_outline_rounded,
+                    size: 48,
+                    color: AppColors.expenseRed,
+                  ),
                   const SizedBox(height: 12),
                   Text(
                     AppStrings.subscriptionLoadFailed,
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   const SizedBox(height: 12),
                   ElevatedButton(
-                    onPressed: () => context.read<SubscriptionCubit>().fetchUserPlan(),
+                    onPressed: () =>
+                        context.read<SubscriptionCubit>().fetchUserPlan(),
                     child: Text(AppStrings.retry),
                   ),
                 ],
@@ -175,7 +185,11 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                   color: Colors.white.withValues(alpha: 0.2),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.workspace_premium_rounded, color: Colors.white, size: 28),
+                child: const Icon(
+                  Icons.workspace_premium_rounded,
+                  color: Colors.white,
+                  size: 28,
+                ),
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -224,7 +238,11 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.bolt_rounded, color: AppColors.accentOrange, size: 18),
+                const Icon(
+                  Icons.bolt_rounded,
+                  color: AppColors.accentOrange,
+                  size: 18,
+                ),
                 const SizedBox(width: 6),
                 Text(
                   '${state.currentCredits} ${AppStrings.aiCredits} ${AppStrings.active.toLowerCase()}',
@@ -271,7 +289,9 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
         border: Border.all(
           color: isCurrent
               ? AppColors.incomeGreen
-              : (isPro ? AppColors.primaryPurple.withValues(alpha: 0.8) : (isDark ? AppColors.cardBorder : Colors.black12)),
+              : (isPro
+                    ? AppColors.primaryPurple.withValues(alpha: 0.8)
+                    : (isDark ? AppColors.cardBorder : Colors.black12)),
           width: isCurrent || isPro ? 2 : 1,
         ),
         boxShadow: [
@@ -304,7 +324,11 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                             style: TextStyle(
                               color: isPro
                                   ? AppColors.primaryPurpleLight
-                                  : (isPremium ? AppColors.accentOrange : (isDark ? Colors.white : Colors.black87)),
+                                  : (isPremium
+                                        ? AppColors.accentOrange
+                                        : (isDark
+                                              ? Colors.white
+                                              : Colors.black87)),
                               fontSize: 22,
                               fontWeight: FontWeight.w800,
                             ),
@@ -313,7 +337,9 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                           Text(
                             _planPrice(plan.tier),
                             style: TextStyle(
-                              color: isDark ? AppColors.secondaryText : Colors.grey[700],
+                              color: isDark
+                                  ? AppColors.secondaryText
+                                  : Colors.grey[700],
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
                             ),
@@ -323,7 +349,10 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                     ),
                     if (isCurrent)
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 5,
+                        ),
                         decoration: BoxDecoration(
                           color: AppColors.incomeGreen.withValues(alpha: 0.18),
                           borderRadius: BorderRadius.circular(8),
@@ -332,7 +361,11 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Icons.check_circle_rounded, color: AppColors.incomeGreen, size: 14),
+                            const Icon(
+                              Icons.check_circle_rounded,
+                              color: AppColors.incomeGreen,
+                              size: 14,
+                            ),
                             const SizedBox(width: 4),
                             Text(
                               AppStrings.currentPlanBadge,
@@ -356,27 +389,33 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                   context,
                   icon: Icons.bolt_rounded,
                   iconColor: AppColors.accentOrange,
-                  title: '${plan.dailyCredits} ${AppStrings.dailyAiCreditsFeature}',
+                  title:
+                      '${plan.dailyCredits} ${AppStrings.dailyAiCreditsFeature}',
                   subtitle: '${plan.dailyCredits} daily refresh',
                 ),
                 _featureItem(
                   context,
                   icon: Icons.account_balance_wallet_rounded,
                   iconColor: AppColors.accentBlue,
-                  title: '${plan.maxBudgets} ${AppStrings.budgetTrackingFeature}',
-                  subtitle: '${plan.monthlyBudgetEdits} ${AppStrings.monthlyBudgetEditsFeature}',
+                  title:
+                      '${plan.maxBudgets} ${AppStrings.budgetTrackingFeature}',
+                  subtitle:
+                      '${plan.monthlyBudgetEdits} ${AppStrings.monthlyBudgetEditsFeature}',
                 ),
                 _featureItem(
                   context,
                   icon: Icons.storefront_rounded,
                   iconColor: AppColors.primaryPurple,
-                  title: '${plan.dailyScrapes} ${AppStrings.smartScrapesFeature}',
+                  title:
+                      '${plan.dailyScrapes} ${AppStrings.smartScrapesFeature}',
                   subtitle: 'Amazon, Flipkart, Meesho deals',
                 ),
                 _featureItem(
                   context,
                   icon: Icons.cloud_done_rounded,
-                  iconColor: plan.cloudSyncEnabled ? AppColors.incomeGreen : Colors.grey,
+                  iconColor: plan.cloudSyncEnabled
+                      ? AppColors.incomeGreen
+                      : Colors.grey,
                   title: plan.cloudSyncEnabled
                       ? AppStrings.cloudSyncIncluded
                       : AppStrings.cloudSyncNotIncluded,
@@ -386,8 +425,11 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                   context,
                   icon: Icons.photo_library_rounded,
                   iconColor: AppColors.primaryPurpleLight,
-                  title: '${plan.diaryImageLimit} ${AppStrings.diaryImagesFeature}',
-                  subtitle: plan.isMonthlyImageLimit ? 'Monthly allowance' : 'Total limit',
+                  title:
+                      '${plan.diaryImageLimit} ${AppStrings.diaryImagesFeature}',
+                  subtitle: plan.isMonthlyImageLimit
+                      ? 'Monthly allowance'
+                      : 'Total limit',
                 ),
                 const SizedBox(height: 18),
 
@@ -399,21 +441,32 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: isCurrent
                           ? (isDark ? AppColors.surfaceDeep : Colors.grey[200])
-                          : (isPro ? AppColors.primaryPurple : (isPremium ? AppColors.accentOrange : AppColors.surfaceElevated)),
+                          : (isPro
+                                ? AppColors.primaryPurple
+                                : (isPremium
+                                      ? AppColors.accentOrange
+                                      : AppColors.surfaceElevated)),
                       foregroundColor: isCurrent
-                          ? (isDark ? AppColors.secondaryText : Colors.grey[700])
+                          ? (isDark
+                                ? AppColors.secondaryText
+                                : Colors.grey[700])
                           : Colors.white,
                       elevation: isCurrent ? 0 : 2,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14),
                         side: isCurrent
-                            ? BorderSide(color: isDark ? AppColors.cardBorder : Colors.black12)
+                            ? BorderSide(
+                                color: isDark
+                                    ? AppColors.cardBorder
+                                    : Colors.black12,
+                              )
                             : BorderSide.none,
                       ),
                     ),
-                    onPressed: isCurrent || _changingPlanId != null
-                        ? null
-                        : () => _selectPlan(option),
+                    // onPressed: isCurrent || _changingPlanId != null
+                    //     ? null
+                    //     : () => _selectPlan(option),
+                    onPressed: null,
                     child: isChanging
                         ? const SizedBox.square(
                             dimension: 20,
@@ -425,7 +478,9 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                         : Text(
                             isCurrent
                                 ? AppStrings.activePlan
-                                : (isPro || isPremium ? AppStrings.upgradeNow : AppStrings.switchPlan),
+                                : (isPro || isPremium
+                                      ? AppStrings.upgradeNow
+                                      : AppStrings.switchPlan),
                             style: const TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.bold,
@@ -444,10 +499,15 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
               top: 0,
               right: 20,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: badgeColor,
-                  borderRadius: const BorderRadius.vertical(bottom: Radius.circular(8)),
+                  borderRadius: const BorderRadius.vertical(
+                    bottom: Radius.circular(8),
+                  ),
                   boxShadow: [
                     BoxShadow(
                       color: badgeColor.withValues(alpha: 0.4),

@@ -5,6 +5,7 @@ class AppStrings {
   // ======================
   //  Common / Brand
   // ======================
+  static String get all => 'all'.tr();
   static String get appName => 'app_name'.tr();
   static String get mindAi => 'mind_ai'.tr();
   static String get poweredByLlms => 'powered_by_llms'.tr();
@@ -120,6 +121,25 @@ class AppStrings {
   static String get studyAiDesc => 'study_ai_desc'.tr();
   static String get voiceTasks => 'voice_tasks'.tr();
   static String get voiceTasksDesc => 'voice_tasks_desc'.tr();
+  static String get aiVoiceAssistant => 'ai_voice_assistant'.tr();
+  static String get listeningToVoice => 'listening_to_voice'.tr();
+  static String get aiProcessingTask => 'ai_processing_task'.tr();
+  static String get tapMicOrTypeCommand => 'tap_mic_or_type_command'.tr();
+  static String get voiceTaskHint => 'voice_task_hint'.tr();
+  static String get processTaskWithAi => 'process_task_with_ai'.tr();
+  static String get aiAnalyzingTask => 'ai_analyzing_task'.tr();
+  static String get saveAsTyped => 'save_as_typed'.tr();
+  static String get voiceTaskChoiceHelp => 'voice_task_choice_help'.tr();
+  static String get quickExamples => 'quick_examples'.tr();
+  static String get taskSavePrompt => 'task_save_prompt'.tr();
+  static String get taskSavedAsTyped => 'task_saved_as_typed'.tr();
+  static String get taskSaveFailed => 'task_save_failed'.tr();
+  static List<String> get voiceQuickSuggestions => [
+    'voice_quick_meeting'.tr(),
+    'voice_quick_doctor'.tr(),
+    'voice_quick_budget'.tr(),
+    'voice_quick_dinner'.tr(),
+  ];
   static String get imageCaptions => 'image_captions'.tr();
   static String get imageCaptionsDesc => 'image_captions_desc'.tr();
   static String get developerAi => 'developer_ai'.tr();
@@ -504,7 +524,7 @@ class AppStrings {
   static String get filterByYear => 'filter_by_year'.tr();
   static String get allMonths => 'all_months'.tr();
   static String get allYears => 'all_years'.tr();
-  static String get all => 'all'.tr();
+  // static String get all => 'all'.tr();
   static String get deleteTransaction => 'delete_transaction'.tr();
   static String get deleteConfirmMsg => 'delete_confirm_msg'.tr();
   static String get delete => 'delete'.tr();
@@ -675,7 +695,8 @@ class AppStrings {
   static String get qualityAuto => 'quality_auto'.tr();
   static String get qualityManual => 'quality_manual'.tr();
   static String get videoPlaybackFailed => 'video_playback_failed'.tr();
-  static String get videoPlaybackFailedDesc => 'video_playback_failed_desc'.tr();
+  static String get videoPlaybackFailedDesc =>
+      'video_playback_failed_desc'.tr();
   static String get playbackSpeed => 'playback_speed'.tr();
   static String get normalSpeed => 'normal_speed'.tr();
   static String get secondsRewind => 'seconds_rewind'.tr();
@@ -702,9 +723,284 @@ class AppStrings {
   static String get dailyAiCreditsFeature => 'daily_ai_credits_feature'.tr();
   static String get smartScrapesFeature => 'smart_scrapes_feature'.tr();
   static String get budgetTrackingFeature => 'budget_tracking_feature'.tr();
-  static String get monthlyBudgetEditsFeature => 'monthly_budget_edits_feature'.tr();
+  static String get monthlyBudgetEditsFeature =>
+      'monthly_budget_edits_feature'.tr();
   static String get cloudBackupFeature => 'cloud_backup_feature'.tr();
   static String get diaryImagesFeature => 'diary_images_feature'.tr();
+
+  // ======================
+  //  Error & System Snackbars
+  // ======================
+  static String get serverErrorMessage => 'server_error'.tr();
+  static String get badRequestErrorMessage => 'bad_request_error'.tr();
+  static String get aiServiceErrorMessage => 'ai_service_error'.tr();
+  static String get networkConnectionErrorMessage =>
+      'network_connection_error'.tr();
+  static String get sessionExpiredMessage => 'session_expired'.tr();
+  static String get accessDeniedMessage => 'access_denied'.tr();
+  static String get rateLimitErrorMessage => 'rate_limit_error'.tr();
+  static String get emailSentSuccess => 'email_sent_success'.tr();
+  static String get somethingWentWrong => 'something_went_wrong'.tr();
+  static String get itemCopied => 'item_copied'.tr();
+  static String get itemDeleted => 'item_deleted'.tr();
+  static String get itemSaved => 'item_saved'.tr();
+
+  // ======================
+  //  News Screen
+  // ======================
+  static String get localCityNews => 'local_city_news'.tr();
+  static String get webScrapingNews => 'web_scraping_news'.tr();
+  static String get noNewsFound => 'no_news_found'.tr();
+  static String get readFullStory => 'read_full_story'.tr();
+  static String get shareArticle => 'share_article'.tr();
+  static String get shareViaEmail => 'share_via_email'.tr();
+  static String get topHeadlines => 'top_headlines'.tr();
+  static String get loadNews => 'load_news'.tr();
+  static String get recent => 'recent'.tr();
+  static String get newsArticleLinkError => 'news_article_link_error'.tr();
+
+  // ======================
+  //  OTT Screen
+  // ======================
+  static String get forYou => 'for_you'.tr();
+  static String get popularRightNow => 'popular_right_now'.tr();
+  static String get featured => 'featured'.tr();
+  static String get nowStreaming => 'now_streaming'.tr();
+  static String get original => 'original'.tr();
+  static String get ottLoadError => 'ott_load_error'.tr();
+  static String get ottRetrySub => 'ott_retry_sub'.tr();
+  static String get ottEmptyTitle => 'ott_empty_title'.tr();
+  static String get ottEmptySub => 'ott_empty_sub'.tr();
+  // static String get developerAi => 'developer_ai'.tr();
+
+  // ======================
+  //  Tasks Screen
+  // ======================
+  static String get myTasks => 'my_tasks'.tr();
+  static String get createTask => 'create_task'.tr();
+  static String get updateTask => 'update_task'.tr();
+  static String get taskTitle => 'task_title'.tr();
+  static String get taskDescription => 'task_description'.tr();
+  static String get taskDueDate => 'task_due_date'.tr();
+  static String get taskPriority => 'task_priority'.tr();
+  static String get priorityLow => 'priority_low'.tr();
+  static String get priorityMedium => 'priority_medium'.tr();
+  static String get priorityHigh => 'priority_high'.tr();
+  static String get taskCategory => 'task_category'.tr();
+  static String get taskCompleted => 'task_completed'.tr();
+  static String get taskPending => 'task_pending'.tr();
+  static String get taskSavedSuccess => 'task_saved_success'.tr();
+  static String get taskDeleteConfirm => 'task_delete_confirm'.tr();
+  static String get deleteTask => 'delete_task'.tr();
+  static String get voiceAssistant => 'voice_assistant'.tr();
+  static String get speakNow => 'speak_now'.tr();
+  static String get listening => 'listening'.tr();
+  static String get tapToSpeak => 'tap_to_speak'.tr();
+  static String get noTasksFound => 'no_tasks_found'.tr();
+
+  // ======================
+  //  Vault Screen
+  // ======================
+  static String get secureVault => 'secure_vault'.tr();
+  static String get vaultSubtitle => 'vault_subtitle'.tr();
+  static String get passwords => 'passwords'.tr();
+  static String get documents => 'documents'.tr();
+  static String get photos => 'photos'.tr();
+  static String get notes => 'notes'.tr();
+  static String get addItem => 'add_item'.tr();
+  static String get addPassword => 'add_password'.tr();
+  static String get addDocument => 'add_document'.tr();
+  static String get addPhoto => 'add_photo'.tr();
+  static String get vaultEmpty => 'vault_empty'.tr();
+  static String get vaultEmptySub => 'vault_empty_sub'.tr();
+  static String get deleteItemConfirm => 'delete_item_confirm'.tr();
+  static String get copyPassword => 'copy_password'.tr();
+  static String get revealPassword => 'reveal_password'.tr();
+  static String get itemSavedVault => 'item_saved_vault'.tr();
+
+  // ======================
+  //  Scraper & Comparison
+  // ======================
+  static String get productScraper => 'product_scraper'.tr();
+  // static String get searchProductsHint => 'search_products_hint'.tr();
+  static String get comparePricesTag => 'compare_prices_tag'.tr();
+  static String get bestDealTag => 'best_deal_tag'.tr();
+  static String get allStores => 'all_stores'.tr();
+  static String get amazonStore => 'amazon_store'.tr();
+  static String get flipkartStore => 'flipkart_store'.tr();
+  static String get meeshoStore => 'meesho_store'.tr();
+  // static String get priceDifference => 'price_difference'.tr();
+  // static String get savings => 'savings'.tr();
+  // static String get noProductsFound => 'no_products_found'.tr();
+  // static String get viewDeal => 'view_deal'.tr();
+  static String get cheaperOn => 'cheaper_on'.tr();
+  static String get searchingStores => 'searching_stores'.tr();
+
+  // ======================
+  //  Email Helper Screen
+  // ======================
+  static String get aiEmailHelper => 'ai_email_helper'.tr();
+  static String get composeEmail => 'compose_email'.tr();
+  static String get emailSubject => 'email_subject'.tr();
+  static String get emailBody => 'email_body'.tr();
+  static String get recipientEmail => 'recipient_email'.tr();
+  static String get generateDraft => 'generate_draft'.tr();
+  static String get sendEmail => 'send_email'.tr();
+  static String get emailSent => 'email_sent'.tr();
+  static String get emailTemplates => 'email_templates'.tr();
+  static String get toneProfessional => 'tone_professional'.tr();
+  static String get toneCasual => 'tone_casual'.tr();
+  static String get toneFriendly => 'tone_friendly'.tr();
+  static String get toneUrgent => 'tone_urgent'.tr();
+  static String get emailAnalytics => 'email_analytics'.tr();
+
+  // ======================
+  //  API Keys Screen
+  // ======================
+  static String get apiKeysTitle => 'api_keys_title'.tr();
+  static String get apiKeysSubtitle => 'api_keys_subtitle'.tr();
+  static String get addApiKey => 'add_api_key'.tr();
+  static String get provider => 'provider'.tr();
+  static String get enterApiKey => 'enter_api_key'.tr();
+  static String get keySavedSecurely => 'key_saved_securely'.tr();
+  static String get deleteKeyConfirm => 'delete_key_confirm'.tr();
+  static String get activeKey => 'active_key'.tr();
+  static String get noApiKeys => 'no_api_keys'.tr();
+
+  // ======================
+  //  Diary Screen
+  // ======================
+  static String get writeEntry => 'write_entry'.tr();
+  static String get editEntry => 'edit_entry'.tr();
+  static String get deleteEntry => 'delete_entry'.tr();
+  static String get moodHype => 'mood_hype'.tr();
+  static String get shareMood => 'share_mood'.tr();
+  static String get entrySaved => 'entry_saved'.tr();
+  static String get searchJournal => 'search_journal'.tr();
+  static String get moodPosterShared => 'mood_poster_shared'.tr();
+  static String get moodPosterShareFailed => 'mood_poster_share_failed'.tr();
+  static String get shareMoodVibe => 'share_mood_vibe'.tr();
+
+  // ======================
+  //  Email Additional Strings
+  // ======================
+  static String get saveEmail => 'save_email'.tr();
+  static String get saveGeneratedEmail => 'save_generated_email'.tr();
+  static String get labelNameHint => 'label_name_hint'.tr();
+  static String get enterLabelName => 'enter_label_name'.tr();
+  static String get intendedRecipient => 'intended_recipient'.tr();
+  static String get emailSavedSuccess => 'email_saved_success'.tr();
+  static String get emailSpamNotice => 'email_spam_notice'.tr();
+  static String get chooseTone => 'choose_tone'.tr();
+  static String get emailPurposeInstructions =>
+      'email_purpose_instructions'.tr();
+
+  // ======================
+  //  Voice Assistant Strings
+  // ======================
+  static String get voiceMicNotAvailable => 'voice_mic_not_available'.tr();
+  static String get listeningSpeakTask => 'listening_speak_task'.tr();
+  static String get pleaseEnterTask => 'please_enter_task'.tr();
+
+  // ======================
+  //  Streams / OTT & News Providers
+  // ======================
+  static String get mineAiStreams => 'mine_ai_streams'.tr();
+  static String get mineAiStreamsDesc => 'mine_ai_streams_desc'.tr();
+  static String get providerAll => 'provider_all'.tr();
+  static String get providerToi => 'provider_toi'.tr();
+  static String get providerTheHindu => 'provider_the_hindu'.tr();
+  static String get providerOther => 'provider_other'.tr();
+  static String get breakingNews => 'breaking_news'.tr();
+  static String get filterBySource => 'filter_by_source'.tr();
+  static String get selectedCityOnly => 'selected_city_only'.tr();
+  static String get edit => 'edit'.tr();
+  static String get phoneNumber => 'phone_number'.tr();
+  static String get notSpecified => 'not_specified'.tr();
+  static String get timezone => 'timezone'.tr();
+  static String get country => 'country'.tr();
+  static String get close => 'close'.tr();
+  static String get back => 'back'.tr();
+  static String get directCompose => 'direct_compose'.tr();
+  static String get composeWithoutAi => 'compose_without_ai'.tr();
+  static String get customCategories => 'custom_categories'.tr();
+  static String get customCategoriesDesc => 'custom_categories_desc'.tr();
+  static String get editTransaction => 'edit_transaction'.tr();
+  static String get updateTransaction => 'update_transaction'.tr();
+  static String get deleteTaskConfirm => 'delete_task_confirm'.tr();
+  static String get lockedFeaturePro => 'locked_feature_pro'.tr();
+  static String get customCategoryProDesc => 'custom_category_pro_desc'.tr();
+  static String get addCategory => 'add_category'.tr();
+  static String get categoryName => 'category_name'.tr();
+  static String get selectIcon => 'select_icon'.tr();
+  static String get exitToStreams => 'exit_to_streams'.tr();
+  static String get transactionUpdated => 'transaction_updated'.tr();
+  static String get directEmailSent => 'direct_email_sent'.tr();
+
+  // Support & Ticketing
+  static String get supportTickets => 'support_tickets'.tr();
+  static String get newTicket => 'new_ticket'.tr();
+  static String get searchTickets => 'search_tickets'.tr();
+  static String get allTickets => 'all_tickets'.tr();
+  static String get ticketStatusOpen => 'ticket_status_open'.tr();
+  static String get ticketStatusInProgress => 'ticket_status_in_progress'.tr();
+  static String get ticketStatusResolved => 'ticket_status_resolved'.tr();
+  static String get noTicketsFound => 'no_tickets_found'.tr();
+  static String get noTicketsFoundDesc => 'no_tickets_found_desc'.tr();
+  static String get reportIssue => 'report_issue'.tr();
+  static String get selectModule => 'select_module'.tr();
+  static String get issueCategory => 'issue_category'.tr();
+  static String get categoryBug => 'category_bug'.tr();
+  static String get categoryFeatureRequest => 'category_feature_request'.tr();
+  static String get categoryPerformance => 'category_performance'.tr();
+  static String get categoryOther => 'category_other'.tr();
+  static String get priorityLevel => 'priority_level'.tr();
+  static String get subjectTitle => 'subject_title'.tr();
+  static String get subjectHint => 'subject_hint'.tr();
+  static String get issueDescription => 'issue_description'.tr();
+  static String get issueDescriptionHint => 'issue_description_hint'.tr();
+  static String get adminTicketNotice => 'admin_ticket_notice'.tr();
+  static String get submitTicket => 'submit_ticket'.tr();
+  static String get ticketStatus => 'ticket_status'.tr();
+  static String get stepSubmitted => 'step_submitted'.tr();
+  static String get stepInProgress => 'step_in_progress'.tr();
+  static String get stepResolved => 'step_resolved'.tr();
+  static String get adminTeamResponse => 'admin_team_response'.tr();
+  static String get adminReviewingNotice => 'admin_reviewing_notice'.tr();
+  static String get subjectRequired => 'subject_required'.tr();
+  static String get descriptionRequired => 'description_required'.tr();
+  static String get ticketSubmittedSuccess => 'ticket_submitted_success'.tr();
+  static String get failedToSubmitTicket => 'failed_to_submit_ticket'.tr();
+  static String get trackIssuesAndRequests => 'track_issues_and_requests'.tr();
+
+  // Custom Categories
+  static String get customCategoriesUnlocked =>
+      'custom_categories_unlocked'.tr();
+  static String get allCategories => 'all_categories'.tr();
+  static String get noCustomCategoriesYet => 'no_custom_categories_yet'.tr();
+  static String get noCustomCategoriesDesc => 'no_custom_categories_desc'.tr();
+  static String get customExpenseCategory => 'custom_expense_category'.tr();
+  static String get customIncomeSource => 'custom_income_source'.tr();
+  static String get customCategoryCreated => 'custom_category_created'.tr();
+  static String get enterCategoryName => 'enter_category_name'.tr();
+
+  // General & Vault & Email
+  static String get privatePhotoSaved => 'private_photo_saved'.tr();
+  static String get documentStoredVault => 'document_stored_vault'.tr();
+  static String get passwordCopied => 'password_copied'.tr();
+  static String get itemDeletedVault => 'item_deleted_vault'.tr();
+  static String get imageMissingVault => 'image_missing_vault'.tr();
+  static String get fileNotExist => 'file_not_exist'.tr();
+  static String get apiKeyDeleted => 'api_key_deleted'.tr();
+  static String get enterKeyValue => 'enter_key_value'.tr();
+  static String get deleteKeyTitle => 'delete_key_title'.tr();
+  static String get deleteSavedEmailConfirm =>
+      'delete_saved_email_confirm'.tr();
+  static String get enterSubjectOrMessage => 'enter_subject_or_message'.tr();
+  static String get enterEmailContentToSave =>
+      'enter_email_content_to_save'.tr();
+  static String get describeEmailPurpose => 'describe_email_purpose'.tr();
+  static String get upgrade => 'upgrade'.tr();
 
   // ======================
   //  API Call Methods

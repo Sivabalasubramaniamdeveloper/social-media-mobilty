@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
 import 'package:video_player/video_player.dart';
 
+import '../../../config/router/route_names.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
 import '../models/ott_video.dart';
@@ -68,10 +70,12 @@ class _OttPlayerScreenState extends State<OttPlayerScreen>
     if (!mounted) return;
 
     // Prefer a mid-quality variant instead of master playlist
-    final preferred = _renditions.where((r) {
-      final h = int.tryParse(r.label.replaceAll('p', '')) ?? 9999;
-      return h >= 480 && h <= 720;
-    }).firstOrNull ?? _renditions.firstOrNull;
+    final preferred =
+        _renditions.where((r) {
+          final h = int.tryParse(r.label.replaceAll('p', '')) ?? 9999;
+          return h >= 480 && h <= 720;
+        }).firstOrNull ??
+        _renditions.firstOrNull;
 
     final startUri = preferred?.uri ?? Uri.parse(widget.video.hlsUrl);
     await _initializePlayer(startUri);
@@ -115,8 +119,8 @@ class _OttPlayerScreenState extends State<OttPlayerScreen>
       final label = height != null
           ? '${height}p'
           : bandwidth != null
-              ? '${(int.parse(bandwidth.group(1)!) / 1000000).toStringAsFixed(1)} Mbps'
-              : 'Variant ${renditions.length + 1}';
+          ? '${(int.parse(bandwidth.group(1)!) / 1000000).toStringAsFixed(1)} Mbps'
+          : 'Variant ${renditions.length + 1}';
       renditions.add(_HlsRendition(label, masterUri.resolve(variantPath)));
     }
 
@@ -259,9 +263,7 @@ class _OttPlayerScreenState extends State<OttPlayerScreen>
       ]);
     } else {
       SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-      SystemChrome.setPreferredOrientations([
-        DeviceOrientation.portraitUp,
-      ]);
+      SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
     }
   }
 
@@ -300,10 +302,17 @@ class _OttPlayerScreenState extends State<OttPlayerScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 8,
+                  ),
                   child: Row(
                     children: [
-                      const Icon(Icons.high_quality_rounded, color: AppColors.primaryPurple, size: 24),
+                      const Icon(
+                        Icons.high_quality_rounded,
+                        color: AppColors.primaryPurple,
+                        size: 24,
+                      ),
                       const SizedBox(width: 10),
                       Text(
                         AppStrings.videoQuality,
@@ -348,17 +357,26 @@ class _OttPlayerScreenState extends State<OttPlayerScreen>
                   return ListTile(
                     leading: Icon(
                       Icons.hd_outlined,
-                      color: isSelected ? AppColors.primaryPurple : AppColors.secondaryText,
+                      color: isSelected
+                          ? AppColors.primaryPurple
+                          : AppColors.secondaryText,
                     ),
                     title: Text(
                       rendition.label,
                       style: TextStyle(
-                        color: isSelected ? AppColors.primaryPurple : AppColors.whiteColor,
-                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                        color: isSelected
+                            ? AppColors.primaryPurple
+                            : AppColors.whiteColor,
+                        fontWeight: isSelected
+                            ? FontWeight.bold
+                            : FontWeight.normal,
                       ),
                     ),
                     trailing: isSelected
-                        ? const Icon(Icons.check, color: AppColors.primaryPurple)
+                        ? const Icon(
+                            Icons.check,
+                            color: AppColors.primaryPurple,
+                          )
                         : null,
                     onTap: () {
                       Navigator.pop(context);
@@ -391,10 +409,17 @@ class _OttPlayerScreenState extends State<OttPlayerScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 8,
+                  ),
                   child: Row(
                     children: [
-                      const Icon(Icons.speed_rounded, color: AppColors.primaryPurple, size: 24),
+                      const Icon(
+                        Icons.speed_rounded,
+                        color: AppColors.primaryPurple,
+                        size: 24,
+                      ),
                       const SizedBox(width: 10),
                       Text(
                         AppStrings.playbackSpeed,
@@ -414,12 +439,19 @@ class _OttPlayerScreenState extends State<OttPlayerScreen>
                     title: Text(
                       s == 1.0 ? '${s}x (${AppStrings.normalSpeed})' : '${s}x',
                       style: TextStyle(
-                        color: isCurrent ? AppColors.primaryPurple : AppColors.whiteColor,
-                        fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,
+                        color: isCurrent
+                            ? AppColors.primaryPurple
+                            : AppColors.whiteColor,
+                        fontWeight: isCurrent
+                            ? FontWeight.bold
+                            : FontWeight.normal,
                       ),
                     ),
                     trailing: isCurrent
-                        ? const Icon(Icons.check, color: AppColors.primaryPurple)
+                        ? const Icon(
+                            Icons.check,
+                            color: AppColors.primaryPurple,
+                          )
                         : null,
                     onTap: () {
                       Navigator.pop(context);
@@ -446,6 +478,17 @@ class _OttPlayerScreenState extends State<OttPlayerScreen>
     return '${twoDigits(minutes)}:${twoDigits(seconds)}';
   }
 
+  void _handleBackNavigation() {
+    if (!mounted) return;
+    if (Navigator.of(context).canPop()) {
+      Navigator.of(context).pop();
+    } else if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go(RouteNames.mineAiStreams);
+    }
+  }
+
   @override
   void dispose() {
     _hideTimer?.cancel();
@@ -456,9 +499,7 @@ class _OttPlayerScreenState extends State<OttPlayerScreen>
       controller.dispose();
     }
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.portraitUp,
-    ]);
+    SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
     super.dispose();
   }
 
@@ -525,7 +566,10 @@ class _OttPlayerScreenState extends State<OttPlayerScreen>
               if (_showRewindIndicator)
                 Center(
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 14,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.black.withValues(alpha: 0.7),
                       borderRadius: BorderRadius.circular(16),
@@ -534,11 +578,18 @@ class _OttPlayerScreenState extends State<OttPlayerScreen>
                     child: const Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.replay_10_rounded, color: AppColors.primaryPurpleLight, size: 42),
+                        Icon(
+                          Icons.replay_10_rounded,
+                          color: AppColors.primaryPurpleLight,
+                          size: 42,
+                        ),
                         SizedBox(height: 6),
                         Text(
                           '-10 sec',
-                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ],
                     ),
@@ -548,7 +599,10 @@ class _OttPlayerScreenState extends State<OttPlayerScreen>
               if (_showForwardIndicator)
                 Center(
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 14,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.black.withValues(alpha: 0.7),
                       borderRadius: BorderRadius.circular(16),
@@ -557,11 +611,18 @@ class _OttPlayerScreenState extends State<OttPlayerScreen>
                     child: const Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.forward_10_rounded, color: AppColors.primaryPurpleLight, size: 42),
+                        Icon(
+                          Icons.forward_10_rounded,
+                          color: AppColors.primaryPurpleLight,
+                          size: 42,
+                        ),
                         SizedBox(height: 6),
                         Text(
                           '+10 sec',
-                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ],
                     ),
@@ -630,29 +691,91 @@ class _OttPlayerScreenState extends State<OttPlayerScreen>
                         Text(
                           AppStrings.videoPlaybackFailedDesc,
                           textAlign: TextAlign.center,
-                          style: const TextStyle(color: AppColors.secondaryText, fontSize: 13),
+                          style: const TextStyle(
+                            color: AppColors.secondaryText,
+                            fontSize: 13,
+                          ),
                         ),
                         const SizedBox(height: 20),
                         ElevatedButton.icon(
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.primaryPurple,
                             foregroundColor: AppColors.whiteColor,
-                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 24,
+                              vertical: 12,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                           ),
                           onPressed: () => _initializePlayer(
-                            _selectedQuality == null || _selectedQuality == 'Auto'
+                            _selectedQuality == null ||
+                                    _selectedQuality == 'Auto'
                                 ? Uri.parse(widget.video.hlsUrl)
                                 : _renditions
-                                    .firstWhere(
-                                      (item) => item.label == _selectedQuality,
-                                    )
-                                    .uri,
+                                      .firstWhere(
+                                        (item) =>
+                                            item.label == _selectedQuality,
+                                      )
+                                      .uri,
                           ),
                           icon: const Icon(Icons.refresh),
                           label: Text(AppStrings.retry),
                         ),
+                        const SizedBox(height: 12),
+                        OutlinedButton.icon(
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: AppColors.whiteColor,
+                            side: BorderSide(
+                              color: AppColors.whiteColor.withValues(
+                                alpha: 0.3,
+                              ),
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 12,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          onPressed: _handleBackNavigation,
+                          icon: const Icon(Icons.arrow_back_rounded, size: 18),
+                          label: Text(AppStrings.exitToStreams),
+                        ),
                       ],
+                    ),
+                  ),
+                ),
+
+              // Persistent Back Button for Error or Loading states
+              if (_error != null || !ready)
+                Positioned(
+                  top: 14,
+                  left: 14,
+                  child: SafeArea(
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: _handleBackNavigation,
+                        borderRadius: BorderRadius.circular(24),
+                        child: Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.6),
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.25),
+                            ),
+                          ),
+                          child: const Icon(
+                            Icons.arrow_back_ios_new_rounded,
+                            color: Colors.white,
+                            size: 18,
+                          ),
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -713,11 +836,16 @@ class _OttPlayerScreenState extends State<OttPlayerScreen>
                             children: [
                               IconButton.filled(
                                 style: IconButton.styleFrom(
-                                  backgroundColor: Colors.black.withValues(alpha: 0.5),
+                                  backgroundColor: Colors.black.withValues(
+                                    alpha: 0.5,
+                                  ),
                                   foregroundColor: AppColors.whiteColor,
                                 ),
-                                icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
-                                onPressed: () => Navigator.of(context).pop(),
+                                icon: const Icon(
+                                  Icons.arrow_back_ios_new_rounded,
+                                  size: 18,
+                                ),
+                                onPressed: _handleBackNavigation,
                               ),
                               const SizedBox(width: 12),
                               Expanded(
@@ -750,13 +878,25 @@ class _OttPlayerScreenState extends State<OttPlayerScreen>
                               ),
                               // Aspect Ratio Toggle
                               IconButton.filled(
-                                tooltip: _fitCover ? AppStrings.originalAspectRatio : AppStrings.fitToScreen,
+                                tooltip: _fitCover
+                                    ? AppStrings.originalAspectRatio
+                                    : AppStrings.fitToScreen,
                                 style: IconButton.styleFrom(
-                                  backgroundColor: Colors.black.withValues(alpha: 0.5),
-                                  foregroundColor: _fitCover ? AppColors.accentBlue : AppColors.whiteColor,
+                                  backgroundColor: Colors.black.withValues(
+                                    alpha: 0.5,
+                                  ),
+                                  foregroundColor: _fitCover
+                                      ? AppColors.accentBlue
+                                      : AppColors.whiteColor,
                                 ),
-                                icon: Icon(_fitCover ? Icons.aspect_ratio_rounded : Icons.fit_screen_rounded, size: 20),
-                                onPressed: () => setState(() => _fitCover = !_fitCover),
+                                icon: Icon(
+                                  _fitCover
+                                      ? Icons.aspect_ratio_rounded
+                                      : Icons.fit_screen_rounded,
+                                  size: 20,
+                                ),
+                                onPressed: () =>
+                                    setState(() => _fitCover = !_fitCover),
                               ),
                               const SizedBox(width: 6),
                               // Speed Button
@@ -764,11 +904,16 @@ class _OttPlayerScreenState extends State<OttPlayerScreen>
                                 onTap: _showSpeedModal,
                                 borderRadius: BorderRadius.circular(12),
                                 child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 7,
+                                  ),
                                   decoration: BoxDecoration(
                                     color: Colors.black.withValues(alpha: 0.5),
                                     borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(color: AppColors.cardBorder),
+                                    border: Border.all(
+                                      color: AppColors.cardBorder,
+                                    ),
                                   ),
                                   child: Text(
                                     '${_currentSpeed}x',
@@ -786,19 +931,31 @@ class _OttPlayerScreenState extends State<OttPlayerScreen>
                                 onTap: _showQualityModal,
                                 borderRadius: BorderRadius.circular(12),
                                 child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 7,
+                                  ),
                                   decoration: BoxDecoration(
                                     color: Colors.black.withValues(alpha: 0.5),
                                     borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(color: AppColors.primaryPurple.withValues(alpha: 0.5)),
+                                    border: Border.all(
+                                      color: AppColors.primaryPurple.withValues(
+                                        alpha: 0.5,
+                                      ),
+                                    ),
                                   ),
                                   child: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      const Icon(Icons.hd_rounded, color: AppColors.primaryPurpleLight, size: 16),
+                                      const Icon(
+                                        Icons.hd_rounded,
+                                        color: AppColors.primaryPurpleLight,
+                                        size: 16,
+                                      ),
                                       const SizedBox(width: 5),
                                       Text(
-                                        _selectedQuality ?? 'Auto',
+                                        _selectedQuality ??
+                                            AppStrings.qualityAuto,
                                         style: const TextStyle(
                                           color: AppColors.whiteColor,
                                           fontSize: 13,
@@ -820,7 +977,9 @@ class _OttPlayerScreenState extends State<OttPlayerScreen>
                             children: [
                               IconButton(
                                 iconSize: 42,
-                                color: AppColors.whiteColor.withValues(alpha: 0.9),
+                                color: AppColors.whiteColor.withValues(
+                                  alpha: 0.9,
+                                ),
                                 icon: const Icon(Icons.replay_10_rounded),
                                 onPressed: () => _seekRelative(-10),
                               ),
@@ -840,7 +999,8 @@ class _OttPlayerScreenState extends State<OttPlayerScreen>
                                     ),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: AppColors.primaryPurple.withValues(alpha: 0.4),
+                                        color: AppColors.primaryPurple
+                                            .withValues(alpha: 0.4),
                                         blurRadius: 18,
                                         spreadRadius: 2,
                                       ),
@@ -858,7 +1018,9 @@ class _OttPlayerScreenState extends State<OttPlayerScreen>
                               const SizedBox(width: 32),
                               IconButton(
                                 iconSize: 42,
-                                color: AppColors.whiteColor.withValues(alpha: 0.9),
+                                color: AppColors.whiteColor.withValues(
+                                  alpha: 0.9,
+                                ),
                                 icon: const Icon(Icons.forward_10_rounded),
                                 onPressed: () => _seekRelative(10),
                               ),
@@ -889,29 +1051,62 @@ class _OttPlayerScreenState extends State<OttPlayerScreen>
                                   Expanded(
                                     child: SliderTheme(
                                       data: SliderTheme.of(context).copyWith(
-                                        activeTrackColor: AppColors.primaryPurple,
+                                        activeTrackColor:
+                                            AppColors.primaryPurple,
                                         inactiveTrackColor: Colors.white24,
                                         thumbColor: AppColors.accentBlue,
-                                        thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
-                                        overlayShape: const RoundSliderOverlayShape(overlayRadius: 12),
+                                        thumbShape: const RoundSliderThumbShape(
+                                          enabledThumbRadius: 6,
+                                        ),
+                                        overlayShape:
+                                            const RoundSliderOverlayShape(
+                                              overlayRadius: 12,
+                                            ),
                                         trackHeight: 3.5,
                                       ),
                                       child: Slider(
                                         min: 0.0,
-                                        max: controller.value.duration.inMilliseconds.toDouble() > 0
-                                            ? controller.value.duration.inMilliseconds.toDouble()
+                                        max:
+                                            controller
+                                                    .value
+                                                    .duration
+                                                    .inMilliseconds
+                                                    .toDouble() >
+                                                0
+                                            ? controller
+                                                  .value
+                                                  .duration
+                                                  .inMilliseconds
+                                                  .toDouble()
                                             : 1.0,
-                                        value: controller.value.position.inMilliseconds.toDouble().clamp(
-                                          0.0,
-                                          controller.value.duration.inMilliseconds.toDouble() > 0
-                                              ? controller.value.duration.inMilliseconds.toDouble()
-                                              : 1.0,
-                                        ),
+                                        value: controller
+                                            .value
+                                            .position
+                                            .inMilliseconds
+                                            .toDouble()
+                                            .clamp(
+                                              0.0,
+                                              controller
+                                                          .value
+                                                          .duration
+                                                          .inMilliseconds
+                                                          .toDouble() >
+                                                      0
+                                                  ? controller
+                                                        .value
+                                                        .duration
+                                                        .inMilliseconds
+                                                        .toDouble()
+                                                  : 1.0,
+                                            ),
                                         onChanged: (val) {
                                           _hideTimer?.cancel();
-                                          controller.seekTo(Duration(milliseconds: val.toInt()));
+                                          controller.seekTo(
+                                            Duration(milliseconds: val.toInt()),
+                                          );
                                         },
-                                        onChangeEnd: (_) => _startHideControlsTimer(),
+                                        onChangeEnd: (_) =>
+                                            _startHideControlsTimer(),
                                       ),
                                     ),
                                   ),

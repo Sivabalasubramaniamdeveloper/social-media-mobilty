@@ -32,7 +32,6 @@ class _ExpenseTrackerScreenState extends State<ExpenseTrackerScreen> {
   String _selectedCategoryId = '';
   String _selectedPeriod = 'This Week';
   bool _isLoading = true;
-  bool _hasCheckedFirstTimeBudget = false;
 
   List<TransactionModel> _allTransactions = [];
   List<CategoryModel> _expenseCategories = [];
@@ -122,24 +121,6 @@ class _ExpenseTrackerScreenState extends State<ExpenseTrackerScreen> {
           _monthlySavingsGoal = goal;
           _isLoading = false;
         });
-
-        // First time user: If no budget and no expense, navigate to budget page first!
-        if (!_hasCheckedFirstTimeBudget && progress.isEmpty) {
-          _hasCheckedFirstTimeBudget = true;
-          WidgetsBinding.instance.addPostFrameCallback((_) async {
-            if (!mounted) return;
-            final hasIncome = items.any((item) => item.type == 'income');
-            if (!hasIncome) {
-              final incomeSaved = await context.push(
-                RouteNames.addExpense,
-                extra: 'income',
-              );
-              if (incomeSaved != true || !mounted) return;
-            }
-            final budgetSaved = await context.push(RouteNames.incomeBudget);
-            if (budgetSaved == true || mounted) _loadAllData();
-          });
-        }
       }
     } catch (e) {
       debugPrint('Error loading expense data: $e');
@@ -566,7 +547,13 @@ class _ExpenseTrackerScreenState extends State<ExpenseTrackerScreen> {
               return TransactionTile(
                 transaction: _allTransactions[index],
                 currencyFormat: currencyFormat,
-                onTap: _openAddScreen,
+                onEdit: () async {
+                  final updated = await context.push<bool>(
+                    RouteNames.addExpense,
+                    extra: _allTransactions[index],
+                  );
+                  if (updated == true) _loadAllData();
+                },
               );
             },
           ),

@@ -53,8 +53,28 @@ class SmtpStatusModel {
   }
 }
 
+class EmailSendResult {
+  final String messageId;
+  final String deliveryStatus;
+  final String deliveryNotice;
+
+  const EmailSendResult({
+    required this.messageId,
+    required this.deliveryStatus,
+    required this.deliveryNotice,
+  });
+
+  factory EmailSendResult.fromJson(Map<String, dynamic> json) =>
+      EmailSendResult(
+        messageId: json['messageId'] as String? ?? '',
+        deliveryStatus:
+            json['deliveryStatus'] as String? ?? 'accepted_by_mail_server',
+        deliveryNotice: json['deliveryNotice'] as String? ?? '',
+      );
+}
+
 class SavedEmailModel {
-  final int? id;
+  final String? id;
   final String userId;
   final String label;
   final String subject;
@@ -74,6 +94,19 @@ class SavedEmailModel {
     required this.createdAt,
   });
 
+  factory SavedEmailModel.fromJson(Map<String, dynamic> map) => SavedEmailModel(
+    id: map['id']?.toString(),
+    userId: map['user_id'] as String? ?? '',
+    label: map['label'] as String? ?? 'General',
+    subject: map['subject'] as String? ?? '',
+    body: map['body'] as String? ?? '',
+    tone: map['tone'] as String? ?? 'Professional',
+    recipient: map['recipient'] as String?,
+    createdAt:
+        DateTime.tryParse(map['created_at'] as String? ?? '') ?? DateTime.now(),
+  );
+
+  // Keeps older on-device data readable during the cloud-draft migration.
   Map<String, dynamic> toMap() => {
     if (id != null) 'id': id,
     'user_id': userId,
@@ -85,15 +118,6 @@ class SavedEmailModel {
     'created_at': createdAt.toIso8601String(),
   };
 
-  factory SavedEmailModel.fromMap(Map<String, dynamic> map) => SavedEmailModel(
-    id: map['id'] as int?,
-    userId: map['user_id'] as String? ?? '',
-    label: map['label'] as String? ?? 'General',
-    subject: map['subject'] as String? ?? '',
-    body: map['body'] as String? ?? '',
-    tone: map['tone'] as String? ?? 'Professional',
-    recipient: map['recipient'] as String?,
-    createdAt:
-        DateTime.tryParse(map['created_at'] as String? ?? '') ?? DateTime.now(),
-  );
+  factory SavedEmailModel.fromMap(Map<String, dynamic> map) =>
+      SavedEmailModel.fromJson(map);
 }

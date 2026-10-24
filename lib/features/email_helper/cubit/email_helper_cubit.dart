@@ -2,20 +2,15 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mineai/core/utils/user_helper.dart';
 import 'package:mineai/features/subscription/models/subscription_plan.dart';
 import '../models/email_helper_model.dart';
-import '../service/email_helper_database_service.dart';
 import '../service/email_helper_service.dart';
 import 'email_helper_state.dart';
 
 class EmailHelperCubit extends Cubit<EmailHelperState> {
   final EmailHelperService _service;
-  final EmailHelperDatabaseService _dbService;
 
-  EmailHelperCubit({
-    EmailHelperService? service,
-    EmailHelperDatabaseService? dbService,
-  })  : _service = service ?? EmailHelperService(),
-        _dbService = dbService ?? EmailHelperDatabaseService.instance,
-        super(const EmailHelperInitial());
+  EmailHelperCubit({EmailHelperService? service})
+    : _service = service ?? EmailHelperService(),
+      super(const EmailHelperInitial());
 
   Future<void> generateEmail({
     required String instructions,
@@ -35,15 +30,16 @@ class EmailHelperCubit extends Cubit<EmailHelperState> {
 
   Future<void> loadSavedEmails(PlanTier tier) async {
     try {
-      final userId = await UserHelper.getCurrentUserId();
-      final emails = await _dbService.getSavedEmails(userId);
+      final emails = await _service.getSavedEmails();
       final count = emails.length;
-      final limit = _dbService.getMaxLimitForTier(tier);
-      emit(EmailHelperSavedEmailsLoaded(
-        savedEmails: emails,
-        count: count,
-        limit: limit,
-      ));
+      final limit = _limitForTier(tier);
+      emit(
+        EmailHelperSavedEmailsLoaded(
+          savedEmails: emails,
+          count: count,
+          limit: limit,
+        ),
+      );
     } catch (e) {
       emit(EmailHelperError(e.toString()));
     }
@@ -58,18 +54,20 @@ class EmailHelperCubit extends Cubit<EmailHelperState> {
     required PlanTier tier,
   }) async {
     try {
-      final userId = await UserHelper.getCurrentUserId();
-      final canSave = await _dbService.canSaveMore(userId, tier);
-      if (!canSave) {
-        final limit = _dbService.getMaxLimitForTier(tier);
-        emit(EmailHelperError(
-          'Saved email limit reached for your plan ($limit emails). Please upgrade or delete older saved emails.',
-        ));
+      if (state is EmailHelperSavedEmailsLoaded &&
+          (state as EmailHelperSavedEmailsLoaded).count >=
+              _limitForTier(tier)) {
+        final limit = _limitForTier(tier);
+        emit(
+          EmailHelperError(
+            'Saved email limit reached for your plan ($limit emails). Please upgrade or delete older saved emails.',
+          ),
+        );
         return false;
       }
 
       final email = SavedEmailModel(
-        userId: userId,
+        userId: await UserHelper.getCurrentUserId(),
         label: label.trim().isEmpty ? 'General' : label.trim(),
         subject: subject,
         body: body,
@@ -78,7 +76,7 @@ class EmailHelperCubit extends Cubit<EmailHelperState> {
         createdAt: DateTime.now(),
       );
 
-      await _dbService.insertEmail(email);
+      await _service.saveEmailDraft(email);
       await loadSavedEmails(tier);
       return true;
     } catch (e) {
@@ -87,12 +85,18 @@ class EmailHelperCubit extends Cubit<EmailHelperState> {
     }
   }
 
-  Future<void> deleteEmail(int id, PlanTier tier) async {
+  Future<void> deleteEmail(String id, PlanTier tier) async {
     try {
-      await _dbService.deleteEmail(id);
+      await _service.deleteSavedEmail(id);
       await loadSavedEmails(tier);
     } catch (e) {
       emit(EmailHelperError(e.toString()));
     }
   }
+
+  int _limitForTier(PlanTier tier) => switch (tier) {
+    PlanTier.basic => 5,
+    PlanTier.pro => 20,
+    PlanTier.premium => 50,
+  };
 }

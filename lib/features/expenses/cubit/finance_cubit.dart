@@ -65,6 +65,19 @@ class FinanceCubit extends Cubit<FinanceState> {
     }
   }
 
+  Future<void> updateTransaction({
+    required TransactionModel transaction,
+    required bool isSubscribed,
+    required String monthYear,
+  }) async {
+    try {
+      await _repository.updateTransaction(transaction, isSubscribed);
+      await loadDashboard(userId: transaction.userId, monthYear: monthYear);
+    } catch (e) {
+      emit(FinanceActionError(e.toString()));
+    }
+  }
+
   Future<void> addCustomCategory({
     required CategoryModel category,
     required bool isSubscribed,

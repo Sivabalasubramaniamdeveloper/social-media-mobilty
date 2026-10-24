@@ -15,6 +15,7 @@ import 'package:mineai/core/widgets/headers/app_screen_header.dart';
 import 'package:mineai/core/widgets/headers/app_section_header.dart';
 import 'package:mineai/features/expenses/models/transaction_model.dart';
 import 'package:mineai/features/expenses/services/expense_export_service.dart';
+import 'package:mineai/features/email_helper/service/email_helper_service.dart';
 import 'package:mineai/instance/locator.dart';
 
 class ExpenseSettingsScreen extends StatefulWidget {
@@ -52,7 +53,17 @@ class _ExpenseSettingsScreenState extends State<ExpenseSettingsScreen> {
     final savedAutoRefresh = await storage.readSecureData(_autoRefreshKey);
     final autoRefresh = savedAutoRefresh == null || savedAutoRefresh == 'true';
     final savedEmailPref = await storage.readSecureData(_monthlyEmailKey);
-    final emailPref = savedEmailPref == null || savedEmailPref == 'true';
+    bool emailPref = savedEmailPref == null || savedEmailPref == 'true';
+    try {
+      emailPref = await EmailHelperService()
+          .getMonthlyExpenseReportPreference();
+      await storage.writeSecureData(
+        _monthlyEmailKey,
+        emailPref ? 'true' : 'false',
+      );
+    } catch (_) {
+      // Retain the last local value while offline; it will sync next time settings opens.
+    }
 
     final txList = await ExpenseDatabaseService.instance.getTransactions(
       userId,
@@ -75,9 +86,27 @@ class _ExpenseSettingsScreenState extends State<ExpenseSettingsScreen> {
   }
 
   Future<void> _onMonthlyEmailChanged(bool value) async {
+    final previousValue = _monthlyEmailReport;
     setState(() => _monthlyEmailReport = value);
     final storage = getIt<CustomSecureStorage>();
     await storage.writeSecureData(_monthlyEmailKey, value ? 'true' : 'false');
+    try {
+      await EmailHelperService().updateMonthlyExpenseReportPreference(value);
+    } catch (e) {
+      if (mounted) {
+        setState(() => _monthlyEmailReport = previousValue);
+        await storage.writeSecureData(
+          _monthlyEmailKey,
+          previousValue ? 'true' : 'false',
+        );
+        if (!mounted) return;
+        SnackBarHelper.showError(
+          context,
+          'Could not update the cloud email setting: $e',
+        );
+      }
+      return;
+    }
     if (mounted) {
       SnackBarHelper.showSuccess(
         context,
@@ -348,6 +377,13 @@ class _ExpenseSettingsScreenState extends State<ExpenseSettingsScreen> {
                             _loadSettingsAndStats();
                           },
                         ),
+                        AppListTileCard(
+                          icon: Icons.category_rounded,
+                          title: AppStrings.customCategories,
+                          subtitle: AppStrings.customCategoriesDesc,
+                          showChevron: true,
+                          onTap: () => context.push(RouteNames.customCategories),
+                        ),
 
                         const SizedBox(height: AppSizes.xxl),
 
@@ -381,7 +417,9 @@ class _ExpenseSettingsScreenState extends State<ExpenseSettingsScreen> {
                               ? const SizedBox(
                                   height: 20,
                                   width: 20,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
                                 )
                               : null,
                           onTap: _isSendingEmailReport

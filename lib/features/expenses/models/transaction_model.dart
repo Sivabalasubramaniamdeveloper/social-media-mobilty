@@ -52,4 +52,30 @@ class TransactionModel {
       isSynced: (map['is_synced'] as int? ?? 0) == 1,
     );
   }
+
+  TransactionModel copyWith({
+    int? id,
+    String? userId,
+    String? title,
+    double? amount,
+    String? type,
+    String? categoryId,
+    DateTime? time,
+    DateTime? updateTime,
+    String? note,
+    bool? isSynced,
+  }) {
+    return TransactionModel(
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
+      title: title ?? this.title,
+      amount: amount ?? this.amount,
+      type: type ?? this.type,
+      categoryId: categoryId ?? this.categoryId,
+      time: time ?? this.time,
+      updateTime: updateTime ?? this.updateTime,
+      note: note ?? this.note,
+      isSynced: isSynced ?? this.isSynced,
+    );
+  }
 }

@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mineai/config/router/route_names.dart';
 import 'package:mineai/core/constants/app_colors.dart';
+import 'package:mineai/core/constants/app_strings.dart';
 import 'package:mineai/core/utils/snackbar_helper.dart';
 import 'package:mineai/core/widgets/gradiant_background.dart';
 import 'package:mineai/core/widgets/headers/app_screen_header.dart';
@@ -51,21 +52,23 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
 
       if (mounted) {
         setState(() => _isSaving = false);
-        SnackBarHelper.showSuccess(context, 'Task saved, emailed & opened in Calendar! (Check Inbox & Spam folder)');
+        SnackBarHelper.showSuccess(context, AppStrings.taskSavedSuccess);
         // Navigate to the tasks list screen to view all saved tasks
         context.pushReplacement(RouteNames.tasksList);
       }
     } catch (e) {
       if (mounted) {
         setState(() => _isSaving = false);
-        SnackBarHelper.showError(context, 'Failed to save task: $e');
+        SnackBarHelper.showError(context, e.toString());
       }
     }
   }
 
   Future<void> _sendEmailOnly() async {
     final profileState = context.read<UserProfileCubit>().state;
-    final userEmail = profileState is UserProfileLoaded ? profileState.profile.email : 'your registered email';
+    final userEmail = profileState is UserProfileLoaded
+        ? profileState.profile.email
+        : 'your registered email';
 
     setState(() => _isEmailSending = true);
     try {
@@ -195,13 +198,52 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                   });
                   Navigator.pop(ctx);
                 },
-                child: const Text('Update Task', style: TextStyle(color: Colors.white)),
+                child: Text(
+                  AppStrings.updateTask,
+                  style: const TextStyle(color: Colors.white),
+                ),
               ),
             ),
           ],
         ),
       ),
     );
+  }
+
+  Future<void> _deleteTask() async {
+    if (widget.task.id == null) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(AppStrings.delete),
+        content: Text(AppStrings.deleteTaskConfirm),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(AppStrings.cancel),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(
+              AppStrings.delete,
+              style: const TextStyle(color: Colors.white),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      await TaskDatabaseService.instance.deleteTask(widget.task.id!);
+      if (!mounted) return;
+      SnackBarHelper.showSuccess(context, AppStrings.itemDeleted);
+      if (context.canPop()) {
+        context.pop(true);
+      } else {
+        context.go(RouteNames.tasksList);
+      }
+    }
   }
 
   @override
@@ -216,16 +258,37 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
           child: Column(
             children: [
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 child: AppScreenHeader(
                   title: 'Task Overview',
                   centerTitle: true,
-                  onBack: () => context.pop(),
+                  onBack: () {
+                    if (context.canPop()) {
+                      context.pop();
+                    } else {
+                      context.go(RouteNames.tasksList);
+                    }
+                  },
+                  trailing: widget.task.id != null
+                      ? IconButton(
+                          icon: const Icon(
+                            Icons.delete_outline_rounded,
+                            color: Colors.redAccent,
+                          ),
+                          onPressed: _deleteTask,
+                        )
+                      : null,
                 ),
               ),
               Expanded(
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 12,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -263,10 +326,14 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                                     vertical: 4,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: scheme.primary.withValues(alpha: 0.15),
+                                    color: scheme.primary.withValues(
+                                      alpha: 0.15,
+                                    ),
                                     borderRadius: BorderRadius.circular(12),
                                     border: Border.all(
-                                      color: scheme.primary.withValues(alpha: 0.4),
+                                      color: scheme.primary.withValues(
+                                        alpha: 0.4,
+                                      ),
                                     ),
                                   ),
                                   child: Row(
@@ -318,13 +385,15 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                                       ),
                                       const SizedBox(width: 8),
                                       Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
                                           Text(
                                             'DATE',
                                             style: TextStyle(
                                               color: isLight
-                                                  ? AppColors.lightSecondaryOnSurface
+                                                  ? AppColors
+                                                        .lightSecondaryOnSurface
                                                   : Colors.white54,
                                               fontSize: 10,
                                               fontWeight: FontWeight.bold,
@@ -353,13 +422,15 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                                       ),
                                       const SizedBox(width: 8),
                                       Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
                                           Text(
                                             'TIME',
                                             style: TextStyle(
                                               color: isLight
-                                                  ? AppColors.lightSecondaryOnSurface
+                                                  ? AppColors
+                                                        .lightSecondaryOnSurface
                                                   : Colors.white54,
                                               fontSize: 10,
                                               fontWeight: FontWeight.bold,
@@ -380,10 +451,13 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                                 ),
                               ],
                             ),
-                            if (_task.location != null || _task.details != null) ...[
+                            if (_task.location != null ||
+                                _task.details != null) ...[
                               const SizedBox(height: 14),
                               Divider(
-                                color: isLight ? Colors.black12 : Colors.white12,
+                                color: isLight
+                                    ? Colors.black12
+                                    : Colors.white12,
                                 height: 1,
                               ),
                               const SizedBox(height: 10),
@@ -426,7 +500,8 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                                         style: TextStyle(
                                           fontSize: 13,
                                           color: isLight
-                                              ? AppColors.lightSecondaryOnSurface
+                                              ? AppColors
+                                                    .lightSecondaryOnSurface
                                               : AppColors.secondaryText,
                                         ),
                                       ),
@@ -440,7 +515,9 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                               borderRadius: BorderRadius.circular(12),
                               child: Container(
                                 width: double.infinity,
-                                padding: const EdgeInsets.symmetric(vertical: 10),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 10,
+                                ),
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(12),
                                   border: Border.all(
@@ -521,7 +598,10 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                               : const Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    Icon(Icons.save_rounded, color: Colors.white),
+                                    Icon(
+                                      Icons.save_rounded,
+                                      color: Colors.white,
+                                    ),
                                     SizedBox(width: 8),
                                     Text(
                                       'Save Task & Sync with Calendar',
@@ -563,7 +643,9 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                                     fontSize: 13,
                                   ),
                                 ),
-                                onPressed: _isEmailSending ? null : _sendEmailOnly,
+                                onPressed: _isEmailSending
+                                    ? null
+                                    : _sendEmailOnly,
                               ),
                             ),
                           ),
@@ -591,7 +673,8 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                                     fontSize: 13,
                                   ),
                                 ),
-                                onPressed: () => _taskService.openInCalendar(_task),
+                                onPressed: () =>
+                                    _taskService.openInCalendar(_task),
                               ),
                             ),
                           ),

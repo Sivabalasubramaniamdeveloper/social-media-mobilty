@@ -3,12 +3,16 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mineai/config/router/route_names.dart';
 import 'package:mineai/core/constants/app_colors.dart';
+import 'package:mineai/core/constants/app_strings.dart';
 import 'package:mineai/core/utils/snackbar_helper.dart';
 import 'package:mineai/core/widgets/cards/credits_tracker_card.dart';
 import 'package:mineai/core/widgets/gradiant_background.dart';
 import 'package:mineai/features/profile/cubit/user_profile_cubit.dart';
 import 'package:mineai/features/profile/cubit/user_profile_state.dart';
 import 'package:mineai/features/tasks/presentation/task_detail_screen.dart';
+import 'package:mineai/features/tasks/cubit/task_cubit.dart';
+import 'package:mineai/features/tasks/models/task_model.dart';
+import 'package:mineai/core/utils/user_helper.dart';
 import 'package:mineai/features/tasks/services/task_service.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 
@@ -33,13 +37,6 @@ class _AiVoiceAssistantScreenState extends State<AiVoiceAssistantScreen>
   bool _isListening = false;
   bool _isProcessing = false;
   bool _speechEnabled = false;
-
-  final List<String> _quickSuggestions = [
-    'Schedule a meeting with design team tomorrow at 10 AM',
-    'Doctor appointment this Friday at 3:30 PM',
-    'Review quarterly budget next Monday at 11 AM',
-    'Dinner with Sarah tonight at 8 PM at Italian Bistro',
-  ];
 
   @override
   void initState() {
@@ -75,7 +72,10 @@ class _AiVoiceAssistantScreenState extends State<AiVoiceAssistantScreen>
         onError: (errorNotification) {
           if (mounted) {
             setState(() => _isListening = false);
-            SnackBarHelper.showError(context, 'Microphone error: ${errorNotification.errorMsg}');
+            SnackBarHelper.showError(
+              context,
+              'Microphone error: ${errorNotification.errorMsg}',
+            );
           }
         },
       );
@@ -105,7 +105,7 @@ class _AiVoiceAssistantScreenState extends State<AiVoiceAssistantScreen>
 
     if (_speechEnabled) {
       if (mounted) setState(() => _isListening = true);
-      SnackBarHelper.showInfo(null, 'Listening... Speak your task now');
+      SnackBarHelper.showInfo(null, AppStrings.listeningSpeakTask);
       await _speech.listen(
         onResult: (result) {
           if (mounted) {
@@ -120,20 +120,27 @@ class _AiVoiceAssistantScreenState extends State<AiVoiceAssistantScreen>
         ),
       );
     } else {
-      SnackBarHelper.showWarning(null, 'Microphone or Speech Recognition not available');
+      SnackBarHelper.showWarning(
+        null,
+        AppStrings.voiceMicNotAvailable,
+      );
     }
   }
 
   Future<void> _processTask() async {
     final prompt = _promptController.text.trim();
     if (prompt.isEmpty) {
-      SnackBarHelper.showWarning(context, 'Please speak or type a task to process with AI');
+      SnackBarHelper.showWarning(
+        context,
+        AppStrings.pleaseEnterTask,
+      );
       return;
     }
 
     // Check credits
     final profileState = context.read<UserProfileCubit>().state;
-    if (profileState is UserProfileLoaded && profileState.profile.credits < 10) {
+    if (profileState is UserProfileLoaded &&
+        profileState.profile.credits < 10) {
       SnackBarHelper.showError(
         context,
         'Insufficient credits (requires 10). Recharges in ${profileState.profile.creditsRechargeCountdown ?? "tomorrow"}.',
@@ -155,9 +162,7 @@ class _AiVoiceAssistantScreenState extends State<AiVoiceAssistantScreen>
         // Navigate to the dedicated Task Detail screen
         Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (_) => TaskDetailScreen(task: task),
-          ),
+          MaterialPageRoute(builder: (_) => TaskDetailScreen(task: task)),
         );
       }
     } catch (e) {
@@ -165,6 +170,40 @@ class _AiVoiceAssistantScreenState extends State<AiVoiceAssistantScreen>
         setState(() => _isProcessing = false);
         SnackBarHelper.showError(context, 'Failed to process task: $e');
       }
+    }
+  }
+
+  Future<void> _saveTaskAsTyped() async {
+    final prompt = _promptController.text.trim();
+    if (prompt.isEmpty) {
+      SnackBarHelper.showWarning(context, AppStrings.taskSavePrompt);
+      return;
+    }
+
+    setState(() => _isProcessing = true);
+    try {
+      final now = DateTime.now();
+      final task = TaskModel(
+        userId: await UserHelper.getCurrentUserId(),
+        title: prompt,
+        category: 'General',
+        dateDisplay: 'Unscheduled',
+        timeDisplay: 'No time set',
+        details: prompt,
+        createdAt: now.toIso8601String(),
+      );
+      if (!mounted) return;
+      final saved = await context.read<TaskCubit>().saveRawTask(task);
+      if (!mounted) return;
+      setState(() => _isProcessing = false);
+      if (saved) {
+        SnackBarHelper.showSuccess(context, AppStrings.taskSavedAsTyped);
+        context.go(RouteNames.tasksList);
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isProcessing = false);
+      SnackBarHelper.showError(context, '${AppStrings.taskSaveFailed}: $e');
     }
   }
 
@@ -181,7 +220,10 @@ class _AiVoiceAssistantScreenState extends State<AiVoiceAssistantScreen>
             children: [
               // Clean top app bar without bottom nav
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -196,7 +238,7 @@ class _AiVoiceAssistantScreenState extends State<AiVoiceAssistantScreen>
                       },
                     ),
                     Text(
-                      'AI Voice Assistant',
+                      AppStrings.aiVoiceAssistant,
                       style: TextStyle(
                         color: scheme.onSurface,
                         fontSize: 17,
@@ -213,7 +255,10 @@ class _AiVoiceAssistantScreenState extends State<AiVoiceAssistantScreen>
 
               Expanded(
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 8,
+                  ),
                   child: Column(
                     children: [
                       // Credits Tracker Card
@@ -224,12 +269,16 @@ class _AiVoiceAssistantScreenState extends State<AiVoiceAssistantScreen>
                       // Status indicator
                       Text(
                         _isListening
-                            ? 'LISTENING TO YOUR VOICE...'
-                            : (_isProcessing ? 'AI PROCESSING TASK...' : 'TAP MIC OR TYPE COMMAND'),
+                            ? AppStrings.listeningToVoice
+                            : (_isProcessing
+                                  ? AppStrings.aiProcessingTask
+                                  : AppStrings.tapMicOrTypeCommand),
                         style: TextStyle(
                           color: _isListening
                               ? Colors.greenAccent
-                              : (_isProcessing ? Colors.orangeAccent : scheme.primary),
+                              : (_isProcessing
+                                    ? Colors.orangeAccent
+                                    : scheme.primary),
                           fontSize: 12,
                           fontWeight: FontWeight.w800,
                           letterSpacing: 1.2,
@@ -260,22 +309,32 @@ class _AiVoiceAssistantScreenState extends State<AiVoiceAssistantScreen>
                         child: TextField(
                           controller: _promptController,
                           maxLines: 3,
-                          style: TextStyle(color: scheme.onSurface, fontSize: 15),
+                          style: TextStyle(
+                            color: scheme.onSurface,
+                            fontSize: 15,
+                          ),
                           decoration: InputDecoration(
-                            hintText:
-                                "Speak or type your task...\n(e.g. 'Schedule team meeting tomorrow at 10 AM')",
+                            hintText: AppStrings.voiceTaskHint,
                             hintStyle: TextStyle(
                               color: isLight
-                                  ? AppColors.lightSecondaryOnSurface.withValues(alpha: 0.7)
-                                  : AppColors.secondaryText.withValues(alpha: 0.7),
+                                  ? AppColors.lightSecondaryOnSurface
+                                        .withValues(alpha: 0.7)
+                                  : AppColors.secondaryText.withValues(
+                                      alpha: 0.7,
+                                    ),
                               fontSize: 14,
                             ),
                             border: InputBorder.none,
                             contentPadding: const EdgeInsets.all(16),
                             suffixIcon: _promptController.text.isNotEmpty
                                 ? IconButton(
-                                    icon: const Icon(Icons.clear_rounded, size: 20),
-                                    onPressed: () => setState(() => _promptController.clear()),
+                                    icon: const Icon(
+                                      Icons.clear_rounded,
+                                      size: 20,
+                                    ),
+                                    onPressed: () => setState(
+                                      () => _promptController.clear(),
+                                    ),
                                   )
                                 : null,
                           ),
@@ -299,7 +358,7 @@ class _AiVoiceAssistantScreenState extends State<AiVoiceAssistantScreen>
                           ),
                           onPressed: _isProcessing ? null : _processTask,
                           child: _isProcessing
-                              ? const Row(
+                              ? Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     SizedBox(
@@ -312,7 +371,7 @@ class _AiVoiceAssistantScreenState extends State<AiVoiceAssistantScreen>
                                     ),
                                     SizedBox(width: 12),
                                     Text(
-                                      'AI Analyzing Task...',
+                                      AppStrings.aiAnalyzingTask,
                                       style: TextStyle(
                                         color: Colors.white,
                                         fontSize: 16,
@@ -321,13 +380,17 @@ class _AiVoiceAssistantScreenState extends State<AiVoiceAssistantScreen>
                                     ),
                                   ],
                                 )
-                              : const Row(
+                              : Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    Icon(Icons.auto_awesome_rounded, color: Colors.white, size: 18),
+                                    Icon(
+                                      Icons.auto_awesome_rounded,
+                                      color: Colors.white,
+                                      size: 18,
+                                    ),
                                     SizedBox(width: 8),
                                     Text(
-                                      'Process Task with AI',
+                                      AppStrings.processTaskWithAi,
                                       style: TextStyle(
                                         color: Colors.white,
                                         fontSize: 16,
@@ -339,13 +402,47 @@ class _AiVoiceAssistantScreenState extends State<AiVoiceAssistantScreen>
                         ),
                       ),
 
+                      const SizedBox(height: 10),
+
+                      SizedBox(
+                        width: double.infinity,
+                        height: 50,
+                        child: OutlinedButton.icon(
+                          style: OutlinedButton.styleFrom(
+                            side: BorderSide(color: scheme.primary),
+                            foregroundColor: scheme.primary,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                          ),
+                          onPressed: _isProcessing ? null : _saveTaskAsTyped,
+                          icon: const Icon(Icons.save_outlined),
+                          label: Text(
+                            AppStrings.saveAsTyped,
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 8),
+                      Text(
+                        AppStrings.voiceTaskChoiceHelp,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: isLight
+                              ? AppColors.lightSecondaryOnSurface
+                              : AppColors.secondaryText,
+                          fontSize: 12,
+                        ),
+                      ),
+
                       const SizedBox(height: 24),
 
                       // Quick Suggestions
                       Align(
                         alignment: Alignment.centerLeft,
                         child: Text(
-                          'QUICK EXAMPLES',
+                          AppStrings.quickExamples,
                           style: TextStyle(
                             color: isLight
                                 ? AppColors.lightSecondaryOnSurface
@@ -357,7 +454,7 @@ class _AiVoiceAssistantScreenState extends State<AiVoiceAssistantScreen>
                         ),
                       ),
                       const SizedBox(height: 10),
-                      ..._quickSuggestions.map(
+                      ...AppStrings.voiceQuickSuggestions.map(
                         (sug) => Padding(
                           padding: const EdgeInsets.only(bottom: 8.0),
                           child: InkWell(
@@ -369,19 +466,28 @@ class _AiVoiceAssistantScreenState extends State<AiVoiceAssistantScreen>
                             borderRadius: BorderRadius.circular(12),
                             child: Container(
                               width: double.infinity,
-                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 10,
+                              ),
                               decoration: BoxDecoration(
                                 color: isLight
                                     ? scheme.surfaceContainerHighest
                                     : AppColors.surface,
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
-                                  color: isLight ? Colors.black12 : Colors.white10,
+                                  color: isLight
+                                      ? Colors.black12
+                                      : Colors.white10,
                                 ),
                               ),
                               child: Row(
                                 children: [
-                                  Icon(Icons.touch_app_rounded, size: 16, color: scheme.primary),
+                                  Icon(
+                                    Icons.touch_app_rounded,
+                                    size: 16,
+                                    color: scheme.primary,
+                                  ),
                                   const SizedBox(width: 10),
                                   Expanded(
                                     child: Text(
@@ -433,7 +539,9 @@ class _AiVoiceAssistantScreenState extends State<AiVoiceAssistantScreen>
               shape: BoxShape.circle,
               color: Colors.transparent,
               border: Border.all(
-                color: scheme.primary.withValues(alpha: _isListening ? 0.6 : 0.2),
+                color: scheme.primary.withValues(
+                  alpha: _isListening ? 0.6 : 0.2,
+                ),
                 width: 2,
               ),
             ),
@@ -446,16 +554,15 @@ class _AiVoiceAssistantScreenState extends State<AiVoiceAssistantScreen>
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     gradient: LinearGradient(
-                      colors: [
-                        scheme.primary,
-                        AppColors.primaryPurpleDeep,
-                      ],
+                      colors: [scheme.primary, AppColors.primaryPurpleDeep],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: scheme.primary.withValues(alpha: _isListening ? 0.6 : 0.3),
+                        color: scheme.primary.withValues(
+                          alpha: _isListening ? 0.6 : 0.3,
+                        ),
                         blurRadius: _isListening ? 24 : 14,
                         spreadRadius: _isListening ? 4 : 1,
                       ),
@@ -477,21 +584,30 @@ class _AiVoiceAssistantScreenState extends State<AiVoiceAssistantScreen>
     );
   }
 
-  Widget _circleIconButton({required IconData icon, required VoidCallback onTap}) {
+  Widget _circleIconButton({
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
     final theme = Theme.of(context);
     final isLight = theme.brightness == Brightness.light;
-    return Container(
-      width: 40,
-      height: 40,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: isLight ? theme.colorScheme.surfaceContainerHighest : AppColors.surface,
-        border: Border.all(color: isLight ? Colors.black12 : Colors.white10),
-      ),
-      child: IconButton(
-        icon: Icon(icon, color: theme.colorScheme.onSurface, size: 20),
-        onPressed: onTap,
-        padding: EdgeInsets.zero,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: isLight
+                ? theme.colorScheme.surfaceContainerHighest
+                : AppColors.surface,
+            border: Border.all(color: isLight ? Colors.black12 : Colors.white10),
+          ),
+          alignment: Alignment.center,
+          child: Icon(icon, color: theme.colorScheme.onSurface, size: 20),
+        ),
       ),
     );
   }

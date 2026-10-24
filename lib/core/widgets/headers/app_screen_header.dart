@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mineai/config/router/route_names.dart';
 import 'package:mineai/core/constants/app_sizes.dart';
 import 'package:mineai/core/constants/app_strings.dart';
 import 'package:mineai/core/widgets/logo/app_logo.dart';
@@ -32,7 +33,11 @@ class AppScreenHeader extends StatelessWidget {
       onPressed:
           onBack ??
           () {
-            if (context.canPop()) context.pop();
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go(RouteNames.dashboard);
+            }
           },
       icon: Icon(
         Icons.arrow_back_ios_new_rounded,

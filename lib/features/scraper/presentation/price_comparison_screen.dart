@@ -260,6 +260,7 @@ class _PriceComparisonView extends BaseScreen {
     double bottomInset,
   ) {
     final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
     return ListView(
       padding: EdgeInsets.fromLTRB(
         20,
@@ -282,8 +283,36 @@ class _PriceComparisonView extends BaseScreen {
         ),
         const SizedBox(height: 12),
 
-        // 3. Side-by-Side Store Cards
-        ...data.stores.map((store) => _buildStoreCard(context, store)),
+        // 3. Side-by-Side Store Cards or Empty State
+        if (data.stores.isEmpty)
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: scheme.surfaceContainerHighest.withValues(alpha: 0.5),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: scheme.outline.withValues(alpha: 0.15)),
+            ),
+            child: Column(
+              children: [
+                Icon(
+                  Icons.store_mall_directory_outlined,
+                  size: 40,
+                  color: scheme.onSurfaceVariant,
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  'No live prices found for this item across monitored stores. Please try another search term.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: scheme.onSurfaceVariant,
+                    fontSize: 13,
+                  ),
+                ),
+              ],
+            ),
+          )
+        else
+          ...data.stores.map((store) => _buildStoreCard(context, store)),
       ],
     );
   }
@@ -447,162 +476,330 @@ class _PriceComparisonView extends BaseScreen {
     );
   }
 
+  Color _getStoreBrandColor(String storeName) {
+    final s = storeName.toLowerCase();
+    if (s.contains('amazon')) return const Color(0xFFFF9900);
+    if (s.contains('flipkart')) return const Color(0xFF2874F0);
+    if (s.contains('meesho')) return const Color(0xFFF43397);
+    return const Color(0xFF8B5CF6);
+  }
+
+  IconData _getStoreIcon(String storeName) {
+    final s = storeName.toLowerCase();
+    if (s.contains('amazon')) return Icons.shopping_cart_checkout_rounded;
+    if (s.contains('flipkart')) return Icons.bolt_rounded;
+    if (s.contains('meesho')) return Icons.local_offer_rounded;
+    return Icons.storefront_rounded;
+  }
+
   Widget _buildStoreCard(BuildContext context, StoreProductDetail store) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final isLight = theme.brightness == Brightness.light;
+    final brandColor = _getStoreBrandColor(store.store);
+    final storeIcon = _getStoreIcon(store.store);
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 14),
-      padding: const EdgeInsets.all(16),
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+      margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: scheme.outline.withValues(alpha: 0.1)),
+        color: isLight ? scheme.surface : const Color(0xFF1E1B38),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(
+          color: store.isBestDeal
+              ? Colors.amber.withValues(alpha: 0.85)
+              : (isLight ? Colors.black.withValues(alpha: 0.08) : Colors.white12),
+          width: store.isBestDeal ? 2.0 : 1.0,
+        ),
+        boxShadow: [
+          if (store.isBestDeal)
+            BoxShadow(
+              color: Colors.amber.withValues(alpha: 0.25),
+              blurRadius: 20,
+              spreadRadius: 1,
+              offset: const Offset(0, 4),
+            )
+          else
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.06),
+              blurRadius: 12,
+              offset: const Offset(0, 3),
+            ),
+        ],
       ),
+      clipBehavior: Clip.antiAlias,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Store Product Image
-              Container(
-                width: 72,
-                height: 72,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  color: scheme.surfaceContainerHighest,
-                  image: store.imageUrl != null
-                      ? DecorationImage(
-                          image: NetworkImage(store.imageUrl!),
-                          fit: BoxFit.cover,
-                        )
-                      : null,
-                ),
-                child: store.imageUrl == null
-                    ? Icon(
-                        Icons.storefront_rounded,
-                        color: scheme.onSurfaceVariant,
-                      )
-                    : null,
-              ),
-              const SizedBox(width: 14),
-
-              // Title & Availability
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 3,
-                          ),
-                          decoration: BoxDecoration(
-                            color: scheme.primary.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text(
-                            store.store,
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                              color: scheme.primary,
-                            ),
-                          ),
-                        ),
-                        if (store.rating != null)
-                          Row(
-                            children: [
-                              const Icon(
-                                Icons.star_rounded,
-                                size: 15,
-                                color: Colors.amber,
-                              ),
-                              const SizedBox(width: 2),
-                              Text(
-                                store.rating!,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                  color: scheme.onSurface,
-                                ),
-                              ),
-                            ],
-                          ),
-                      ],
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      store.title,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: scheme.onSurface,
-                      ),
-                    ),
-                  ],
+          if (store.isBestDeal)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 16),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Color(0xFFF59E0B), Color(0xFFD97706)],
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: 14),
-
-          // Price & View Deal CTA
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              child: const Row(
                 children: [
+                  Icon(Icons.stars_rounded, color: Colors.white, size: 16),
+                  SizedBox(width: 8),
                   Text(
-                    store.formattedPrice,
+                    'LOWEST VERIFIED PRICE • BEST VALUE DEAL',
                     style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: store.found ? scheme.primary : scheme.error,
-                    ),
-                  ),
-                  Text(
-                    store.found ? AppStrings.inStock : AppStrings.outOfStock,
-                    style: TextStyle(
+                      color: Colors.white,
                       fontSize: 10,
-                      color: store.found
-                          ? const Color(0xFF34D399)
-                          : scheme.error,
-                      fontWeight: FontWeight.w500,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 0.8,
                     ),
                   ),
                 ],
               ),
-              ElevatedButton.icon(
-                onPressed: () => _launchDealUrl(store.productUrl),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: scheme.primary,
-                  foregroundColor: scheme.onPrimary,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 8,
-                  ),
+            ),
+
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Store Product Image with Animated Container
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: Container(
+                        width: 84,
+                        height: 84,
+                        color: isLight
+                            ? scheme.surfaceContainerHighest
+                            : const Color(0xFF262344),
+                        child: store.imageUrl != null &&
+                                store.imageUrl!.trim().startsWith('http')
+                            ? Image.network(
+                                store.imageUrl!.trim(),
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, _, _) => Icon(
+                                  Icons.storefront_rounded,
+                                  color: scheme.onSurfaceVariant,
+                                  size: 32,
+                                ),
+                              )
+                            : Icon(
+                                Icons.storefront_rounded,
+                                color: scheme.onSurfaceVariant,
+                                size: 32,
+                              ),
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+
+                    // Title, Brand & Star Rating
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: brandColor.withValues(alpha: 0.16),
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(
+                                    color: brandColor.withValues(alpha: 0.4),
+                                    width: 1,
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(storeIcon, size: 13, color: brandColor),
+                                    const SizedBox(width: 5),
+                                    Text(
+                                      store.store.toUpperCase(),
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w800,
+                                        color: brandColor,
+                                        letterSpacing: 0.5,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              if (store.rating != null)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 3,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.amber.withValues(alpha: 0.16),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      const Icon(
+                                        Icons.star_rounded,
+                                        size: 14,
+                                        color: Colors.amber,
+                                      ),
+                                      const SizedBox(width: 3),
+                                      Text(
+                                        store.rating!,
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.bold,
+                                          color: scheme.onSurface,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            store.title,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: scheme.onSurface,
+                              height: 1.3,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-                icon: const Icon(Icons.open_in_new_rounded, size: 14),
-                label: Text(
-                  AppStrings.viewDeal,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                  ),
+                const SizedBox(height: 14),
+
+                // Specs & Trust Badges
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: store.found
+                            ? Colors.green.withValues(alpha: 0.12)
+                            : Colors.red.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            store.found ? Icons.check_circle_rounded : Icons.cancel_rounded,
+                            size: 13,
+                            color: store.found ? const Color(0xFF10B981) : Colors.redAccent,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            store.found ? AppStrings.inStock : AppStrings.outOfStock,
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: store.found ? const Color(0xFF10B981) : Colors.redAccent,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: isLight
+                            ? scheme.surfaceContainerHighest
+                            : const Color(0xFF262344),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.verified_user_outlined,
+                            size: 13,
+                            color: scheme.onSurfaceVariant,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Verified Pricing',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: scheme.onSurfaceVariant,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-            ],
+                const SizedBox(height: 14),
+                Divider(height: 1, color: isLight ? Colors.black12 : Colors.white10),
+                const SizedBox(height: 12),
+
+                // Price & View Deal CTA
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          store.formattedPrice,
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w900,
+                            color: store.found ? scheme.primary : scheme.error,
+                          ),
+                        ),
+                        if (store.isBestDeal)
+                          const Text(
+                            'Cheapest Option',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF10B981),
+                            ),
+                          ),
+                      ],
+                    ),
+                    ElevatedButton.icon(
+                      onPressed: () => _launchDealUrl(store.productUrl),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: store.isBestDeal ? const Color(0xFFD97706) : scheme.primary,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 18,
+                          vertical: 11,
+                        ),
+                        elevation: store.isBestDeal ? 4 : 1,
+                      ),
+                      icon: const Icon(Icons.open_in_new_rounded, size: 15),
+                      label: Text(
+                        AppStrings.viewDeal,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -679,9 +876,13 @@ class _PriceComparisonView extends BaseScreen {
   }
 
   Future<void> _launchDealUrl(String url) async {
-    final uri = Uri.tryParse(url);
-    if (uri != null && await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    }
+    final clean = url.trim();
+    if (clean.isEmpty) return;
+    try {
+      final uri = Uri.tryParse(clean);
+      if (uri != null && (uri.scheme == 'http' || uri.scheme == 'https')) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      }
+    } catch (_) {}
   }
 }

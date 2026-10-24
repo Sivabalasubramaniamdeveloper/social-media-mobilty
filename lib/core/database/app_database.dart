@@ -146,6 +146,17 @@ class ExpenseDatabaseService {
     );
   }
 
+  Future<int> updateTransaction(TransactionModel item) async {
+    final db = await database;
+    final values = item.toMap();
+    return await db.update(
+      'transactions',
+      values,
+      where: 'id = ? AND user_id = ?',
+      whereArgs: [item.id, item.userId],
+    );
+  }
+
   Future<List<TransactionModel>> getTransactions(String userId) async {
     final db = await database;
     final res = await db.query(

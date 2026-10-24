@@ -20,6 +20,7 @@ abstract class ExpenseRepository {
     String? type,
   });
   Future<int> deleteTransaction(int id, String userId);
+  Future<void> updateTransaction(TransactionModel item, bool syncToCloud);
 
   Future<List<CategoryModel>> getCategories(String userId, String type);
   Future<void> addCustomCategory(CategoryModel category, bool isSubscribed);
@@ -164,6 +165,28 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
     } catch (_) {}
 
     return deletedCount;
+  }
+
+  @override
+  Future<void> updateTransaction(TransactionModel item, bool syncToCloud) async {
+    await _dbService.updateTransaction(item);
+
+    if (syncToCloud && item.id != null) {
+      try {
+        await Supabase.instance.client.from('transactions').update({
+          'title': item.title,
+          'amount': item.amount,
+          'type': item.type,
+          'category_id': item.categoryId,
+          'time': item.time.toIso8601String(),
+          'update_time': DateTime.now().toIso8601String(),
+          'note': item.note,
+        }).match({
+          'id': item.id!,
+          'user_id': item.userId,
+        });
+      } catch (_) {}
+    }
   }
 
   @override
